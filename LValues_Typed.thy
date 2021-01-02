@@ -10,27 +10,23 @@ setup_lifting type_definition_lvalue
 
 lift_definition valid_lvalue :: "('mem,'val) lvalue \<Rightarrow> bool" is "\<lambda>x. x \<noteq> None".
 
-lift_definition compatible_lvalues :: "('mem,'val1) lvalue \<Rightarrow> ('mem,'val2) lvalue \<Rightarrow> bool" is
-  \<open>\<lambda>x y. case (x,y) of (Some x, Some y) \<Rightarrow> LValues.compatible_lvalues x y | _ \<Rightarrow> False\<close>.
+(* lift_definition compatible_lvalues :: "('mem,'val1) lvalue \<Rightarrow> ('mem,'val2) lvalue \<Rightarrow> bool" is
+  \<open>\<lambda>x y. case (x,y) of (Some x, Some y) \<Rightarrow> LValues.compatible_lvalues x y | _ \<Rightarrow> False\<close>. *)
 
 lift_definition lvalue_pair :: "('mem,'val1) lvalue \<Rightarrow> ('mem,'val2) lvalue \<Rightarrow> ('mem,'val1\<times>'val2) lvalue" is
   \<open>\<lambda>x y. case (x,y) of (Some x, Some y) \<Rightarrow> 
     if LValues.compatible_lvalues x y then Some (LValues.lvalue_pair x y) else None
     | _ \<Rightarrow> None\<close>
   apply (rename_tac x y; case_tac x; case_tac y)
-     apply auto
-  apply (simp add: lvalue_pair_def)
-  by (simp add: lvalue_pair_def)
-
-lemma "compatible_lvalues x y \<Longrightarrow> valid_lvalue (lvalue_pair x y)"
-  apply transfer 
-      apply (rename_tac x y; case_tac x; case_tac y)
   by auto
 
-lemma "compatible_lvalues x y \<Longrightarrow> valid_lvalue x"
+abbreviation compatible_lvalues where
+  "compatible_lvalues x y \<equiv> valid_lvalue (lvalue_pair x y)"
+
+lemma compatible_valid1: "compatible_lvalues x y \<Longrightarrow> valid_lvalue x"
   apply transfer apply (rename_tac x y; case_tac x) by auto
 
-lemma "compatible_lvalues x y \<Longrightarrow> valid_lvalue y"
+lemma compatible_valid2: "compatible_lvalues x y \<Longrightarrow> valid_lvalue y"
   apply transfer apply (rename_tac x y; case_tac x; case_tac y) by auto
 
 lift_definition lvalue_chain :: "('mem,'val1) lvalue \<Rightarrow> ('val1,'val2) lvalue \<Rightarrow> ('mem,'val2) lvalue" is
@@ -79,7 +75,142 @@ lemma getter_setter_compat[simp]:
   shows "getter x (setter y a m) = getter x m"
   using assms apply transfer
   apply (rename_tac x y a m; case_tac x; case_tac y)
+  apply auto
+  by (metis get_set_diff iso_tuple_UNIV_I option.distinct(1))
+
+lift_definition unit_lvalue :: "('mem,unit) lvalue" is "Some (LValues.unit_lvalue UNIV)"
   by auto
 
+lemma valid_unit_lvalue[simp]: "valid_lvalue unit_lvalue"
+  apply transfer by simp
+
+lemma unit_setter[simp]: "setter unit_lvalue x = id"
+  apply transfer by simp
+
+lemma unit_lvalue_compat[simp]:
+  assumes [simp]: "valid_lvalue x"
+  shows "compatible_lvalues unit_lvalue x"
+  using assms apply transfer by auto
+
+lemma unit_lvalue_compat'[simp]:
+  assumes [simp]: "valid_lvalue x"
+  shows "compatible_lvalues x unit_lvalue"
+  using assms apply transfer by auto
+
+lift_definition mk_lvalue :: "('mem\<Rightarrow>'val) \<Rightarrow> ('val\<Rightarrow>'mem\<Rightarrow>'mem) \<Rightarrow> ('mem,'val) lvalue" is
+  "\<lambda>g s. let x = \<lparr> lv_domain=UNIV, lv_range=UNIV, lv_getter=g, lv_setter=s \<rparr> in
+    if LValues.valid_lvalue x then Some x else None"
+  by (smt option.simps(4) option.simps(5) select_convs(1) select_convs(2))
+  
+
+lemma mk_lvalue_valid:
+  assumes [simp]: "\<And>a m. g (s a m) = a"
+  assumes [simp]: "\<And>m. s (g m) m = m"
+  assumes [simp]: "\<And>a b m. s a (s b m) = s a m"
+  shows "valid_lvalue (mk_lvalue g s)"
+  apply (transfer fixing: g s) apply (simp add: Let_def)
+  apply (rule valid_lvalueI)
+  by auto
+
+lemma getter_mk_lvalue[simp]:
+  assumes "valid_lvalue (mk_lvalue g s)"
+  shows "getter (mk_lvalue g s) = g"
+  using assms apply transfer by (auto simp: Let_def)
+
+lemma setter_mk_lvalue[simp]:
+  assumes "valid_lvalue (mk_lvalue g s)"
+  shows "setter (mk_lvalue g s) = s"
+  using assms apply transfer by (auto simp: Let_def)
+
+lemma mk_lvalue_compat:
+  assumes "valid_lvalue (mk_lvalue g s)"
+  assumes "valid_lvalue (mk_lvalue g' s')"
+  assumes [simp]: "\<And>a b m. s a (s' b m) = s' b (s a m)"
+  shows "compatible_lvalues (mk_lvalue g s) (mk_lvalue g' s')"
+  using assms(1,2) apply (transfer fixing: g s g' s')
+  apply (auto simp: Let_def)
+  apply (meson option.distinct(1))
+  apply (meson option.distinct(1))
+  apply (rule LValues.compatible_lvalues.intros)
+  apply auto
+  apply (meson option.distinct(1))
+  by (meson option.distinct(1))
+
+lemma setter_pair [simp]:
+  assumes "compatible_lvalues x y"
+  shows "setter (lvalue_pair x y) (a,b) m = setter y b (setter x a m)"
+  using assms apply (transfer fixing: m a b)
+  apply (rename_tac x y; case_tac x; case_tac y)
+  by auto
+
+lemma setter_pair':
+  assumes "compatible_lvalues x y"
+  shows "setter (lvalue_pair x y) ab m = setter y (snd ab) (setter x (fst ab) m)"
+  by (metis LValues_Typed.setter_pair assms prod.exhaust_sel)
+
+lift_definition fst_lvalue :: "('a*'b, 'a) lvalue" is
+  "Some \<lparr> lv_domain=UNIV, lv_range=UNIV, lv_getter=fst, lv_setter=\<lambda>a (_,b). (a,b) \<rparr>"
+  apply auto apply (rule valid_lvalueI) by auto
+
+lift_definition snd_lvalue :: "('a*'b, 'b) lvalue" is
+  "Some \<lparr> lv_domain=UNIV, lv_range=UNIV, lv_getter=snd, lv_setter=\<lambda>b (a,_). (a,b) \<rparr>"
+  apply auto apply (rule valid_lvalueI) by auto
+
+lemma valid_fst[simp]: "valid_lvalue fst_lvalue"
+  apply transfer by simp
+
+lemma valid_snd[simp]: "valid_lvalue snd_lvalue"
+  apply transfer by simp
+
+lemma compat_fst_snd[simp]: "compatible_lvalues fst_lvalue snd_lvalue"
+  apply transfer apply auto
+  apply (rule compatible_lvalues.intros)
+     apply auto 
+   apply (rule valid_lvalueI; auto)
+  by (rule valid_lvalueI; auto)
+
+lift_definition function_lvalue :: "'a \<Rightarrow> ('a\<Rightarrow>'b, 'b) lvalue" is
+  "\<lambda>i. Some \<lparr> lv_domain=UNIV, lv_range=UNIV, lv_getter=\<lambda>m. m i, lv_setter=\<lambda>a m. m(i:=a) \<rparr>"
+  apply auto apply (rule valid_lvalueI) by auto
+
+lemma valid_function_lvalue[simp]: "valid_lvalue (function_lvalue a)"
+  apply transfer by auto
+
+lemma compat_function_lvalue[simp]: "x \<noteq> y \<Longrightarrow> compatible_lvalues (function_lvalue x) (function_lvalue y)"
+  apply (transfer fixing: x y) apply auto
+  apply (rule compatible_lvalues.intros)
+     apply auto
+   apply (rule valid_lvalueI) apply auto
+  apply (rule valid_lvalueI) by auto
+
+
+nonterminal lvalue_expr
+nonterminal lvalue_expr_chain
+nonterminal lvalue_expr_atom
+
+syntax "" :: "id \<Rightarrow> lvalue_expr_atom" ("_")
+syntax "" :: "lvalue_expr \<Rightarrow> lvalue_expr_atom" ("'(_')")
+
+(* syntax "" :: "lvalue_expr_atom \<Rightarrow> lvalue_expr_indexed" ("_") *)
+(* syntax "lvalue_index" :: "lvalue_expr_atom \<Rightarrow> 'a \<Rightarrow> lvalue_expr_indexed" ("_[_]") *)
+
+syntax "" :: "lvalue_expr_atom \<Rightarrow> lvalue_expr_chain" ("_")
+syntax "_lvalue_index" :: "lvalue_expr_chain \<Rightarrow> 'a \<Rightarrow> lvalue_expr_chain" ("_[_]")
+syntax "lvalue_chain" :: "lvalue_expr_chain \<Rightarrow> lvalue_expr_atom \<Rightarrow> lvalue_expr_chain" (infixl "\<rightarrow>" 90)
+
+syntax "" :: "lvalue_expr_chain \<Rightarrow> lvalue_expr" ("_")
+syntax "lvalue_pair" :: "lvalue_expr_chain \<Rightarrow> lvalue_expr \<Rightarrow> lvalue_expr" (infixr "," 80)
+syntax "_lvalue_expr" :: "lvalue_expr \<Rightarrow> 'a" ("\<lbrakk>_\<rbrakk>")
+
+(* translations "_lvalue_id x" \<rightharpoonup> "x" *)
+(* translations "_lvalue_paren x" \<rightharpoonup> "x" *)
+(* translations "_lvalue_pair x y" \<rightharpoonup> "CONST lvalue_pair x y" *)
+translations "_lvalue_index x i" \<rightharpoonup> "CONST lvalue_chain x (CONST function_lvalue i)"
+translations "_lvalue_expr x" \<rightharpoonup> "x :: (_,_) lvalue"
+(* translations "_lvalue_chain x y" \<rightharpoonup> "CONST lvalue_chain x y" *)
+
+term "\<lbrakk>x[3]\<rbrakk>"
+term "\<lbrakk>x\<rightarrow>fst_lvalue, y\<rbrakk>"
+term "\<lbrakk>(x,z)\<rightarrow>x, y\<rbrakk>"
 
 end

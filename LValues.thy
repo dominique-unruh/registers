@@ -41,7 +41,15 @@ lemma compatible_lvalues_sym:
 definition lvalue_pair where
   "lvalue_pair x y = \<lparr> lv_domain = lv_domain x, lv_range = lv_range x \<times> lv_range y,
     lv_getter = \<lambda>m. if m \<in> lv_domain x then (lv_getter x m, lv_getter y m) else undefined,
-    lv_setter = \<lambda>(a,b). lv_setter x a \<circ> lv_setter y b\<rparr>"
+    lv_setter = \<lambda>(a,b). lv_setter y b \<circ> lv_setter x a\<rparr>"
+
+lemma lvalue_pair_domain[simp]:
+  "lv_domain (lvalue_pair x y) = lv_domain x"
+  by (simp add: lvalue_pair_def)
+
+lemma lvalue_pair_range[simp]:
+  "lv_range (lvalue_pair x y) = lv_range x \<times> lv_range y"
+  by (simp add: lvalue_pair_def)
 
 lemma set_domain[simp]:
   assumes "valid_lvalue x"
@@ -98,7 +106,7 @@ lemma lvalue_pair_valid[simp]:
            apply (metis get_set set_domain)
   using set_domain apply fastforce
     apply (metis set_domain)
-  using set_domain apply fastforce
+  apply (metis set_domain set_set)
   using set_domain by fastforce
 
 
@@ -308,6 +316,92 @@ proof -
   finally show ?thesis
     by -
 qed
+
+definition "unit_lvalue A = \<lparr> lv_domain=A, lv_range={()},
+  lv_getter = \<lambda>_. (), lv_setter = \<lambda>_. id \<rparr>"
+
+lemma valid_unit_lvalue[simp]: "valid_lvalue (unit_lvalue A)"
+  unfolding unit_lvalue_def
+  apply (rule valid_lvalueI)
+  by auto
+
+lemma domain_unit_lvalue[simp]: "lv_domain (unit_lvalue A) = A"
+  by (simp add: unit_lvalue_def)
+
+lemma range_unit_lvalue[simp]: "lv_range (unit_lvalue A) = {()}"
+  by (simp add: unit_lvalue_def)
+
+lemma setter_unit_lvalue[simp]: "lv_setter (unit_lvalue A) a = id"
+  by (simp add: unit_lvalue_def)
+
+lemma unit_lvalue_compat[simp]:
+  assumes [simp]: "valid_lvalue x"
+  assumes [simp]: "A = lv_domain x"
+  shows "compatible_lvalues (unit_lvalue A) x"
+  apply (rule compatible_lvalues.intros)
+  by auto
+
+lemma unit_lvalue_compat'[simp]:
+  assumes [simp]: "valid_lvalue x"
+  assumes [simp]: "A = lv_domain x"
+  shows "compatible_lvalues x (unit_lvalue A)"
+  apply (rule compatible_lvalues_sym)
+  by simp
+
+lemma setter_pair[simp]:
+  shows "lv_setter (lvalue_pair x y) (a,b) m = lv_setter y b (lv_setter x a m)"
+  unfolding lvalue_pair_def by simp
+
+lemma pair_compat1[simp]:
+  assumes [simp]: "compatible_lvalues x z"
+  assumes [simp]: "compatible_lvalues y z"
+  assumes [simp]: "compatible_lvalues x y"
+  shows "compatible_lvalues (lvalue_pair x y) z"
+proof (rule compatible_lvalues.intros)
+  have [simp]: "valid_lvalue x" "valid_lvalue y" 
+    using compatible_valid1 compatible_valid2 assms by blast+
+  show "valid_lvalue (lvalue_pair x y)" and [simp]: "valid_lvalue z"
+    using assms compatible_valid2 apply simp
+    using assms(1) compatible_valid2 by blast
+  show "lv_domain (lvalue_pair x y) = lv_domain z"
+    using assms(1) apply cases by simp
+
+  have xy[simp]: "lv_domain x = lv_domain y"
+    using compatible_lvalues.simps by fastforce
+  have yz[simp]: "lv_domain y = lv_domain z"
+    using compatible_lvalues.simps by fastforce
+
+  fix m a b
+  assume "m \<in> lv_domain (lvalue_pair x y)"
+  then have [simp]: "m \<in> lv_domain x" "m \<in> lv_domain y" "m \<in> lv_domain z"
+    by auto
+  assume "a \<in> lv_range (lvalue_pair x y)"
+  then obtain a1 a2 where a: "a = (a1,a2)" 
+    and [simp]: "a1 \<in> lv_range x" and [simp]: "a2 \<in> lv_range y" by auto
+  assume [simp]: "b \<in> lv_range z"
+
+  have "lv_setter (lvalue_pair x y) a (lv_setter z b m) =
+        lv_setter y a2 (lv_setter x a1 (lv_setter z b m))"
+    unfolding a by simp
+  also have "\<dots> = lv_setter y a2 (lv_setter z b (lv_setter x a1 m))"
+    apply (subst (2) compatible_swap_set) by auto
+  also have "\<dots> = lv_setter z b (lv_setter y a2 (lv_setter x a1 m))"
+    apply (subst (1) compatible_swap_set) by (auto simp flip: yz xy)
+  also have "\<dots> = lv_setter z b (lv_setter (lvalue_pair x y) a m)"
+    unfolding a by simp
+  finally show "lv_setter (lvalue_pair x y) a (lv_setter z b m) =
+        lv_setter z b (lv_setter (lvalue_pair x y) a m)"
+    by -
+qed
+
+lemma pair_compat2[simp]:
+  assumes [simp]: "compatible_lvalues x y"
+  assumes [simp]: "compatible_lvalues x z"
+  assumes [simp]: "compatible_lvalues y z"
+  shows "compatible_lvalues x (lvalue_pair y z)"
+  apply (rule compatible_lvalues_sym)
+  apply (rule pair_compat1)
+  using assms compatible_lvalues_sym by blast+
 
 end
 
