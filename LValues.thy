@@ -2,7 +2,7 @@ theory LValues
   imports Main
 begin
 
-record ('mem,'val) lvalue = 
+record ('mem,'val) lvalue_raw =
   lv_domain :: \<open>'mem set\<close>
   lv_range :: \<open>'val set\<close>
   lv_getter :: \<open>'mem \<Rightarrow> 'val\<close>
@@ -25,6 +25,18 @@ inductive compatible_lvalues where
     \<And>a b m. m \<in> lv_domain x \<Longrightarrow> a \<in> lv_range x \<Longrightarrow> b \<in> lv_range y \<Longrightarrow>
             lv_setter x a (lv_setter y b m) = lv_setter y b (lv_setter x a m)\<rbrakk>
     \<Longrightarrow> compatible_lvalues x y"
+
+lemma compatible_swap_set:
+  assumes "compatible_lvalues x y"
+  assumes "m \<in> lv_domain x" and "a \<in> lv_range x" and "b \<in> lv_range y"
+  shows "lv_setter x a (lv_setter y b m) = lv_setter y b (lv_setter x a m)"
+  using assms(1) apply cases
+  using assms(2) assms(3) assms(4) by blast
+
+lemma compatible_lvalues_sym:
+  assumes "compatible_lvalues x y"
+  shows "compatible_lvalues y x"
+  using assms apply cases apply (rule compatible_lvalues.intros) by auto
 
 definition lvalue_pair where
   "lvalue_pair x y = \<lparr> lv_domain = lv_domain x, lv_range = lv_range x \<times> lv_range y,
@@ -77,7 +89,7 @@ lemma range_inhabited[simp]:
   using assms apply cases by auto *)
 
 lemma lvalue_pair_valid[simp]:
-  fixes x :: "('mem,'val1) lvalue" and y :: "('mem,'val2) lvalue" 
+  fixes x :: "('mem,'val1) lvalue_raw" and y :: "('mem,'val2) lvalue_raw" 
   assumes "compatible_lvalues x y"
   shows "valid_lvalue (lvalue_pair x y)"
   using assms apply cases
@@ -226,6 +238,76 @@ lemma get_split_memory[simp]:
   assumes [simp]: "m \<in> lv_domain x"
   shows "fst (split_memory x m) = lv_getter x m"
   unfolding split_memory_def by simp
+
+definition lvalue_map where
+  "lvalue_map f x = \<lparr> lv_domain=lv_domain x, lv_range = f ` lv_range x,
+    lv_getter = \<lambda>m. f (lv_getter x m),
+    lv_setter = \<lambda>a m. lv_setter x (inv_into (lv_range x) f a) m\<rparr>"
+
+lemma valid_lvalue_map:
+  assumes "valid_lvalue x"
+  assumes "inj_on f (lv_range x)"
+  shows "valid_lvalue (lvalue_map f x)"
+  unfolding lvalue_map_def apply (rule valid_lvalueI)
+  using assms by auto
+
+lemma lvalue_map_range[simp]: "lv_range (lvalue_map f x) = f ` lv_range x"
+  by (simp add: lvalue_map_def)
+
+lemma lvalue_map_domain[simp]: "lv_domain (lvalue_map f x) = lv_domain x"
+  by (simp add: lvalue_map_def)
+
+lemma compatible_valid1: "compatible_lvalues x y \<Longrightarrow> valid_lvalue x"
+  using compatible_lvalues.simps by blast
+
+lemma compatible_valid2: "compatible_lvalues x y \<Longrightarrow> valid_lvalue y"
+  using compatible_lvalues.simps by blast
+
+lemma lvalue_map_compat1:
+  assumes [simp]: "compatible_lvalues x y"
+  assumes "inj_on f (lv_range x)"
+  shows "compatible_lvalues (lvalue_map f x) y"
+  using assms(1) apply cases
+  apply (rule compatible_lvalues.intros)
+     apply (rule valid_lvalue_map)
+  using assms(2) apply auto
+  by (simp add: lvalue_map_def)
+
+lemma lvalue_map_compat2:
+  assumes [simp]: "compatible_lvalues x y"
+  assumes "inj_on f (lv_range y)"
+  shows "compatible_lvalues x (lvalue_map f y)"
+  using assms(1) apply cases
+  apply (rule compatible_lvalues.intros)
+  apply auto
+     apply (rule valid_lvalue_map)
+  using assms(2) apply auto
+  by (simp add: lvalue_map_def)
+
+
+lemma get_set_diff[simp]:
+  fixes x y
+  assumes [simp]: "LValues.compatible_lvalues x y"
+  assumes [simp]: "m \<in> lv_domain x"
+  assumes [simp]: "a \<in> lv_range y"
+  shows "lv_getter x (lv_setter y a m) = lv_getter x m"
+proof -
+  have [simp]: "LValues.valid_lvalue x" and [simp]: "LValues.valid_lvalue y"
+    using assms compatible_valid1 compatible_valid2 by blast+
+  have [simp]: "m \<in> lv_domain y"
+    using assms(1) assms(2) compatible_lvalues.cases by blast
+  have "lv_getter x (lv_setter y a m) = lv_getter x (lv_setter y a (lv_setter x (lv_getter x m) m))"
+    by (subst set_get; simp)
+  also have "\<dots> = lv_getter x (lv_setter x (lv_getter x m) (lv_setter y a m))"
+    apply (subst compatible_swap_set)
+    apply (subst compatible_lvalues_sym)
+    by auto
+  also have "\<dots> = lv_getter x m"
+    apply (rule get_set, auto)
+    by (metis \<open>m \<in> lv_domain y\<close> assms(1) assms(3) compatible_lvalues.cases set_domain)
+  finally show ?thesis
+    by -
+qed
 
 end
 
