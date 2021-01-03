@@ -403,5 +403,154 @@ lemma pair_compat2[simp]:
   apply (rule pair_compat1)
   using assms compatible_lvalues_sym by blast+
 
+definition "co_lvalue x = \<lparr> lv_domain=lv_domain x, 
+  lv_range=memory_except x, 
+  lv_getter=snd o split_memory x,
+  lv_setter=\<lambda>r' m. case split_memory x m of (a,r) \<Rightarrow> join_memory x (a,r') \<rparr>"
+
+lemma valid_co_lvalue[simp]: 
+  assumes "valid_lvalue x"
+  shows "valid_lvalue (co_lvalue x)"
+  using assms apply cases
+  unfolding co_lvalue_def
+  apply (rule valid_lvalueI)
+  apply auto
+  apply (metis (no_types, lifting) SigmaI assms case_prod_beta eq_snd_iff get_split_memory select_convs(1) select_convs(2) select_convs(3) split_join_memory)
+  apply (metis (no_types, lifting) SigmaI assms get_split_memory prod.case_eq_if select_convs(1) select_convs(2) select_convs(3) sndI split_join_memory)
+  apply (metis (no_types, lifting) assms case_prod_beta' join_split_memory prod.collapse select_convs(1))
+  apply (metis (no_types, lifting) SigmaI assms fstI prod.case_eq_if select_convs(2) select_convs(3) split_join_memory split_memory_def)
+  apply (simp add: memory_except_def quotientI split_memory_def)
+  by (metis (no_types, lifting) SigmaI assms case_prod_beta' get_split_memory join_memory_range select_convs(1) select_convs(2) select_convs(3))
+
+lemma domain_co_lvalue[simp]: "lv_domain (co_lvalue x) = lv_domain x"
+  by (simp add: co_lvalue_def)
+
+lemma range_co_lvalue[simp]: "lv_range (co_lvalue x) = memory_except x"
+  by (simp add: co_lvalue_def)
+
+lemma snd_split_set:
+  assumes [simp]: "valid_lvalue x"
+  assumes [simp]: "m \<in> lv_domain x"
+  assumes [simp]: "a \<in> lv_range x"
+  shows "snd (split_memory x (lv_setter x a m)) = snd (split_memory x m)"
+  apply (rule sym)
+  unfolding split_memory_def apply simp
+  apply (rule equiv_class_eq)
+   apply (rule equiv_same_except, simp)
+  apply (rule same_except.intros)
+  by auto
+
+lemma compatible_co_lvalue:
+  assumes [simp]: "valid_lvalue x"
+  shows "compatible_lvalues x (co_lvalue x)"
+  apply (rule compatible_lvalues.intros)
+     apply simp_all
+  unfolding co_lvalue_def split_memory_def apply auto
+  apply (rule inj_onD[where f="split_memory x" and A="lv_domain x"])
+  using assms bij_betw_def bij_split_memory apply blast
+    apply (rule prod_eqI)
+     apply simp
+     apply (subst get_split_memory, simp)
+  apply (simp add: join_memory_range)
+  apply (simp add: join_memory_range)
+  apply (simp add: join_memory_range snd_split_set)
+  by (simp add: join_memory_range)
+
+definition "get_from_rest x y m = the_elem (lv_getter y ` m)"
+
+lemma get_from_rest:
+  assumes "compatible_lvalues x y"
+  assumes [simp]: "m \<in> lv_domain x"
+  shows "get_from_rest x y (snd (split_memory x m)) = lv_getter y m"
+proof -
+  have "lv_getter y ` same_except x `` {m} = {lv_getter y m}"
+    apply (rule apply_congruent)
+    apply (metis assms(1) compatible_lvalues.simps compatible_lvalues_sym congruentI get_set_diff same_except.cases)
+     apply (rule equiv_same_except)
+    using assms compatible_valid1 apply blast
+    by auto
+  then show ?thesis
+    unfolding get_from_rest_def split_memory_def by simp
+qed
+
+lemma split_pair_eq:
+  fixes x y
+  assumes [simp]: "compatible_lvalues x y"
+  defines "xy \<equiv> lvalue_pair x y"
+  assumes [simp]: "m1 \<in> lv_domain x"
+  assumes [simp]: "m2 \<in> lv_domain x"
+  shows "snd (split_memory x m1) = snd (split_memory x m2)
+     \<longleftrightarrow> snd (split_memory xy m1) = snd (split_memory xy m2)
+         \<and> lv_getter y m1 = lv_getter y m2"
+proof -
+  have [simp]: "valid_lvalue y"
+    using assms(1) compatible_valid2 by blast
+  have [simp]: "m1 \<in> lv_domain xy"
+    by (simp add: xy_def)
+  have [simp]: "m1 \<in> lv_domain y"
+    by (metis assms(1) assms(3) compatible_lvalues.simps)
+  have [simp]: "compatible_lvalues y x"
+    using assms(1) compatible_lvalues_sym by blast
+  have [simp]: "m2 \<in> lv_domain y"
+    by (metis \<open>compatible_lvalues y x\<close> assms(4) compatible_lvalues.simps)
+  have 1: "(m1, m2) \<in> same_except xy" if "(m1, m2) \<in> same_except x"
+    using that 
+  proof cases
+    case (1 a)
+    have *: "m2 = lv_setter xy (a, lv_getter y m2) m1"
+      unfolding xy_def by (auto simp flip: 1(1))
+    show ?thesis
+      apply (subst *)
+      apply (rule same_except.intros)
+       apply auto
+      by (simp add: "1"(3) xy_def)
+  qed
+
+  have 2: "lv_getter y m1 = lv_getter y m2" if "(m1, m2) \<in> same_except x"
+    using that 
+  proof cases
+    case (1 a)
+    show ?thesis
+      apply (subst 1(1))
+      apply (subst get_set_diff)
+      using 1 by auto
+  qed
+
+  have 3: "(m1, m2) \<in> same_except x"
+    if "(m1, m2) \<in> same_except xy" and "lv_getter y m1 = lv_getter y m2"
+    using that(1)
+  proof cases
+    case (1 a)
+    then obtain a1 a2 where a: "a=(a1,a2)" and [simp]: "a1 \<in> lv_range x"
+      using xy_def by auto
+    from 1(1) have "m2 = lv_setter y a2 (lv_setter x a1 m1)"
+      unfolding a xy_def by simp
+    also have "\<dots> = lv_setter y (lv_getter y m2) (lv_setter y a2 (lv_setter x a1 m1))"
+      using \<open>m2 \<in> lv_domain y\<close> calculation by auto
+    also have "\<dots> = lv_setter y (lv_getter y m2) (lv_setter x a1 m1)"
+      by (metis "1"(3) \<open>m1 \<in> lv_domain y\<close> a assms(1) compatible_lvalues.simps get_range lvalue_pair_range mem_Sigma_iff set_domain set_set that(2) xy_def)
+    also have "\<dots> = lv_setter y (lv_getter y m1) (lv_setter x a1 m1)"
+      by (simp add: that(2))
+    also have "\<dots> = lv_setter x a1 (lv_setter y (lv_getter y m1) m1)"
+      by (simp add: compatible_swap_set)
+    also have "\<dots> = lv_setter x a1 m1"
+      by simp
+    finally have *: "m2 = lv_setter x a1 m1"
+      by -
+    show ?thesis
+      apply (subst *)
+      apply (rule same_except.intros)  
+      by auto
+  qed
+
+  show ?thesis
+    unfolding split_memory_def apply simp
+    apply (subst eq_equiv_class_iff[OF equiv_same_except])
+    using assms compatible_valid1 apply blast+
+    apply (subst eq_equiv_class_iff[OF equiv_same_except])
+       apply (simp_all add: xy_def)[3]
+    using 1 2 3 by auto
+qed
+
 end
 

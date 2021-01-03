@@ -184,6 +184,28 @@ lemma compat_function_lvalue[simp]: "x \<noteq> y \<Longrightarrow> compatible_l
   apply (rule valid_lvalueI) by auto
 
 
+lemma fst_split_memory[simp]: 
+  assumes "valid_lvalue x"
+  shows "fst (split_memory x m) = getter x m"
+  using assms apply transfer by auto
+
+lemma split_pair_eq_typed:
+  fixes x y
+  assumes [simp]: "compatible_lvalues x y"
+  defines "xy \<equiv> lvalue_pair x y"
+  shows "snd (split_memory x m1) = snd (split_memory x m2)
+     \<longleftrightarrow> snd (split_memory xy m1) = snd (split_memory xy m2)
+         \<and> getter y m1 = getter y m2"
+  unfolding xy_def using assms(1)
+  apply (transfer fixing: m1 m2)
+  apply (rename_tac x y; case_tac x; case_tac y)
+     apply simp_all
+  apply (subst split_pair_eq)
+  apply auto
+  by (meson option.distinct(1))
+
+
+
 nonterminal lvalue_expr
 nonterminal lvalue_expr_chain
 nonterminal lvalue_expr_atom
@@ -212,5 +234,6 @@ translations "_lvalue_expr x" \<rightharpoonup> "x :: (_,_) lvalue"
 term "\<lbrakk>x[3]\<rbrakk>"
 term "\<lbrakk>x\<rightarrow>fst_lvalue, y\<rbrakk>"
 term "\<lbrakk>(x,z)\<rightarrow>x, y\<rbrakk>"
+
 
 end
