@@ -42,10 +42,38 @@ lift_definition the_invalid_lvalue :: "('mem,'val) lvalue" is "None"
 
 typedef 'mem memory_rest = "UNIV :: 'mem set set"..
 setup_lifting type_definition_memory_rest
+instance memory_rest :: (finite) finite
+  apply intro_classes apply (rule finite_surj[where f=Abs_memory_rest and A=UNIV])
+  using type_definition.Abs_image type_definition_memory_rest by force+
 
 lift_definition split_memory :: "('mem,'val) lvalue \<Rightarrow> 'mem \<Rightarrow> ('val\<times>'mem memory_rest)" is
   "\<lambda>x m. case x of None \<Rightarrow> (undefined, {m})
                  | Some x \<Rightarrow> LValues.split_memory x m".
+
+lift_definition join_memory :: "('mem,'val) lvalue \<Rightarrow> ('val\<times>'mem memory_rest) \<Rightarrow> 'mem" is
+  "\<lambda>x m. case x of None \<Rightarrow> undefined
+                 | Some x \<Rightarrow> LValues.join_memory x m".
+
+lift_definition memory_except :: "('mem,'val) lvalue \<Rightarrow> 'mem memory_rest set" is
+  "\<lambda>x. case x of Some x \<Rightarrow> LValues.memory_except x | None \<Rightarrow> undefined".
+
+lemma split_memory_range:
+  assumes [simp]: "valid_lvalue x"
+  shows "split_memory x m \<in> UNIV \<times> memory_except x"
+proof - 
+  have "snd (split_memory x m) \<in> memory_except x"
+    using assms apply (transfer fixing: m) apply (case_tac x)
+    by (auto simp add: LValues.memory_except_def LValues.split_memory_def quotientI)
+  then show ?thesis
+    by (simp add: mem_Times_iff)
+qed
+
+lemma split_memory_range':
+  assumes [simp]: "valid_lvalue x"
+  shows "range (split_memory x) = UNIV \<times> memory_except x"
+  using assms apply (auto; transfer) apply auto
+  apply (simp add: LValues.memory_except_def LValues.split_memory_def quotientI)
+  by (metis UNIV_I bij_betw_def bij_split_memory mem_Times_iff snd_conv)
 
 lift_definition setter :: "('mem,'val) lvalue \<Rightarrow> 'val \<Rightarrow> 'mem \<Rightarrow> 'mem" is
   "\<lambda>x. case x of Some x \<Rightarrow> lv_setter x | None \<Rightarrow> \<lambda>_. id".

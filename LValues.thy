@@ -451,9 +451,10 @@ lemma compatible_co_lvalue:
     apply (rule prod_eqI)
      apply simp
      apply (subst get_split_memory, simp)
-  apply (simp add: join_memory_range)
-  apply (simp add: join_memory_range)
-  apply (simp add: join_memory_range snd_split_set)
+      apply (simp add: join_memory_range)
+     apply (simp add: join_memory_range)
+    apply (simp add: join_memory_range snd_split_set)
+   apply (simp add: join_memory_range)
   by (simp add: join_memory_range)
 
 definition "get_from_rest x y m = the_elem (lv_getter y ` m)"

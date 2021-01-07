@@ -1,5 +1,5 @@
 theory Example_Finite_Vars
-  imports LValues_Typed "HOL-Word.Word"
+  imports LValues_Typed "HOL-Library.Word"
 begin
 
 typedef mem = \<open>{f. \<forall>(n::string) (i::nat). f(n,i) \<in> {..i}}\<close>
