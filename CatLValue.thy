@@ -1,5 +1,5 @@
 theory CatLValue
-  imports CatLValue_Axioms
+  imports CatLValue_Axioms2
 begin
 
 definition 
@@ -22,7 +22,7 @@ lemma compatibleI':
   assumes "pair x y = pair y x o\<^sub>l swap"
   shows "compatible x y"
   apply (rule compatibleI)
-  by (simp add: assms swap_apply lvalue_comp_app)
+  by (simp add: assms)
 
 definition "chain x y = x o\<^sub>l y"
 
@@ -32,7 +32,7 @@ lemma compatible_sym: "compatible x y \<Longrightarrow> compatible y x"
 lemma lvalue_app_fun_cong: "f = g \<Longrightarrow> f \<cdot> x = g \<cdot> x" by simp
 
 lemma compatible3:
-  assumes [simp]: "compatible x y" and "compatible y z" and "compatible x z"
+  assumes [simp]: (* "compatible x y" and *) "compatible y z" and "compatible x z"
   shows "compatible (pair x y) z"
 proof -
   have "pair (pair x y) z \<cdot> (f \<otimes> g) \<otimes> h = pair z (pair x y) \<cdot> h \<otimes> (f \<otimes> g)" for f g h
@@ -60,3 +60,50 @@ lemma compatible_chain_inner:
   unfolding compatible_def chain_def  
   by (auto simp flip: lvalue_app_mult)
 
+definition is_everything1 where
+  "is_everything1 x \<longleftrightarrow> (\<exists>y. \<forall>f. (y o\<^sub>l x) \<cdot> f = f)"
+
+definition is_everything2 where
+  "is_everything2 x \<longleftrightarrow> inj (lvalue_app x)"
+
+definition is_complement1 where
+  "is_complement1 x y \<longleftrightarrow> compatible x y \<and> is_everything1 (pair x y)"
+
+definition is_complement2 where
+  "is_complement2 x y \<longleftrightarrow> compatible x y \<and> is_everything2 (pair x y)"
+
+lemma complement_chain1:
+  assumes "is_complement1 x x'"
+  assumes "is_complement1 y y'"
+  shows "is_complement1 (chain x y) (pair (chain x y') x')"
+proof (simp add: is_complement1_def, rule)
+  have [simp]: "compatible x x'" "compatible y y'" "compatible x' x" "compatible y' y"
+    using assms is_complement1_def compatible_sym by blast+
+  show "compatible (chain x y) (pair (chain x y') x')"
+    apply (rule compatible_sym)
+    apply (rule compatible3)
+    apply (rule compatible_sym)
+    apply (rule compatible_chain_left, simp)
+    by (rule compatible_chain_inner, simp)
+  from assms(1)
+  obtain xInv where "xInv o\<^sub>l pair x x' \<cdot> f = f" for f
+    unfolding is_complement1_def is_everything1_def by auto
+  from assms(2)
+  obtain yInv where "yInv o\<^sub>l pair y y' \<cdot> f = f" for f
+    unfolding is_complement1_def is_everything1_def by auto
+  show "is_everything1 (pair (chain x y) (pair (chain x y') x'))"
+    unfolding is_everything1_def apply (rule exI[of _ ])
+  (* TODO: need something to connect pair x (pair y z) with
+    pair (pair x y) z. \<longrightarrow> assoc
+
+    And maybe pair x y with pair y z (\<rightarrow> this one is done by swap).
+  *)
+    sorry
+qed
+
+
+lemma complement_chain2:
+  assumes "is_complement2 x x'"
+  assumes "is_complement2 y y'"
+  shows "is_complement2 (chain x y) (pair (chain x y') x')"
+  sorry

@@ -1,4 +1,4 @@
-theory CatLValue_Axioms
+theory CatLValue_Axioms2
 imports Main
 begin
 
@@ -42,5 +42,8 @@ axiomatization left_tensor where
 
 axiomatization swap where
   swap_apply[simp]: "swap \<cdot> (f \<otimes> g) = g \<otimes> f"
+
+axiomatization assoc where
+  assoc_apply[simp]: "assoc \<cdot> (f \<otimes> (g \<otimes> h)) = (f \<otimes> g) \<otimes> h"
 
 end

@@ -1,4 +1,0 @@
-theory CatLValue_Axioms
-imports Main
-begin
-
