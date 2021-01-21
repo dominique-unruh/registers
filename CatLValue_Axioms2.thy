@@ -30,6 +30,7 @@ axiomatization where
   lvalue_id[simp]: "1\<^sub>l \<cdot> x = x"
 axiomatization where
   lvalue_comp_app[simp]: "(x o\<^sub>l y) \<cdot> f = x \<cdot> y \<cdot> f"
+(* TODO: only for a subset of lvalues *)
 axiomatization where
   lvalue_app_mult: "x \<cdot> (f o\<^sub>m g) = (x \<cdot> f) o\<^sub>m (x \<cdot> g)"
 axiomatization where
@@ -45,6 +46,7 @@ axiomatization pair where
     (\<And>f g. (x \<cdot> f) o\<^sub>m (y \<cdot> g) = (y \<cdot> g) o\<^sub>m (x \<cdot> f)) \<Longrightarrow>
     pair x y \<cdot> (f \<otimes> g) = (x \<cdot> f) o\<^sub>m (y \<cdot> g)\<close>
 
+(* TODO prove this *)
 axiomatization where compatible30:
 \<open>\<lbrakk>\<And>f g. (x \<cdot> f) o\<^sub>m (y \<cdot> g) = (y \<cdot> g) o\<^sub>m (x \<cdot> f);
   \<And>f h. (x \<cdot> f) o\<^sub>m (z \<cdot> h) = (z \<cdot> h) o\<^sub>m (x \<cdot> f);

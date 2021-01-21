@@ -8,7 +8,7 @@ definition
 (* definition
   \<open>pair x y = (THE xy. \<forall>f g. xy \<cdot> (f \<otimes> g) = (x \<cdot> f) o\<^sub>m (y \<cdot> g))\<close> *)
 
-lemma pair_apply[simp]: 
+lemma pair_apply[simp]:
   assumes "compatible x y"
   shows "pair x y \<cdot> (f \<otimes> g) = (x \<cdot> f) o\<^sub>m (y \<cdot> g)"
   apply (rule pair_apply0) using assms by (simp add: compatible_def)
