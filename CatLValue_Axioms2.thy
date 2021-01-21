@@ -26,43 +26,51 @@ axiomatization
                \<Rightarrow> ('a,'b,'c,'d) lvalue \<Rightarrow> ('a,'b,'e,'f) lvalue" (infixl "o\<^sub>l" 55) and
   lvalue_tensor :: "('a,'b,'c,'d) lvalue \<Rightarrow> ('e,'f,'g::domain,'h::domain) lvalue \<Rightarrow> ('a\<times>'e,'b\<times>'f,'c\<times>'g,'d\<times>'h) lvalue"
 
+axiomatization is_lvalue :: "('a::domain, 'b::domain, 'c::domain, 'd::domain) lvalue \<Rightarrow> bool"
+
 axiomatization where
-  lvalue_id[simp]: "1\<^sub>l \<cdot> x = x"
+  comp_is_lvalue: "is_lvalue x \<Longrightarrow> is_lvalue y \<Longrightarrow> is_lvalue (x o\<^sub>l y)"
+
 axiomatization where
-  lvalue_comp_app[simp]: "(x o\<^sub>l y) \<cdot> f = x \<cdot> y \<cdot> f"
-(* TODO: only for a subset of lvalues *)
+  lvalue_id: "1\<^sub>l \<cdot> x = x"
 axiomatization where
-  lvalue_app_mult: "x \<cdot> (f o\<^sub>m g) = (x \<cdot> f) o\<^sub>m (x \<cdot> g)"
+  lvalue_comp_app: "(x o\<^sub>l y) \<cdot> f = x \<cdot> y \<cdot> f"
+axiomatization where
+  lvalue_app_mult: "is_lvalue x \<Longrightarrow> x \<cdot> (f o\<^sub>m g) = (x \<cdot> f) o\<^sub>m (x \<cdot> g)"
 axiomatization where
   maps_comp_assoc: "(f o\<^sub>m g) o\<^sub>m h = f o\<^sub>m (g o\<^sub>m h)"
 axiomatization where
-  lvalue_tensor_app[simp]: "(lvalue_tensor x y) \<cdot> (f \<otimes> g) = (x \<cdot> f) \<otimes> (y \<cdot> g)"
+  lvalue_tensor_app: "(lvalue_tensor x y) \<cdot> (f \<otimes> g) = (x \<cdot> f) \<otimes> (y \<cdot> g)"
 
 axiomatization where tensor_extensionality:
   "(\<And>f g. x \<cdot> (f \<otimes> g) = y \<cdot> (f \<otimes> g)) \<Longrightarrow> x = y"
 
 axiomatization pair where
-  pair_apply0: \<open>
-    (\<And>f g. (x \<cdot> f) o\<^sub>m (y \<cdot> g) = (y \<cdot> g) o\<^sub>m (x \<cdot> f)) \<Longrightarrow>
-    pair x y \<cdot> (f \<otimes> g) = (x \<cdot> f) o\<^sub>m (y \<cdot> g)\<close>
+  pair_apply: \<open>pair x y \<cdot> (f \<otimes> g) = (x \<cdot> f) o\<^sub>m (y \<cdot> g)\<close>
 
-(* TODO prove this *)
+axiomatization where
+  pair_is_lvalue0: 
+  \<open>\<lbrakk>is_lvalue x; is_lvalue y;
+    \<And>f g. (x \<cdot> f) o\<^sub>m (y \<cdot> g) = (y \<cdot> g) o\<^sub>m (x \<cdot> f)\<rbrakk>
+     \<Longrightarrow> is_lvalue (pair x y)\<close>
+
+(* (* TODO prove this *)
 axiomatization where compatible30:
 \<open>\<lbrakk>\<And>f g. (x \<cdot> f) o\<^sub>m (y \<cdot> g) = (y \<cdot> g) o\<^sub>m (x \<cdot> f);
   \<And>f h. (x \<cdot> f) o\<^sub>m (z \<cdot> h) = (z \<cdot> h) o\<^sub>m (x \<cdot> f);
   \<And>g h. (y \<cdot> g) o\<^sub>m (z \<cdot> h) = (z \<cdot> h) o\<^sub>m (y \<cdot> g)\<rbrakk>
-    \<Longrightarrow> (pair x y \<cdot> fg) o\<^sub>m (z \<cdot> h) = (z \<cdot> h) o\<^sub>m (pair x y \<cdot> fg)\<close>
+    \<Longrightarrow> (pair x y \<cdot> fg) o\<^sub>m (z \<cdot> h) = (z \<cdot> h) o\<^sub>m (pair x y \<cdot> fg)\<close> *)
 
 axiomatization left_tensor where
-  left_tensor_apply[simp]: "left_tensor f \<cdot> g = f \<otimes> g"
+  left_tensor_apply: "left_tensor f \<cdot> g = f \<otimes> g"
 
 axiomatization swap where
-  swap_apply[simp]: "swap \<cdot> (f \<otimes> g) = g \<otimes> f"
+  swap_apply: "swap \<cdot> (f \<otimes> g) = g \<otimes> f"
 
 axiomatization assoc where
-  assoc_apply[simp]: "assoc \<cdot> (f \<otimes> (g \<otimes> h)) = (f \<otimes> g) \<otimes> h"
+  assoc_apply: "assoc \<cdot> (f \<otimes> (g \<otimes> h)) = (f \<otimes> g) \<otimes> h"
 
 axiomatization assoc' where
-  assoc'_apply[simp]: "assoc' \<cdot> (f \<otimes> g) \<otimes> h = (f \<otimes> (g \<otimes> h))"
+  assoc'_apply: "assoc' \<cdot> (f \<otimes> g) \<otimes> h = (f \<otimes> (g \<otimes> h))"
 
 end
