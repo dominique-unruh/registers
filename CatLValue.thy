@@ -1,5 +1,5 @@
 theory CatLValue
-  imports CatLValue_Axioms1
+  imports CatLValue_Axioms_Fun
 begin
 
 definition 
@@ -16,7 +16,7 @@ definition
 declare pair_apply[simp]
 declare lvalue_id[simp]
 declare lvalue_comp_app[simp]
-declare lvalue_tensor_app[simp]
+(* declare lvalue_tensor_app[simp] *)
 declare left_tensor_apply[simp]
 declare swap_apply[simp]
 declare assoc_apply[simp]
@@ -78,11 +78,11 @@ lemma compatible_chain_inner:
   "compatible x y \<Longrightarrow> is_lvalue z \<Longrightarrow> compatible (chain z x) (chain z y)"
   by (auto simp flip: lvalue_app_mult simp: compatible_def chain_def comp_is_lvalue)
 
-definition is_everything where
-  "is_everything x \<longleftrightarrow> (\<exists>y. y o\<^sub>l x = 1\<^sub>l)"
+(* definition is_everything where
+  "is_everything x \<longleftrightarrow> (\<exists>y. y o\<^sub>l x = 1\<^sub>l)" *)
 
-(* definition is_everything2 where
-  "is_everything2 x \<longleftrightarrow> inj (lvalue_app x)" *)
+definition is_everything where
+  "is_everything x \<longleftrightarrow> inj (lvalue_app x)"
 
 definition is_complement where
   "is_complement x y \<longleftrightarrow> compatible x y \<and> is_everything (pair x y)"
@@ -105,7 +105,58 @@ proof -
     by (rule tensor_extensionality)
 qed
 
+(* TODO: Can we do this without lvalue_tensor? *)
 lemma complement_chain:
+  assumes "is_complement x x'"
+  assumes "is_complement y y'"
+  shows "is_complement (chain x y) (pair (chain x y') x')"
+proof (simp add: is_complement_def, rule)
+  have xx'[simp]: "compatible x x'" and yy'[simp]: "compatible y y'"
+    and x'x[simp]: "compatible x' x" and y'y[simp]: "compatible y' y"
+    using assms is_complement_def compatible_sym by blast+
+  then have [simp]: "is_lvalue x" "is_lvalue x'" "is_lvalue y" "is_lvalue y'"
+    using compatible_def by blast+
+  show compat: "compatible (chain x y) (pair (chain x y') x')"
+    apply (rule compatible_sym)
+    apply (rule compatible3)
+      apply (rule compatible_chain_left, simp, simp)
+     apply (rule compatible_sym)
+    apply (rule compatible_chain_left, simp, simp)
+    by (rule compatible_chain_inner, simp_all)
+
+  have "pair (chain x y) (pair (chain x y') x') \<cdot> (f \<otimes> (g \<otimes> h))
+      = (pair x x') \<cdot> ((pair y y' \<cdot> (f \<otimes> g)) \<otimes> h)"
+  proof -
+    have "pair (chain x y) (pair (chain x y') x') \<cdot> (f \<otimes> (g \<otimes> h))
+      = (x \<cdot> y \<cdot> f) o\<^sub>m (x \<cdot> y' \<cdot> g) o\<^sub>m (x' \<cdot> h)"
+      by (simp add: maps_comp_assoc chain_def)
+    also have "\<dots> = (x \<cdot> (pair y y') \<cdot> (f \<otimes> g)) o\<^sub>m (x' \<cdot> h)"
+      by (simp add: lvalue_app_mult)
+    also have "\<dots> = (pair x x') \<cdot> ((pair y y' \<cdot> (f \<otimes> g)) \<otimes> h)"
+      by simp
+    finally show ?thesis
+  qed
+
+  define z where "z = assoc' o\<^sub>l lvalue_tensor yInv 1\<^sub>l o\<^sub>l xInv"
+  have "z o\<^sub>l pair (chain x y) (pair (chain x y') x') \<cdot> (f \<otimes> (g \<otimes> h)) = (f \<otimes> (g \<otimes> h))" for f g h
+  proof -
+    moreover have "xInv \<cdot> ... = ((pair y y' \<cdot> (f \<otimes> g)) \<otimes> h)"
+      using xInv apply simp by (metis pair_apply)
+    moreover have "lvalue_tensor yInv 1\<^sub>l \<cdot> \<dots> = (f \<otimes> g) \<otimes> h"
+      using yInv apply simp by (metis pair_apply)x
+    moreover have "assoc' \<cdot> \<dots> = f \<otimes> (g \<otimes> h)"
+      by simp
+    ultimately show ?thesis
+      unfolding z_def by simp
+  qed
+
+  then have "z o\<^sub>l pair (chain x y) (pair (chain x y') x') = 1\<^sub>l"
+    by (rule_tac tensor_extensionality3, simp)
+  then show "is_everything (pair (chain x y) (pair (chain x y') x'))"
+    unfolding is_everything_def by auto
+qed *)
+
+(* lemma complement_chain:
   assumes "is_complement x x'"
   assumes "is_complement y y'"
   shows "is_complement (chain x y) (pair (chain x y') x')"
@@ -137,17 +188,17 @@ proof (simp add: is_complement_def, rule)
     have "pair (chain x y) (pair (chain x y') x') \<cdot> (f \<otimes> (g \<otimes> h))
       = (x \<cdot> y \<cdot> f) o\<^sub>m (x \<cdot> y' \<cdot> g) o\<^sub>m (x' \<cdot> h)"
       by (simp add: maps_comp_assoc chain_def)
-    also have "\<dots> = (x \<cdot> (pair y y') \<cdot> (f \<otimes> g)) o\<^sub>m (x' \<cdot> h)"
+    moreover have "\<dots> = (x \<cdot> (pair y y') \<cdot> (f \<otimes> g)) o\<^sub>m (x' \<cdot> h)"
       by (simp add: lvalue_app_mult)
-    also have "\<dots> = (pair x x') \<cdot> ((pair y y' \<cdot> (f \<otimes> g)) \<otimes> h)"
+    moreover have "\<dots> = (pair x x') \<cdot> ((pair y y' \<cdot> (f \<otimes> g)) \<otimes> h)"
       by simp
-    also have "xInv \<cdot> ... = ((pair y y' \<cdot> (f \<otimes> g)) \<otimes> h)"
+    moreover have "xInv \<cdot> ... = ((pair y y' \<cdot> (f \<otimes> g)) \<otimes> h)"
       using xInv apply simp by (metis pair_apply)
-    also have "lvalue_tensor yInv 1\<^sub>l \<cdot> \<dots> = (f \<otimes> g) \<otimes> h"
-      using yInv apply simp by (metis pair_apply)
-    also have "assoc' \<cdot> \<dots> = f \<otimes> (g \<otimes> h)"
+    moreover have "lvalue_tensor yInv 1\<^sub>l \<cdot> \<dots> = (f \<otimes> g) \<otimes> h"
+      using yInv apply simp by (metis pair_apply)x
+    moreover have "assoc' \<cdot> \<dots> = f \<otimes> (g \<otimes> h)"
       by simp
-    finally show ?thesis
+    ultimately show ?thesis
       unfolding z_def by simp
   qed
 
@@ -155,6 +206,6 @@ proof (simp add: is_complement_def, rule)
     by (rule_tac tensor_extensionality3, simp)
   then show "is_everything (pair (chain x y) (pair (chain x y') x'))"
     unfolding is_everything_def by auto
-qed
+qed *)
 
 end
