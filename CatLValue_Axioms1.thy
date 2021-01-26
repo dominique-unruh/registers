@@ -1,3 +1,5 @@
+section \<open>The axioms\<close>
+
 theory CatLValue_Axioms1
 imports Main
 begin

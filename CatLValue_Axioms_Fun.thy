@@ -1,3 +1,5 @@
+section \<open>Classical instantiation\<close>
+
 theory CatLValue_Axioms_Fun
   imports Main
 begin
@@ -148,7 +150,7 @@ lift_definition lvalue_tensor ::
   "('a::domain,'c::domain) lvalue \<Rightarrow> ('b::domain,'d::domain) lvalue 
         \<Rightarrow> ('a\<times>'b,'c\<times>'d) lvalue" is
   "\<lambda>x y f. undefined"
-  by -
+  sorry
 
 lemma lvalue_id: "1\<^sub>l \<cdot> x = x"
   by (transfer, simp)
@@ -164,7 +166,8 @@ lemma lvalue_app_mult:
   fixes x :: "('a::domain,'b::domain) lvalue"
   assumes "is_lvalue x"
   shows "x \<cdot> (f o\<^sub>m g) = (x \<cdot> f) o\<^sub>m (x \<cdot> g)"
-  using assms apply transfer unfolding is_lvalue_raw_def by auto
+  using assms apply transfer unfolding is_lvalue_raw_def 
+  sorry
 
 lemma maps_comp_assoc: "(f o\<^sub>m g) o\<^sub>m h = f o\<^sub>m (g o\<^sub>m h)"
   by auto
@@ -206,27 +209,27 @@ lift_definition left_tensor :: "'a::domain maps \<Rightarrow> ('b::domain, 'a \<
   sorry
 
 lemma left_tensor_apply: "left_tensor f \<cdot> g = f \<otimes> g"
-  apply transfer by simp
+  apply transfer sorry
 
 lift_definition swap :: "('a\<times>'b, 'b\<times>'a) lvalue" is
   "\<lambda>f. prod.swap o f o prod.swap" 
   sorry
 
 lemma swap_apply[simp]: "swap \<cdot> (f \<otimes> g) = g \<otimes> f"
-  by (transfer, auto)x
+  by (transfer, auto)
 
 lift_definition assoc :: "('a \<times> ('b \<times> 'c), ('a \<times> 'b) \<times> 'c) lvalue" is
   "\<lambda>f. (\<lambda>(a,(b,c)). ((a,b),c)) o f o (\<lambda>((a,b),c). (a,(b,c)))"
   sorry
 
 lemma assoc_apply[simp]: "assoc \<cdot> (f \<otimes> (g \<otimes> h)) = (f \<otimes> g) \<otimes> h"
-  by (transfer, auto)x
+  by (transfer, auto)
 
 lift_definition assoc' :: "(('a \<times> 'b) \<times> 'c, 'a \<times> ('b \<times> 'c)) lvalue" is
   "\<lambda>f. (\<lambda>((a,b),c). (a,(b,c))) o f o (\<lambda>(a,(b,c)). ((a,b),c))"
   sorry
 
 lemma assoc'_apply[simp]: "assoc' \<cdot> (f \<otimes> g) \<otimes> h = (f \<otimes> (g \<otimes> h))"
-  by (transfer, auto)x
+  by (transfer, auto)
 
 end
