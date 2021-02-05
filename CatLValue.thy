@@ -1,7 +1,7 @@
 section \<open>Using the axioms\<close>
 
 theory CatLValue
-  imports CatLValue_Axioms1
+  imports CatLValue_Axioms_Mat
 begin
 
 definition 

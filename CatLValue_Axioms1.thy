@@ -38,7 +38,7 @@ axiomatization where
 axiomatization where
   lvalue_comp_app: "(x o\<^sub>l y) \<cdot> f = x \<cdot> y \<cdot> f"
 axiomatization where
-  lvalue_app_mult: "x \<cdot> (f o\<^sub>m g) = (x \<cdot> f) o\<^sub>m (x \<cdot> g)"
+  lvalue_app_mult: "is_lvalue x \<Longrightarrow> x \<cdot> (f o\<^sub>m g) = (x \<cdot> f) o\<^sub>m (x \<cdot> g)"
 axiomatization where
   maps_comp_assoc: "(f o\<^sub>m g) o\<^sub>m h = f o\<^sub>m (g o\<^sub>m h)"
 axiomatization where
