@@ -4,7 +4,7 @@ begin
 
 class domain
 instance prod :: (domain,domain) domain
-  sorry
+  by intro_classes
 
 typedecl 'a domain_end
 axiomatization comp_domain :: "'a::domain domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
@@ -45,7 +45,10 @@ axiomatization where
   lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain (F a) (F b)"
   for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
 
-(* TODO: lvalue pair *)
+axiomatization where
+pair_lvalue_axiom: \<open>\<lbrakk>lvalue F; lvalue G; maps_hom p;
+    \<And>a b. comp_domain (F a) (G b) = comp_domain (G b) (F a);
+    \<And>a b. p (tensor_maps a b) = comp_domain (F a) (G b)\<rbrakk> \<Longrightarrow> lvalue p\<close>
 
 bundle lvalue_notation begin
 notation comp_domain (infixl "\<circ>\<^sub>d" 55)

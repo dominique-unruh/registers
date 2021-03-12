@@ -150,8 +150,9 @@ lemma pair_apply[simp]:
 lemma pair_lvalue[simp]:
   assumes "compatible F G"
   shows "lvalue (pair F G)"
-  sorry
-
+  apply (rule pair_lvalue_axiom[where F=F and G=G and p=\<open>pair F G\<close>])
+  using assms by (auto simp: compatible_def lvalue_hom)
+  
 lemma compatible3:
   assumes [simp]: "compatible x y" and "compatible y z" and "compatible x z"
   shows "compatible (pair x y) z"
@@ -193,9 +194,11 @@ subsection \<open>Notation\<close>
 bundle lvalue_notation begin
 unbundle lvalue_notation
 notation tensor_maps_hom (infixr "\<otimes>\<^sub>h" 70)
+notation pair ("(_;_)")
 end
 
 bundle no_lvalue_notation begin
 unbundle lvalue_notation
 no_notation tensor_maps_hom (infixr "\<otimes>\<^sub>h" 70)
+no_notation pair ("(_;_)")
 end
