@@ -35,6 +35,27 @@ lemma tensor_maps_hom_apply[simp]:
   using tensor_existence maps_2hom_F_tensor_G assms
   by metis
 
+lemma tensor_extensionality:
+  assumes "maps_hom F" and "maps_hom G"
+  assumes "(\<And>a b. F (a \<otimes> b) = G (a \<otimes> b))"
+  shows "F = G"
+  sorry
+
+lemma left_tensor_hom[simp]: "maps_hom ((\<otimes>) a)"
+  using maps_2hom_def tensor_2hom by blast
+
+lemma right_tensor_hom[simp]: "maps_hom (\<lambda>a. (\<otimes>) a b)"
+  using maps_2hom_def tensor_2hom by blast
+
+subsection \<open>Swap and assoc\<close>
+
+definition \<open>swap = tensor_lift (\<lambda>a b. b \<otimes> a)\<close>
+
+lemma swap_hom[simp]: "maps_hom swap"
+  sorry
+
+lemma swap_apply[simp]: "swap (a \<otimes> b) = (b \<otimes> a)"
+  sorry
 
 subsection \<open>Pairs and compatibility\<close>
 
@@ -53,19 +74,24 @@ lemma compatible_sym: "compatible x y \<Longrightarrow> compatible y x"
 definition pair :: \<open>('a::domain,'c::domain) maps_hom \<Rightarrow> ('b::domain,'c) maps_hom \<Rightarrow> ('a\<times>'b, 'c) maps_hom\<close> where
   \<open>pair F G = tensor_lift (\<lambda>a b. F a \<circ>\<^sub>d G b)\<close>
 
+lemma maps_hom_F_comp_G1:
+  assumes \<open>maps_hom G\<close>
+  shows \<open>maps_hom (\<lambda>b. F a \<circ>\<^sub>d G b)\<close>
+  using assms apply (rule comp_maps_hom[of G \<open>\<lambda>b. F a \<circ>\<^sub>d b\<close>, unfolded comp_def])
+  using maps_2hom_def comp_2hom by auto
+
+lemma maps_hom_F_comp_G2:
+  assumes \<open>maps_hom F\<close>
+  shows \<open>maps_hom (\<lambda>a. F a \<circ>\<^sub>d G b)\<close> 
+    using assms apply (rule comp_maps_hom[of F \<open>\<lambda>a. a \<circ>\<^sub>d G b\<close>, unfolded comp_def])
+    using maps_2hom_def comp_2hom by auto
+
 lemma maps_2hom_F_comp_G[simp]:
   assumes \<open>maps_hom F\<close> and \<open>maps_hom G\<close>
   shows \<open>maps_2hom (\<lambda>a b. F a \<circ>\<^sub>d G b)\<close>
-proof -
-  have \<open>maps_hom (\<lambda>b. F a \<circ>\<^sub>d G b)\<close> for a
-    using \<open>maps_hom G\<close> apply (rule comp_maps_hom[of G \<open>\<lambda>b. F a \<circ>\<^sub>d b\<close>, unfolded comp_def])
-    using maps_2hom_def comp_2hom by auto
-  moreover have \<open>maps_hom (\<lambda>a. F a \<circ>\<^sub>d G b)\<close> for b
-    using \<open>maps_hom F\<close> apply (rule comp_maps_hom[of F \<open>\<lambda>a. a \<circ>\<^sub>d G b\<close>, unfolded comp_def])
-    using maps_2hom_def comp_2hom by auto
-  ultimately show ?thesis
-    unfolding maps_2hom_def by auto
-qed
+  unfolding maps_2hom_def
+  using assms
+  by (auto intro!: maps_hom_F_comp_G1 maps_hom_F_comp_G2)
 
 lemma pair_hom[simp]:
   assumes "maps_hom F" and "maps_hom G"
@@ -78,6 +104,11 @@ lemma pair_apply[simp]:
   unfolding pair_def 
   using tensor_existence maps_2hom_F_comp_G assms
   by metis
+
+lemma pair_lvalue[simp]:
+  assumes "compatible F G"
+  shows "lvalue (pair F G)"
+  sorry
 
 lemma compatible3:
   assumes [simp]: "compatible x y" and "compatible y z" and "compatible x z"
@@ -95,11 +126,12 @@ proof (rule compatibleI)
     by auto
   then have *: "(pair (pair x y) z \<circ> swap \<circ> (\<otimes>) h)
            = (pair z (pair x y) \<circ> (\<otimes>) h)" for h
-    by (rule tensor_extensionality)
+    apply (rule tensor_extensionality[rotated -1])
+    by (intro comp_maps_hom pair_hom; simp)+
   have "(pair (pair x y) z) (fg \<otimes> h)
            = (pair z (pair x y)) (h \<otimes> fg)" for fg h
-    using *[THEN lvalue_app_fun_cong]
-    by auto
+    using *
+    using comp_eq_dest_lhs by fastforce
   then show "(pair x y fg) \<circ>\<^sub>d (z h) = (z h) \<circ>\<^sub>d (pair x y fg)" for fg h
     unfolding compatible_def by simp
   show "lvalue z" and  "lvalue (pair x y)"
