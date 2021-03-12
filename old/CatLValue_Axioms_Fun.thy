@@ -10,8 +10,11 @@ instance prod :: (domain,domain) domain ..
 
 type_synonym 'a maps = "'a\<Rightarrow>'a"
 
-definition lvalueish where 
+definition lvalueish :: "('a maps \<Rightarrow> 'b maps) \<Rightarrow> bool" where 
   \<open>lvalueish F \<longleftrightarrow> (\<forall>a b. \<exists>c d e. mono e \<and> (\<forall>f. F f a = b \<longleftrightarrow> e (f c = d)))\<close>
+
+declare[[show_types]]
+thm lvalueish_def
 
 typedef ('a,'b) lvalue = "{F::'a maps \<Rightarrow> 'b maps. lvalueish F}"
   apply (rule exI[of _ "\<lambda>_ _. undefined"])

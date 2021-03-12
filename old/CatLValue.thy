@@ -93,8 +93,9 @@ definition is_complement where
   "is_complement2 x y \<longleftrightarrow> compatible x y \<and> is_everything2 (pair x y)" *)
 
 lemma tensor_extensionality3: 
-  assumes "\<And>f g h. x \<cdot> (f \<otimes> g \<otimes> h) = y \<cdot> (f \<otimes> g \<otimes> h)"
+  assumes "\<And>f g h. x \<cdot> (f \<otimes> (g \<otimes> h)) = y \<cdot> (f \<otimes> g \<otimes> h)"
   shows "x = y"
+  using [[show_sorts]]
 proof -
   from assms
   have "x o\<^sub>l left_tensor f \<cdot> (g \<otimes> h) = y o\<^sub>l left_tensor f \<cdot> (g \<otimes> h)" for f g h

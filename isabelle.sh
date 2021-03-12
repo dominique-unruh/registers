@@ -10,4 +10,4 @@ else
     FILES=()
 fi
 
-/opt/Isabelle2021-RC3/bin/isabelle jedit -l HOL "${FILES[@]}" "$@"
+/opt/Isabelle2021/bin/isabelle jedit -l HOL "${FILES[@]}" "$@"

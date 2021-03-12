@@ -17,7 +17,7 @@ setup_lifting type_definition_maps
 definition lvalueish where 
   \<open>lvalueish F \<longleftrightarrow> undefined F\<close>
 
-typedef (overloaded) ('a,'b) lvalue = "{F::'a maps \<Rightarrow> 'b maps. lvalueish F}"
+typedef (overloaded) ('a::domain,'b::domain) lvalue = "{F::'a maps \<Rightarrow> 'b maps. lvalueish F}"
   morphisms lvalue_app Abs_lvalue
   sorry
 setup_lifting type_definition_lvalue
@@ -126,25 +126,29 @@ lift_definition left_tensor :: "'a::domain maps \<Rightarrow> ('b::domain, 'a \<
 lemma left_tensor_apply: "left_tensor f \<cdot> g = f \<otimes> g"
   apply (transfer fixing: f g) by simp
 
-lift_definition swap :: "('a\<times>'b, 'b\<times>'a) lvalue" is
+lift_definition swap :: "('a::domain\<times>'b::domain, 'b\<times>'a) lvalue" is
   "\<lambda>f. undefined" 
   sorry
 
 lemma swap_apply[simp]: "swap \<cdot> (f \<otimes> g) = g \<otimes> f"
   sorry
 
-lift_definition assoc :: "('a \<times> ('b \<times> 'c), ('a \<times> 'b) \<times> 'c) lvalue" is
+lift_definition assoc :: "('a::domain \<times> ('b::domain \<times> 'c::domain), ('a \<times> 'b) \<times> 'c) lvalue" is
   "undefined"
   sorry
 
 lemma assoc_apply[simp]: "assoc \<cdot> (f \<otimes> (g \<otimes> h)) = (f \<otimes> g) \<otimes> h"
   sorry
 
-lift_definition assoc' :: "(('a \<times> 'b) \<times> 'c, 'a \<times> ('b \<times> 'c)) lvalue" is
+lift_definition assoc' :: "(('a::domain \<times> 'b::domain) \<times> 'c::domain, 'a \<times> ('b \<times> 'c)) lvalue" is
   undefined
   sorry
 
 lemma assoc'_apply[simp]: "assoc' \<cdot> (f \<otimes> g) \<otimes> h = (f \<otimes> (g \<otimes> h))"
   sorry
+
+lemma lvalue_tensor_app: "(lvalue_tensor x y) \<cdot> (f \<otimes> g) = (x \<cdot> f) \<otimes> (y \<cdot> g)"
+  sorry
+
 
 end
