@@ -12,7 +12,7 @@ axiomatization comp_domain :: "'a::domain domain_end \<Rightarrow> 'a domain_end
 (* TODO: category laws *)
 
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
-axiomatization maps_hom :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close>
+axiomatization maps_hom :: \<open>('a::domain,'b::domain) maps_hom \<Rightarrow> bool\<close>
 axiomatization where
   comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> maps_hom (G \<circ> F)"
 (* TODO category laws *)

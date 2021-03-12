@@ -7,6 +7,14 @@ unbundle lvalue_notation
 
 subsection \<open>Elementary facts\<close>
 
+declare tensor_2hom[simp]
+
+lemma maps_hom_2hom_comp: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. G (F2 a b))\<close>
+  unfolding maps_2hom_def 
+  using comp_maps_hom[of \<open>\<lambda>a. F2 a _\<close> G]
+  using comp_maps_hom[of \<open>\<lambda>b. F2 _ b\<close> G]
+  unfolding o_def by auto
+
 subsection \<open>Tensor product of homs\<close>
 
 definition "tensor_maps_hom F G = tensor_lift (\<lambda>a b. F a \<otimes> G b)"
@@ -17,10 +25,10 @@ lemma maps_2hom_F_tensor_G[simp]:
 proof -
   have \<open>maps_hom (\<lambda>b. F a \<otimes> G b)\<close> for a
     using \<open>maps_hom G\<close> apply (rule comp_maps_hom[of G \<open>\<lambda>b. F a \<otimes> b\<close>, unfolded comp_def])
-    using maps_2hom_def tensor_2hom by auto
+    using maps_2hom_def by (auto intro!: tensor_2hom)
   moreover have \<open>maps_hom (\<lambda>a. F a \<otimes> G b)\<close> for b
     using \<open>maps_hom F\<close> apply (rule comp_maps_hom[of F \<open>\<lambda>a. a \<otimes> G b\<close>, unfolded comp_def])
-    using maps_2hom_def tensor_2hom by auto
+    using maps_2hom_def by (auto intro!: tensor_2hom)
   ultimately show ?thesis
     unfolding maps_2hom_def by auto
 qed
@@ -35,11 +43,23 @@ lemma tensor_maps_hom_apply[simp]:
   using tensor_existence maps_2hom_F_tensor_G assms
   by metis
 
+lemma maps_2hom_F_tensor[simp]: \<open>maps_hom F \<Longrightarrow> maps_2hom (\<lambda>a b. F (a \<otimes> b))\<close>
+  using tensor_2hom by (rule maps_hom_2hom_comp)
+
 lemma tensor_extensionality:
-  assumes "maps_hom F" and "maps_hom G"
+  fixes F G :: \<open>('a::domain\<times>'b::domain, 'c::domain) maps_hom\<close>
+  assumes [simp]: "maps_hom F" "maps_hom G"
   assumes "(\<And>a b. F (a \<otimes> b) = G (a \<otimes> b))"
   shows "F = G"
-  sorry
+proof -
+  have \<open>F = tensor_lift (\<lambda>a b. F (a \<otimes> b))\<close>
+    by (rule tensor_uniqueness, auto)
+  moreover have \<open>G = tensor_lift (\<lambda>a b. G (a \<otimes> b))\<close>
+    by (rule tensor_uniqueness, auto)
+  moreover note assms(3)
+  ultimately show "F = G"
+    by simp
+qed
 
 lemma left_tensor_hom[simp]: "maps_hom ((\<otimes>) a)"
   using maps_2hom_def tensor_2hom by blast
@@ -47,15 +67,37 @@ lemma left_tensor_hom[simp]: "maps_hom ((\<otimes>) a)"
 lemma right_tensor_hom[simp]: "maps_hom (\<lambda>a. (\<otimes>) a b)"
   using maps_2hom_def tensor_2hom by blast
 
+lemma tensor_extensionality3: 
+  fixes F G :: \<open>('a::domain\<times>'b::domain\<times>'c::domain, 'd::domain) maps_hom\<close>
+  assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close>
+  assumes "\<And>f g h. F (f \<otimes> g \<otimes> h) = G (f \<otimes> g \<otimes> h)"
+  shows "F = G"
+proof -
+  from assms
+  have "(F \<circ> (\<otimes>) a) (b \<otimes> c) = (G \<circ> (\<otimes>) a) (b \<otimes> c)" for a b c
+    by auto
+  then have "F \<circ> (\<otimes>) a = G \<circ> (\<otimes>) a" for a
+    apply (rule tensor_extensionality[rotated -1])
+    by (intro comp_maps_hom; simp)+
+  then have "F (a \<otimes> bc) = G (a \<otimes> bc)" for a bc
+    using comp_eq_elim by blast
+  then show ?thesis
+    by (rule tensor_extensionality[rotated -1]; simp)
+qed
+
+
 subsection \<open>Swap and assoc\<close>
 
 definition \<open>swap = tensor_lift (\<lambda>a b. b \<otimes> a)\<close>
 
 lemma swap_hom[simp]: "maps_hom swap"
-  sorry
+  unfolding swap_def apply (rule tensor_lift_hom) 
+  using tensor_2hom unfolding maps_2hom_def by auto
 
 lemma swap_apply[simp]: "swap (a \<otimes> b) = (b \<otimes> a)"
-  sorry
+  unfolding swap_def 
+  apply (rule tensor_existence[THEN fun_cong, THEN fun_cong])
+  using tensor_2hom unfolding maps_2hom_def by auto
 
 subsection \<open>Pairs and compatibility\<close>
 
@@ -138,6 +180,12 @@ proof (rule compatibleI)
     by simp_all
 qed
 
+lemma compatible_comp_left: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (x \<circ> z) y"
+  by (simp add: compatible_def lvalue_comp)
+  
+lemma compatible_comp_inner: 
+  "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (z \<circ> x) (z \<circ> y)"
+  by (smt (verit, best) comp_apply compatible_def lvalue_comp lvalue_mult)
 
 subsection \<open>Notation\<close>
 
