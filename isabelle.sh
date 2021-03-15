@@ -5,9 +5,9 @@ set -e
 DIR="$(dirname "$BASH_SOURCE[0]")"
 
 if [ "$#" = 0 ]; then
-    FILES=("$DIR/All.thy")
+    FILES=("$DIR/Laws.thy")
 else
     FILES=()
 fi
 
-/opt/Isabelle2021/bin/isabelle jedit -l HOL "${FILES[@]}" "$@"
+/opt/Isabelle2021/bin/isabelle jedit -l Lots-Of-Stuff "${FILES[@]}" "$@"
