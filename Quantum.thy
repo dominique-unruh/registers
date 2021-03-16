@@ -1,7 +1,33 @@
 theory Quantum
-  imports Jordan_Normal_Form.Matrix_Impl
+  imports Jordan_Normal_Form.Matrix_Impl "HOL-Library.Rewrite"
+ Jordan_Normal_Form.Matrix
 begin
 
+
+instantiation mat :: (conjugate) conjugate
+begin
+
+definition conjugate_mat :: "'a :: conjugate mat \<Rightarrow> 'a mat"
+  where "conjugate M = mat (dim_row M) (dim_col M) (\<lambda>(i,j). conjugate (M $$ (i,j)))"
+
+instance
+proof intro_classes
+  fix M N :: \<open>'a mat\<close>
+  show \<open>conjugate (conjugate M) = M\<close>
+    unfolding conjugate_mat_def by auto
+  show \<open>(conjugate M = conjugate N) = (M = N)\<close>
+    unfolding conjugate_mat_def by (auto simp: mat_eq_iff)
+qed
+end
+
+lemma conjugate_carrier_mat[simp]: \<open>M \<in> carrier_mat n m \<Longrightarrow> conjugate M \<in> carrier_mat n m\<close>
+  unfolding conjugate_mat_def by auto
+
+definition "adjoint_mat M = conjugate (transpose_mat M)"
+
+lemma adjoint_carrier_mat[simp]: \<open>M \<in> carrier_mat n m \<Longrightarrow> adjoint_mat M \<in> carrier_mat m n\<close>
+  unfolding adjoint_mat_def
+  by auto
 
 lemma sum_single: 
   assumes "finite A"
@@ -54,6 +80,19 @@ lemma tensor_pack_sum[simp]: \<open>(\<Sum>ij = 0..<A*B. f ij) =
     apply (subst sum.reindex[where h=\<open>tensor_pack A B\<close>, unfolded o_def, symmetric])
   by auto
 
+lemma tensor_unpack_fstfst: \<open>fst (tensor_unpack A B (fst (tensor_unpack (A * B) C i)))
+     = fst (tensor_unpack A (B * C) i)\<close>
+  unfolding tensor_unpack_def apply auto
+  by (metis div_mult2_eq mult.commute)
+lemma tensor_unpack_sndsnd: \<open>snd (tensor_unpack B C (snd (tensor_unpack A (B * C) i)))
+     = snd (tensor_unpack (A * B) C i)\<close>
+  unfolding tensor_unpack_def apply auto
+  by (meson dvd_triv_right mod_mod_cancel)
+lemma tensor_unpack_fstsnd: \<open>fst (tensor_unpack B C (snd (tensor_unpack A (B * C) i)))
+     = snd (tensor_unpack A B (fst (tensor_unpack (A * B) C i)))\<close>
+  unfolding tensor_unpack_def apply auto
+  by (metis (no_types, lifting) Euclidean_Division.div_eq_0_iff add_0_iff bits_mod_div_trivial div_mult_self4 mod_mult2_eq mod_mult_self1_is_0 mult.commute)
+
 
 
 
@@ -76,6 +115,9 @@ typedef (overloaded) ('a::enum, 'b::enum) operator =
 type_synonym 'a domain_end = \<open>('a,'a) operator\<close>
 setup_lifting type_definition_operator
 
+lift_definition id_operator :: \<open>('a::enum, 'a::enum) operator\<close> is "one_mat CARD('a)"
+  by auto
+
 lift_definition apply_operator :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> 'a state \<Rightarrow> 'b state\<close> is
   "mult_mat_vec"
   by auto
@@ -93,6 +135,10 @@ lemma comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_
 lemma comp_apply_operator[simp]:
  "apply_operator (comp_op A B) \<psi> = apply_operator A (apply_operator B \<psi>)"
   apply transfer
+  by auto
+
+lift_definition adjoint_op :: \<open>('a::enum, 'a::enum) operator \<Rightarrow> ('a::enum, 'a::enum) operator\<close> is
+  \<open>adjoint_mat\<close>
   by auto
 
 value "List.product [1,2,3] [8,9] :: (int*int) list"
@@ -126,7 +172,7 @@ lemma comp_apply_superop[simp]: "apply_superop (comp_superop A B) \<psi> = apply
   apply transfer by auto
 
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
-definition maps_hom :: \<open>('a::domain,'b::domain) maps_hom \<Rightarrow> bool\<close> where
+definition maps_hom :: \<open>('a::enum,'b::enum) maps_hom \<Rightarrow> bool\<close> where
   "maps_hom F \<longleftrightarrow> (\<exists>M. F = apply_superop M)"
 
 lemma comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> maps_hom (G \<circ> F)"
@@ -237,31 +283,83 @@ lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
 
 
 definition tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2hom
-                            \<Rightarrow> (('a\<times>'b, 'c) maps_hom)\<close>
+                            \<Rightarrow> (('a\<times>'b, 'c) maps_hom)\<close> where
+(* TODO *)
+  "tensor_lift = undefined"
 
 lemma tensor_lift_hom: "maps_2hom F2 \<Longrightarrow> maps_hom (tensor_lift F2)"
+  sorry
 lemma tensor_existence:  \<open>maps_2hom F2 \<Longrightarrow> (\<lambda>a b. tensor_lift F2 (tensor_maps a b)) = F2\<close>
+  sorry
 lemma tensor_uniqueness: \<open>maps_2hom F2 \<Longrightarrow> maps_hom F \<Longrightarrow> (\<lambda>a b. F (tensor_maps a b)) = F2 \<Longrightarrow> F = tensor_lift F2\<close>
+  sorry
 (* Formalize the weak property instead *)
 
-lift_definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a\<times>('b\<times>'c)) maps_hom\<close> is
+
+lift_definition assoc00 :: \<open>((('a::enum\<times>'b::enum)\<times>'c::enum) \<times> (('a\<times>'b)\<times>'c),
+                            ('a\<times>('b\<times>'c)) \<times> ('a\<times>('b\<times>'c))) operator\<close> is
+  \<open>one_mat (CARD('a)*CARD('b)*CARD('c)*CARD('a)*CARD('b)*CARD('c)) :: complex mat\<close>
+  by auto
+
+lift_definition assoc0 :: \<open>(('a::enum \<times> 'b::enum) \<times> 'c::enum, 'a \<times> ('b \<times> 'c)) superoperator\<close> is
+  assoc00.
+
+lift_definition assoc :: \<open>(('a::enum\<times>'b::enum)\<times>'c::enum, 'a\<times>('b\<times>'c)) maps_hom\<close> is
   \<open>id\<close>
+  by auto
 
 lemma assoc_hom: \<open>maps_hom assoc\<close>
-lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
+  unfolding maps_hom_def
+  apply (rule exI[of _ assoc0])
+  apply (rule ext)
+  apply transfer
+  apply transfer
+  apply (auto simp: mat_eq_iff mult.assoc[symmetric])
+  apply (subst index_vec)
+   apply (metis (no_types, lifting) UNIV_I class_semiring.m_assoc tensor_pack_bound)
+  by simp
 
-definition lvalue :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close> where
+
+
+
+lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
+  apply transfer
+  by (auto simp: case_prod_beta mat_eq_iff mult.assoc[symmetric] tensor_unpack_fstfst tensor_unpack_sndsnd tensor_unpack_fstsnd)
+
+definition lvalue :: \<open>('a::enum, 'b::enum) maps_hom \<Rightarrow> bool\<close> where
+  "lvalue F \<longleftrightarrow> 
+     maps_hom F
+   \<and> F id_operator = id_operator 
+   \<and> (\<forall>a b. F(comp_op a b) = comp_op (F a) (F b))
+   \<and> (\<forall>a. F(adjoint_op a) = adjoint_op (F a))"
 
 lemma lvalue_hom: "lvalue F \<Longrightarrow> maps_hom F"
-  for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
+  for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom"
+  unfolding lvalue_def by simp
+
 lemma lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue (G \<circ> F)"
   for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
+  unfolding lvalue_def
+  by (auto intro: comp_maps_hom)
+
 lemma lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain (F a) (F b)"
   for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
+  unfolding lvalue_def
+  by auto
 
-lemma pair_lvalue_axiom: \<open>\<lbrakk>lvalue F; lvalue G; maps_hom p;
-    \<And>a b. comp_domain (F a) (G b) = comp_domain (G b) (F a);
-    \<And>a b. p (tensor_maps a b) = comp_domain (F a) (G b)\<rbrakk> \<Longrightarrow> lvalue p\<close>
-
+lemma pair_lvalue_axiom: 
+  assumes \<open>lvalue F\<close> and \<open>lvalue G\<close> and \<open>maps_hom p\<close>
+  assumes \<open>\<And>a b. comp_domain (F a) (G b) = comp_domain (G b) (F a)\<close>
+  assumes \<open>\<And>a b. p (tensor_maps a b) = comp_domain (F a) (G b)\<close>
+  shows \<open>lvalue p\<close>
+proof (unfold lvalue_def, intro conjI allI)
+  fix a b :: \<open>('a \<times> 'c, 'a \<times> 'c) operator\<close>
+  show "maps_hom p"
+    using assms by auto
+  show \<open>p id_operator = id_operator\<close>
+    by auto
+  show \<open>p (comp_op a b) = comp_domain (p a) (p b)\<close>
+    by -
+  show \<open>p (adjoint_op a) = adjoint_op (p a)\<close>
 
 end

@@ -329,3 +329,5 @@ unbundle lvalue_notation
 no_notation tensor_maps_hom (infixr "\<otimes>\<^sub>h" 70)
 no_notation pair ("(_;_)")
 end
+
+end
