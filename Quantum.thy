@@ -3,6 +3,13 @@ theory Quantum
 begin
 
 
+lemma sum_single: 
+  assumes "finite A"
+  assumes "\<And>j. j \<noteq> i \<Longrightarrow> j\<in>A \<Longrightarrow> f j = 0"
+  shows "sum f A = (if i\<in>A then f i else 0)"
+  apply (subst sum.mono_neutral_cong_right[where S=\<open>A \<inter> {i}\<close> and h=f])
+  using assms by auto
+
 lemma index_mat_fstsnd:  "fst x < nr \<Longrightarrow> snd x < nc \<Longrightarrow> mat nr nc f $$ x = f x"
   apply (cases x) by auto
 
@@ -40,6 +47,14 @@ lemma tensor_pack_range[simp]: \<open>tensor_pack A B ` ({0..<A} \<times> {0..<B
   apply auto unfolding image_iff Bex_def
   apply (rule_tac x=\<open>tensor_unpack A B x\<close> in exI)
   by (auto simp: mem_Times_iff)
+
+lemma tensor_pack_sum[simp]: \<open>(\<Sum>ij = 0..<A*B. f ij) = 
+    (\<Sum>i = 0..<A. \<Sum>j = 0..<B. f (tensor_pack A B (i,j)))\<close>
+    apply (subst sum.cartesian_product) apply simp
+    apply (subst sum.reindex[where h=\<open>tensor_pack A B\<close>, unfolded o_def, symmetric])
+  by auto
+
+
 
 
 
@@ -145,16 +160,17 @@ lift_definition tensor_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> 
 lemma tensor_op_state: "apply_operator (tensor_op A B) (tensor_state \<psi> \<phi>)
   = tensor_state (apply_operator A \<psi>) (apply_operator B \<phi>)"
 proof -
+(* (* TODO: use tensor_pack_sum instead *)
   have split_sum: "(\<Sum>i = 0..<CARD('c) * CARD('d). f i)
       = (\<Sum>i = 0..<CARD('c). \<Sum>j = 0..<CARD('d). 
           f (tensor_pack CARD('c) CARD('d) (i, j)))" for f :: "_ \<Rightarrow> complex"
     apply (subst sum.cartesian_product) apply simp
     apply (subst sum.reindex[where h=\<open>tensor_pack CARD('c) CARD('d)\<close>, unfolded o_def, symmetric])
-    by auto
+    by auto *)
 
   show ?thesis
     apply transfer
-    apply (auto simp: case_prod_beta Let_def split_sum sum_product vec_eq_iff scalar_prod_def mult_mat_vec_def)
+    apply (auto simp: case_prod_beta Let_def sum_product vec_eq_iff scalar_prod_def mult_mat_vec_def)
     apply (rule sum.cong, simp)
     apply (rule sum.cong, simp)
     by auto
@@ -163,11 +179,61 @@ qed
 abbreviation tensor_maps :: \<open>'a::enum domain_end \<Rightarrow> 'b::enum domain_end \<Rightarrow> ('a\<times>'b) domain_end\<close> where
   \<open>tensor_maps \<equiv> tensor_op\<close>
 
+
+lift_definition tensor_left0 :: "('a::enum,'a) operator \<Rightarrow> ('b::enum \<times> 'b, ('a\<times>'b) \<times> ('a\<times>'b)) operator" is
+  \<open>\<lambda>A::complex mat. mat CARD(('a\<times>'b) \<times> ('a\<times>'b)) CARD('b\<times>'b) (\<lambda>(i,j). 
+    let (j1,j2) = tensor_unpack CARD('b) CARD('b) j in
+    let (i1,i2) = tensor_unpack CARD('a\<times>'b) CARD('a\<times>'b) i in
+    let (i1a,i1b) = tensor_unpack CARD('a) CARD('b) i1 in
+    let (i2a,i2b) = tensor_unpack CARD('a) CARD('b) i2 in
+    if i1b=j1 \<and> i2b=j2 then A $$ (i1a,i2a) else 0) :: complex mat\<close>
+  by auto
+
+
+lift_definition tensor_right0 :: "('b::enum,'b) operator \<Rightarrow> ('a::enum \<times> 'a, ('a\<times>'b) \<times> ('a\<times>'b)) operator" is
+  \<open>\<lambda>B::complex mat. mat CARD(('a\<times>'b) \<times> ('a\<times>'b)) CARD('a\<times>'a) (\<lambda>(i,j). 
+    let (j1,j2) = tensor_unpack CARD('a) CARD('a) j in
+    let (i1,i2) = tensor_unpack CARD('a\<times>'b) CARD('a\<times>'b) i in
+    let (i1a,i1b) = tensor_unpack CARD('a) CARD('b) i1 in
+    let (i2a,i2b) = tensor_unpack CARD('a) CARD('b) i2 in
+    if i1a=j1 \<and> i2a=j2 then B $$ (i1b,i2b) else 0) :: complex mat\<close>
+  by auto
+
+lift_definition tensor_left :: "('a::enum,'a) operator \<Rightarrow> ('b::enum,'a\<times>'b) superoperator" is
+  tensor_left0.
+
+lift_definition tensor_right :: "('b::enum,'b) operator \<Rightarrow> ('a::enum,'a\<times>'b) superoperator" is
+  tensor_right0.
+
+lemma tensor_left_tensor_maps: "apply_superop (tensor_left a) b = tensor_maps a b"
+  apply (transfer fixing: a b)
+  apply transfer
+  apply (simp add: Let_def case_prod_beta mat_eq_iff vec_eq_iff scalar_prod_def)
+  apply auto
+  apply (subst sum_single[where i=\<open>snd (tensor_unpack CARD('a) CARD('b) _)\<close>])
+    apply auto
+  apply (subst sum_single[where i=\<open>snd (tensor_unpack CARD('a) CARD('b) _)\<close>])
+  by auto
+
+lemma tensor_right_tensor_maps: "apply_superop (tensor_right b) a = tensor_maps a b"
+  apply (transfer fixing: a b)
+  apply transfer
+  apply (simp add: Let_def case_prod_beta mat_eq_iff vec_eq_iff scalar_prod_def)
+  apply auto
+  apply (subst sum_single[where i=\<open>fst (tensor_unpack CARD('a) CARD('b) _)\<close>])
+    apply auto
+  apply (subst sum_single[where i=\<open>fst (tensor_unpack CARD('a) CARD('b) _)\<close>])
+  by auto
+
 lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
   unfolding maps_2hom_def maps_hom_def
   apply auto
-  sorry
-
+   apply (rule exI[of _ \<open>tensor_left _\<close>])
+   apply (rule ext)
+   apply (subst tensor_left_tensor_maps, simp)
+  apply (rule exI[of _ \<open>tensor_right _\<close>])
+  apply (rule ext)
+  by (subst tensor_right_tensor_maps, simp)
 
 
 definition tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2hom
