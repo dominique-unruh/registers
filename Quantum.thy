@@ -123,6 +123,10 @@ typedef (overloaded) ('a::enum) state =
   by auto
 setup_lifting type_definition_state
 
+lift_definition rawket :: \<open>nat \<Rightarrow> 'a::enum state\<close> is (* TODO needed? *)
+  \<open>\<lambda>i. unit_vec CARD('a) i\<close>
+  by simp
+
 typedef (overloaded) ('a::enum, 'b::enum) operator =
   \<open>carrier_mat CARD('b) CARD('a) :: complex mat set\<close>
   apply (rule exI[of _ \<open>zero_mat CARD('b) CARD('a)\<close>])
@@ -130,7 +134,15 @@ typedef (overloaded) ('a::enum, 'b::enum) operator =
 type_synonym 'a domain_end = \<open>('a,'a) operator\<close>
 setup_lifting type_definition_operator
 
+lift_definition index_op :: \<open>nat \<Rightarrow> nat \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
+  \<open>\<lambda>i j. mat CARD('b) CARD('a) (\<lambda>(k,l). if k=i \<and> l=j then 1 else 0)\<close>
+  by auto
+
 lift_definition id_operator :: \<open>('a::enum, 'a::enum) operator\<close> is "one_mat CARD('a)"
+  by auto
+
+lift_definition map_operator :: \<open>(complex\<Rightarrow>complex) \<Rightarrow> ('a::enum, 'b::enum) operator \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
+  \<open>\<lambda>f M. map_mat f M\<close>
   by auto
 
 lift_definition apply_operator :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> 'a state \<Rightarrow> 'b state\<close> is
@@ -213,9 +225,25 @@ lemma comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> 
   by auto
 (* TODO category laws *)
 
+term transpose_op
+
+lift_definition transpose_op00 :: \<open>('a::enum \<times> 'b::enum, 'b \<times> 'a) operator\<close> is
+  \<open>mat CARD('a\<times>'b) CARD('b\<times>'a) (\<lambda>(i,j).
+    let (ia, ib) = tensor_unpack CARD('a) CARD('b) i in
+    let (jb, ja) = tensor_unpack CARD('b) CARD('a) j in
+    if ia=ja \<and> ib=jb then 1 else 0)\<close>
+  by auto
+
+lift_definition transpose_op0 :: \<open>('a::enum, 'a) superoperator\<close> is transpose_op00.
 
 lemma transpose_op_hom[simp]: \<open>maps_hom transpose_op\<close>
-  sorry
+  unfolding maps_hom_def apply (rule exI[of _ transpose_op0]) apply (rule ext)
+  apply transfer apply transfer
+  apply (auto simp: mat_eq_iff case_prod_beta scalar_prod_def)
+  apply (subst sum_single)
+    apply auto[2]
+  apply (subst sum_single)
+  by auto
 
 type_synonym ('a,'b,'c) maps_2hom = \<open>'a domain_end \<Rightarrow> 'b domain_end \<Rightarrow> 'c domain_end\<close>
 definition maps_2hom :: "('a::enum, 'b::enum, 'c::enum) maps_2hom \<Rightarrow> bool" where
@@ -325,12 +353,102 @@ lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
   apply (rule ext)
   by (subst tensor_right_tensor_maps, simp)
 
+(* lift_definition operator_nth :: \<open>('a::enum,'b::enum) operator \<Rightarrow> (nat * nat) \<Rightarrow> complex\<close> is
+  \<open>index_mat\<close>. *)
+
 lemma tensor_extensionality:
   fixes F G :: \<open>('a::enum\<times>'b::enum, 'c::enum) maps_hom\<close>
   assumes [simp]: "maps_hom F" "maps_hom G"
-  assumes "(\<And>a b. F (tensor_maps a b) = G (tensor_maps a b))"
+  assumes tensor_eq: "(\<And>a b. F (tensor_op a b) = G (tensor_op a b))"
   shows "F = G"
-  sorry
+proof -
+  from \<open>maps_hom F\<close> \<open>maps_hom G\<close>
+  obtain FSO GSO where FSO: "F = apply_superop FSO" and GSO: "G = apply_superop GSO"
+    unfolding maps_hom_def by auto
+  define FM where "FM = Rep_operator (Rep_superoperator FSO)"
+  define GM where "GM = Rep_operator (Rep_superoperator GSO)"
+  have [simp]: "dim_row FM = CARD('c) * CARD('c)"
+    unfolding FM_def apply transfer apply transfer by simp
+  have [simp]: "dim_col FM = (CARD('a) * CARD('b)) * (CARD('a) * CARD('b))"
+    unfolding FM_def apply transfer apply transfer by simp
+  have [simp]: "dim_row GM = CARD('c) * CARD('c)"
+    unfolding GM_def apply transfer apply transfer by simp
+  have [simp]: "dim_col GM = (CARD('a) * CARD('b)) * (CARD('a) * CARD('b))"
+    unfolding GM_def apply transfer apply transfer by simp
+
+  have "FM $$ (i,j) = GM $$ (i,j)" 
+    if [simp]: "i < CARD('c) * CARD('c)"
+      and [simp]: "j < (CARD('a) * CARD('b)) * (CARD('a) * CARD('b))"
+    for i j
+  proof -
+
+    obtain i1 i2 where i: "(i1,i2) = tensor_unpack CARD('c) CARD('c) i"
+      by (metis pivot_positions_main_gen.cases)
+    then have [simp]: \<open>i1 < CARD('c)\<close> \<open>i2 < CARD('c)\<close>
+      by (simp_all add: less_mult_imp_div_less tensor_unpack_def)
+    obtain j1 j2 where j: "(j1,j2) = tensor_unpack (CARD('a) * CARD('b)) (CARD('a) * CARD('b)) j"
+      by (metis pivot_positions_main_gen.cases)
+    then have [simp]: \<open>j1 < CARD('a) * CARD('b)\<close> \<open>j2 < CARD('a) * CARD('b)\<close>
+      by (simp_all add: less_mult_imp_div_less tensor_unpack_def)
+    obtain j11 j12 where j1: \<open>(j11, j12) = tensor_unpack CARD('a) CARD('b) j1\<close>
+      by (metis pivot_positions_main_gen.cases)
+    then have [simp]: \<open>j11 < CARD('a)\<close> \<open>j12 < CARD('b)\<close>
+      by (simp_all add: less_mult_imp_div_less tensor_unpack_def)
+    obtain j21 j22 where j2: \<open>(j21, j22) = tensor_unpack CARD('a) CARD('b) j2\<close>
+      by (metis pivot_positions_main_gen.cases)
+    then have [simp]: \<open>j21 < CARD('a)\<close> \<open>j22 < CARD('b)\<close>
+      by (simp_all add: less_mult_imp_div_less tensor_unpack_def)
+
+    have 1: "Rep_operator (F (tensor_op (index_op j11 j21) (index_op j12 j22))) $$ (i1,i2)
+      = FM $$ (i,j)"
+
+      unfolding FSO apply_superop.rep_eq unflatten_operator.rep_eq apply_operator.rep_eq
+        FM_def[symmetric] flatten_operator.rep_eq tensor_op.rep_eq index_op.rep_eq
+        mult_mat_vec_def scalar_prod_def case_prod_beta
+
+      apply (auto simp: case_prod_beta)
+
+      apply (subst sum_single[of _ j22], simp, simp)
+      apply (subst sum_single[of _ j21], simp, simp)
+      apply (subst sum_single[of _ j12], simp, simp)
+      apply (subst sum_single[of _ j11], simp, simp)
+
+      apply auto
+
+      using i j j1 j2
+      by auto
+
+    have 2: "Rep_operator (G (tensor_op (index_op j11 j21) (index_op j12 j22))) $$ (i1,i2)
+      = GM $$ (i,j)"
+
+      unfolding GSO apply_superop.rep_eq unflatten_operator.rep_eq apply_operator.rep_eq
+        GM_def[symmetric] flatten_operator.rep_eq tensor_op.rep_eq index_op.rep_eq
+        mult_mat_vec_def scalar_prod_def case_prod_beta
+
+      apply (auto simp: case_prod_beta)
+
+      apply (subst sum_single[of _ j22], simp, simp)
+      apply (subst sum_single[of _ j21], simp, simp)
+      apply (subst sum_single[of _ j12], simp, simp)
+      apply (subst sum_single[of _ j11], simp, simp)
+
+      apply auto
+
+      using i j j1 j2
+      by auto
+
+    from 1 2 tensor_eq
+    show ?thesis by simp
+  qed
+
+  then have "FM = GM"
+    unfolding mat_eq_iff
+    by auto
+
+  then show "F = G"
+    unfolding FSO GSO FM_def GM_def
+    by (simp add: Rep_operator_inject Rep_superoperator_inject)
+qed
 
 lemma tensor_id[simp]: \<open>tensor_maps id_operator id_operator = id_operator\<close>
   apply transfer
@@ -341,7 +459,6 @@ definition tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2hom
                             \<Rightarrow> (('a\<times>'b, 'c) maps_hom)\<close> where
 (* TODO *)
   "tensor_lift = undefined"
-
 
 
 lemma tensor_lift_hom: "maps_2hom F2 \<Longrightarrow> maps_hom (tensor_lift F2)"
@@ -404,10 +521,23 @@ lemma lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain
   unfolding lvalue_def
   by auto
 
+lift_definition map_superop :: \<open>(complex\<Rightarrow>complex) \<Rightarrow> ('a::enum, 'b::enum) superoperator \<Rightarrow> ('a, 'b) superoperator\<close> is
+  \<open>map_operator\<close>.
+
 lemma maps_hom_conjugate: 
   assumes \<open>maps_hom p\<close>
   shows \<open>maps_hom (conjugate_op \<circ> p \<circ> conjugate_op)\<close>
-  sorry
+proof -
+  obtain P where P: "p = apply_superop P"
+    using assms maps_hom_def by auto
+  (* define P' where \<open>P' = map_superop conjugate P\<close> *)
+  have \<open>conjugate_op \<circ> p \<circ> conjugate_op = apply_superop (map_superop conjugate P)\<close>
+    (* unfolding P'_def *)
+    unfolding P apply (rule ext) apply simp apply transfer apply transfer
+    by (auto simp: mat_eq_iff scalar_prod_def)
+  then show ?thesis
+    unfolding maps_hom_def by auto
+qed
 
 lemma pair_lvalue_axiom: 
   fixes F :: \<open>('a::enum, 'c::enum) maps_hom\<close> and G :: \<open>('b::enum, 'c::enum) maps_hom\<close>
