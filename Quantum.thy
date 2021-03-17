@@ -23,11 +23,11 @@ end
 lemma conjugate_carrier_mat[simp]: \<open>M \<in> carrier_mat n m \<Longrightarrow> conjugate M \<in> carrier_mat n m\<close>
   unfolding conjugate_mat_def by auto
 
-definition "adjoint_mat M = conjugate (transpose_mat M)"
+(* definition "adjoint_mat M = conjugate (transpose_mat M)"
 
 lemma adjoint_carrier_mat[simp]: \<open>M \<in> carrier_mat n m \<Longrightarrow> adjoint_mat M \<in> carrier_mat m n\<close>
   unfolding adjoint_mat_def
-  by auto
+  by auto *)
 
 lemma sum_single: 
   assumes "finite A"
@@ -126,10 +126,13 @@ lift_definition comp_op :: "('b::enum,'c::enum) operator \<Rightarrow> ('a::enum
   "times"
   by auto
 
+lemma comp_id_op_left[simp]: "comp_op id_operator a = a"
+  apply transfer by auto
+
 abbreviation comp_domain :: "'a::domain domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
   "comp_domain \<equiv> comp_op"
 
-lemma comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_domain b c)"
+lemma comp_domain_assoc: "comp_op (comp_op a b) c = comp_op a (comp_op b c)"
   apply transfer by auto
 
 lemma comp_apply_operator[simp]:
@@ -137,9 +140,22 @@ lemma comp_apply_operator[simp]:
   apply transfer
   by auto
 
-lift_definition adjoint_op :: \<open>('a::enum, 'a::enum) operator \<Rightarrow> ('a::enum, 'a::enum) operator\<close> is
-  \<open>adjoint_mat\<close>
+lift_definition conjugate_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
+  \<open>conjugate\<close>
   by auto
+
+lemma conjugate_op_involution[simp]: "conjugate_op (conjugate_op A) = A"
+  apply transfer by auto
+
+lift_definition transpose_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('b::enum, 'a::enum) operator\<close> is
+  \<open>transpose_mat\<close>
+  by auto
+
+definition adjoint_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('b::enum, 'a::enum) operator\<close> where
+  \<open>adjoint_op M = conjugate_op (transpose_op M)\<close>
+
+lemma comp_adjoint_op: "adjoint_op (comp_op A B) = comp_op (adjoint_op B) (adjoint_op A)"
+  sorry
 
 value "List.product [1,2,3] [8,9] :: (int*int) list"
 
@@ -182,11 +198,15 @@ lemma comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> 
   by auto
 (* TODO category laws *)
 
+
+lemma transpose_op_hom[simp]: \<open>maps_hom transpose_op\<close>
+  sorry
+
 type_synonym ('a,'b,'c) maps_2hom = \<open>'a domain_end \<Rightarrow> 'b domain_end \<Rightarrow> 'c domain_end\<close>
-definition maps_2hom :: "('a::domain, 'b::domain, 'c::domain) maps_2hom \<Rightarrow> bool" where
+definition maps_2hom :: "('a::enum, 'b::enum, 'c::enum) maps_2hom \<Rightarrow> bool" where
   "maps_2hom F \<longleftrightarrow> (\<forall>a. maps_hom (F a)) \<and> (\<forall>b. maps_hom (\<lambda>a. F a b))"
 
-axiomatization where comp_2hom: "maps_2hom comp_domain"
+axiomatization where comp_2hom: "maps_2hom comp_op"
 
 
 lift_definition tensor_state :: \<open>('a::enum) state \<Rightarrow> ('b::enum) state \<Rightarrow> ('a\<times>'b) state\<close> is
@@ -205,22 +225,23 @@ lift_definition tensor_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> 
 
 lemma tensor_op_state: "apply_operator (tensor_op A B) (tensor_state \<psi> \<phi>)
   = tensor_state (apply_operator A \<psi>) (apply_operator B \<phi>)"
-proof -
-(* (* TODO: use tensor_pack_sum instead *)
-  have split_sum: "(\<Sum>i = 0..<CARD('c) * CARD('d). f i)
-      = (\<Sum>i = 0..<CARD('c). \<Sum>j = 0..<CARD('d). 
-          f (tensor_pack CARD('c) CARD('d) (i, j)))" for f :: "_ \<Rightarrow> complex"
-    apply (subst sum.cartesian_product) apply simp
-    apply (subst sum.reindex[where h=\<open>tensor_pack CARD('c) CARD('d)\<close>, unfolded o_def, symmetric])
-    by auto *)
+  apply transfer
+  apply (auto simp: case_prod_beta Let_def sum_product vec_eq_iff scalar_prod_def mult_mat_vec_def)
+  apply (rule sum.cong, simp)
+  apply (rule sum.cong, simp)
+  by auto
 
-  show ?thesis
-    apply transfer
-    apply (auto simp: case_prod_beta Let_def sum_product vec_eq_iff scalar_prod_def mult_mat_vec_def)
-    apply (rule sum.cong, simp)
-    apply (rule sum.cong, simp)
-    by auto
-qed
+lemma comp_tensor_op: "comp_op (tensor_op a b) (tensor_op c d) = tensor_op (comp_op a c) (comp_op b d)"
+  apply transfer
+  apply (simp add: mat_eq_iff scalar_prod_def case_prod_beta Ball_def)
+  apply (intro allI impI)
+  unfolding sum_product
+  apply (rule sum.cong, simp)
+  apply (rule sum.cong, simp)
+  by simp
+
+lemma tensor_op_adjoint: "tensor_op (adjoint_op a) (adjoint_op b) = adjoint_op (tensor_op a b)"
+  sorry
 
 abbreviation tensor_maps :: \<open>'a::enum domain_end \<Rightarrow> 'b::enum domain_end \<Rightarrow> ('a\<times>'b) domain_end\<close> where
   \<open>tensor_maps \<equiv> tensor_op\<close>
@@ -281,11 +302,24 @@ lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
   apply (rule ext)
   by (subst tensor_right_tensor_maps, simp)
 
+lemma tensor_extensionality:
+  fixes F G :: \<open>('a::enum\<times>'b::enum, 'c::enum) maps_hom\<close>
+  assumes [simp]: "maps_hom F" "maps_hom G"
+  assumes "(\<And>a b. F (tensor_maps a b) = G (tensor_maps a b))"
+  shows "F = G"
+  sorry
+
+lemma tensor_id[simp]: \<open>tensor_maps id_operator id_operator = id_operator\<close>
+  apply transfer
+  apply (auto simp: case_prod_beta mat_eq_iff)
+  by (metis prod.expand tensor_pack_unpack)
 
 definition tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2hom
                             \<Rightarrow> (('a\<times>'b, 'c) maps_hom)\<close> where
 (* TODO *)
   "tensor_lift = undefined"
+
+
 
 lemma tensor_lift_hom: "maps_2hom F2 \<Longrightarrow> maps_hom (tensor_lift F2)"
   sorry
@@ -347,19 +381,84 @@ lemma lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain
   unfolding lvalue_def
   by auto
 
+
+
 lemma pair_lvalue_axiom: 
-  assumes \<open>lvalue F\<close> and \<open>lvalue G\<close> and \<open>maps_hom p\<close>
-  assumes \<open>\<And>a b. comp_domain (F a) (G b) = comp_domain (G b) (F a)\<close>
-  assumes \<open>\<And>a b. p (tensor_maps a b) = comp_domain (F a) (G b)\<close>
+  fixes F :: \<open>('a::enum, 'c::enum) maps_hom\<close> and G :: \<open>('b::enum, 'c::enum) maps_hom\<close>
+  assumes \<open>lvalue F\<close> and \<open>lvalue G\<close> and [simp]: \<open>maps_hom p\<close>
+  assumes compat: \<open>\<And>a b. comp_op (F a) (G b) = comp_op (G b) (F a)\<close>
+  assumes tensor: \<open>\<And>a b. p (tensor_op a b) = comp_op (F a) (G b)\<close>
   shows \<open>lvalue p\<close>
 proof (unfold lvalue_def, intro conjI allI)
-  fix a b :: \<open>('a \<times> 'c, 'a \<times> 'c) operator\<close>
+  fix x y :: \<open>('a \<times> 'b, 'a \<times> 'b) operator\<close>
   show "maps_hom p"
     using assms by auto
   show \<open>p id_operator = id_operator\<close>
-    by auto
-  show \<open>p (comp_op a b) = comp_domain (p a) (p b)\<close>
-    by -
-  show \<open>p (adjoint_op a) = adjoint_op (p a)\<close>
+    unfolding tensor_id[symmetric] tensor
+    using \<open>lvalue F\<close> \<open>lvalue G\<close> unfolding lvalue_def by auto
+  show \<open>p (comp_op x y) = comp_op (p x) (p y)\<close>
+  proof -
+    have \<open>p (comp_op (tensor_op a b) (tensor_op a' b')) 
+          = comp_op (p (tensor_op a b)) (p  (tensor_op a' b'))\<close> for a b a' b'
+    proof -
+      have \<open>p (comp_op (tensor_op a b) (tensor_op a' b')) = p (tensor_op (comp_op a a') (comp_op b b'))\<close>
+        unfolding comp_tensor_op by simp
+      also have \<open>\<dots> = comp_op (F (comp_op a a')) (G (comp_op b b'))\<close>
+        unfolding tensor by simp
+      also have \<open>\<dots> = comp_op (comp_op (F a) (F a')) (comp_op (G b) (G b'))\<close>
+        using \<open>lvalue F\<close> \<open>lvalue G\<close> unfolding lvalue_def by simp
+      also have \<open>\<dots> = comp_op (comp_op (F a) (G b)) (comp_op (F a') (G b'))\<close>
+        using compat comp_domain_assoc by metis
+      also have \<open>\<dots> = comp_op (p (tensor_maps a b)) (p (tensor_maps a' b'))\<close>
+        unfolding tensor by simp
+      finally show ?thesis
+        by -
+    qed
+    then have \<open>p (comp_op x (tensor_op a' b')) 
+          = comp_op (p x) (p  (tensor_op a' b'))\<close> for a' b'
+      apply (rule tensor_extensionality[THEN fun_cong, rotated -1])
+       apply (rule comp_maps_hom[unfolded o_def, of _ p])
+      using comp_2hom maps_2hom_def apply auto[2]
+       apply (rule comp_maps_hom[unfolded o_def, of p])
+      using comp_2hom maps_2hom_def by auto
+    then show ?thesis
+      apply (rule tensor_extensionality[THEN fun_cong, rotated -1])
+       apply (rule comp_maps_hom[unfolded o_def, of _ p])
+      using comp_2hom maps_2hom_def apply auto[2]
+       apply (rule comp_maps_hom[unfolded o_def, of p])
+      using comp_2hom maps_2hom_def by auto
+  qed
+  show \<open>p (adjoint_op x) = adjoint_op (p x)\<close>
+  proof -
+    have \<open>(p \<circ> adjoint_op) (tensor_op a b) = (adjoint_op \<circ> p) (tensor_op a b)\<close> for a b
+    proof -
+      have \<open>(p \<circ> adjoint_op) (tensor_op a b) = p (tensor_op (adjoint_op a) (adjoint_op b))\<close>
+        unfolding tensor_op_adjoint by simp
+      also have \<open>... = comp_op (F (adjoint_op a)) (G (adjoint_op b))\<close>
+        by (simp add: tensor)
+      also have \<open>... = comp_op (adjoint_op (F a)) (adjoint_op (G b))\<close>
+        using \<open>lvalue F\<close> \<open>lvalue G\<close> unfolding lvalue_def by simp
+      also have \<open>... = adjoint_op (comp_op (G b) (F a))\<close>
+        apply (simp add: comp_adjoint_op)
+      also have \<open>... = adjoint_op (comp_op (F a) (G b))\<close>
+        using compat by simp
+      also have \<open>... = adjoint_op (p (tensor_op a b))\<close>
+        unfolding tensor by simp
+      also have \<open>\<dots> = (adjoint_op \<circ> p) (tensor_op a b)\<close>
+        by auto
+      finally show ?thesis
+        by-
+    qed
+    then have \<open>(conjugate_op \<circ> p \<circ> adjoint_op) (tensor_op a b) = (conjugate_op \<circ> adjoint_op \<circ> p) (tensor_op a b)\<close> for a b
+      by simp
+    then have \<open>conjugate_op \<circ> p \<circ> adjoint_op = conjugate_op \<circ> adjoint_op \<circ> p\<close>
+      apply (rule tensor_extensionality[rotated -1])
+      sorry
+    then have \<open>p \<circ> adjoint_op = adjoint_op \<circ> p\<close>
+      by (metis (no_types, lifting) comp_assoc conjugate_op_involution fun.map_id0 id_apply isomorphism_expand)
+    then show ?thesis
+      unfolding o_def by metis
+  qed
+qed
 
 end

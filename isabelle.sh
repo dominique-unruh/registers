@@ -5,7 +5,7 @@ set -e
 DIR="$(dirname "$BASH_SOURCE[0]")"
 
 if [ "$#" = 0 ]; then
-    FILES=("$DIR/Laws.thy")
+    FILES=("$DIR/Quantum.thy")
 else
     FILES=()
 fi
