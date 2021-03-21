@@ -1,5 +1,5 @@
 theory Laws
-  imports Axioms
+  imports Classical
     "HOL-Library.Rewrite"
 begin
 
@@ -9,11 +9,18 @@ subsection \<open>Elementary facts\<close>
 
 declare tensor_2hom[simp]
 
-lemma maps_hom_2hom_comp: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. G (F2 a b))\<close>
+
+lemma maps_2hom_hom_comp2: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. F2 a (G b))\<close>
+  apply (rule maps_2hom_sym) apply (rule maps_2hom_hom_comp1) apply (rule maps_2hom_sym) by simp
+
+lemma maps_2hom_right: \<open>maps_2hom F2 \<Longrightarrow> maps_hom (\<lambda>b. F2 a b)\<close>
+  apply (rule maps_2hom_left) by (rule maps_2hom_sym)
+
+(* lemma maps_hom_2hom_comp: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. G (F2 a b))\<close>
   unfolding maps_2hom_def 
   using comp_maps_hom[of \<open>\<lambda>a. F2 a _\<close> G]
   using comp_maps_hom[of \<open>\<lambda>b. F2 _ b\<close> G]
-  unfolding o_def by auto
+  unfolding o_def by auto *)
 
 subsection \<open>Tensor product of homs\<close>
 
@@ -22,16 +29,8 @@ definition "tensor_maps_hom F G = tensor_lift (\<lambda>a b. F a \<otimes> G b)"
 lemma maps_2hom_F_tensor_G[simp]:
   assumes \<open>maps_hom F\<close> and \<open>maps_hom G\<close>
   shows \<open>maps_2hom (\<lambda>a b. F a \<otimes> G b)\<close>
-proof -
-  have \<open>maps_hom (\<lambda>b. F a \<otimes> G b)\<close> for a
-    using \<open>maps_hom G\<close> apply (rule comp_maps_hom[of G \<open>\<lambda>b. F a \<otimes> b\<close>, unfolded comp_def])
-    using maps_2hom_def by (auto intro!: tensor_2hom)
-  moreover have \<open>maps_hom (\<lambda>a. F a \<otimes> G b)\<close> for b
-    using \<open>maps_hom F\<close> apply (rule comp_maps_hom[of F \<open>\<lambda>a. a \<otimes> G b\<close>, unfolded comp_def])
-    using maps_2hom_def by (auto intro!: tensor_2hom)
-  ultimately show ?thesis
-    unfolding maps_2hom_def by auto
-qed
+  apply (rule maps_2hom_hom_comp1, rule maps_2hom_hom_comp2)
+  by (rule tensor_2hom assms)+
 
 lemma tensor_maps_hom_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> maps_hom (tensor_maps_hom F G)"
   unfolding tensor_maps_hom_def apply (rule tensor_lift_hom) by simp
@@ -62,10 +61,10 @@ proof -
 qed
 
 lemma left_tensor_hom[simp]: "maps_hom ((\<otimes>) a)"
-  using maps_2hom_def tensor_2hom by blast
+  by (simp add: maps_2hom_right)
 
 lemma right_tensor_hom[simp]: "maps_hom (\<lambda>a. (\<otimes>) a b)"
-  using maps_2hom_def tensor_2hom by blast
+  by (simp add: maps_2hom_left)
 
 lemma tensor_extensionality3: 
   fixes F G :: \<open>('a::domain\<times>'b::domain\<times>'c::domain, 'd::domain) maps_hom\<close>
@@ -92,12 +91,12 @@ definition \<open>swap = tensor_lift (\<lambda>a b. b \<otimes> a)\<close>
 
 lemma swap_hom[simp]: "maps_hom swap"
   unfolding swap_def apply (rule tensor_lift_hom) 
-  using tensor_2hom unfolding maps_2hom_def by auto
+  apply (rule maps_2hom_sym) by (fact tensor_2hom)
 
 lemma swap_apply[simp]: "swap (a \<otimes> b) = (b \<otimes> a)"
   unfolding swap_def 
   apply (rule tensor_existence[THEN fun_cong, THEN fun_cong])
-  using tensor_2hom unfolding maps_2hom_def by auto
+  apply (rule maps_2hom_sym) by (fact tensor_2hom)
 
 subsection \<open>Pairs and compatibility\<close>
 
@@ -120,20 +119,19 @@ lemma maps_hom_F_comp_G1:
   assumes \<open>maps_hom G\<close>
   shows \<open>maps_hom (\<lambda>b. F a \<circ>\<^sub>d G b)\<close>
   using assms apply (rule comp_maps_hom[of G \<open>\<lambda>b. F a \<circ>\<^sub>d b\<close>, unfolded comp_def])
-  using maps_2hom_def comp_2hom by auto
+  apply (rule maps_2hom_right) using comp_2hom by auto
 
 lemma maps_hom_F_comp_G2:
   assumes \<open>maps_hom F\<close>
   shows \<open>maps_hom (\<lambda>a. F a \<circ>\<^sub>d G b)\<close> 
-    using assms apply (rule comp_maps_hom[of F \<open>\<lambda>a. a \<circ>\<^sub>d G b\<close>, unfolded comp_def])
-    using maps_2hom_def comp_2hom by auto
+  using assms apply (rule comp_maps_hom[of F \<open>\<lambda>a. a \<circ>\<^sub>d G b\<close>, unfolded comp_def])
+  apply (rule maps_2hom_left) using comp_2hom by auto
 
 lemma maps_2hom_F_comp_G[simp]:
   assumes \<open>maps_hom F\<close> and \<open>maps_hom G\<close>
   shows \<open>maps_2hom (\<lambda>a b. F a \<circ>\<^sub>d G b)\<close>
-  unfolding maps_2hom_def
-  using assms
-  by (auto intro!: maps_hom_F_comp_G1 maps_hom_F_comp_G2)
+  apply (rule maps_2hom_hom_comp1, rule maps_2hom_hom_comp2)
+  by (rule comp_2hom assms)+
 
 lemma pair_hom[simp]:
   assumes "maps_hom F" and "maps_hom G"
@@ -163,7 +161,9 @@ proof (rule compatibleI)
     using lvalue_hom by blast+
   have "(pair (pair x y) z) ((f \<otimes> g) \<otimes> h) = (pair z (pair x y)) (h \<otimes> (f \<otimes> g))" for f g h
     apply auto using assms unfolding compatible_def
-    by (metis comp_domain_assoc)
+    apply (smt (z3) comp_domain_assoc relcomp.relcompI)
+    by (smt (verit, ccfv_threshold) assms(2) assms(3) comp_domain_assoc compatible_def relcomp.relcompI)
+    (* by (metis comp_domain_assoc) *)
   then have "(pair (pair x y) z \<circ> swap \<circ> (\<otimes>) h) (f \<otimes> g)
            = (pair z (pair x y) \<circ> (\<otimes>) h) (f \<otimes> g)" for f g h
     by auto
