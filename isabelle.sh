@@ -10,4 +10,4 @@ else
     FILES=()
 fi
 
-/opt/Isabelle2021/bin/isabelle jedit -l Lots-Of-Stuff "${FILES[@]}" "$@" &
+/opt/Isabelle2021/bin/isabelle jedit -l Bounded_Operators -d . "${FILES[@]}" "$@" &

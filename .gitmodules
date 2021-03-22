@@ -1,0 +1,3 @@
+[submodule "bounded-operators"]
+	path = bounded-operators
+	url = git@github.com:dominique-unruh/bounded-operators.git

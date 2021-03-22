@@ -1,8 +1,10 @@
 theory Quantum
   imports Jordan_Normal_Form.Matrix_Impl "HOL-Library.Rewrite"
- Jordan_Normal_Form.Matrix
+          Bounded_Operators.Complex_L2
 begin
 
+unbundle cblinfun_notation
+no_notation m_inv ("inv\<index> _" [81] 80)
 
 instantiation mat :: (conjugate) conjugate
 begin
@@ -32,17 +34,11 @@ lemma dim_col_conjugate[simp]: \<open>dim_col (conjugate M) = dim_col M\<close>
 lemma conjugate_index[simp]: \<open>i < dim_row A \<Longrightarrow> j < dim_col A \<Longrightarrow> conjugate A $$ (i,j) = conjugate (A $$ (i,j))\<close>
   unfolding conjugate_mat_def by auto
 
-lemma row_conjugate_mat[simp]: \<open>i < dim_row A \<Longrightarrow> row (conjugate A) i = conjugate (row A i)\<close>
-  unfolding conjugate_mat_def by auto
+(* lemma row_conjugate_mat[simp]: \<open>i < dim_row A \<Longrightarrow> row (conjugate A) i = conjugate (row A i)\<close>
+  unfolding conjugate_mat_def by auto *)
 
 lemma col_conjugate_mat[simp]: \<open>i < dim_col A \<Longrightarrow> col (conjugate A) i = conjugate (col A i)\<close>
   unfolding conjugate_mat_def by auto
-
-(* definition "adjoint_mat M = conjugate (transpose_mat M)"
-
-lemma adjoint_carrier_mat[simp]: \<open>M \<in> carrier_mat n m \<Longrightarrow> adjoint_mat M \<in> carrier_mat m n\<close>
-  unfolding adjoint_mat_def
-  by auto *)
 
 lemma sum_single: 
   assumes "finite A"
@@ -51,8 +47,8 @@ lemma sum_single:
   apply (subst sum.mono_neutral_cong_right[where S=\<open>A \<inter> {i}\<close> and h=f])
   using assms by auto
 
-lemma index_mat_fstsnd:  "fst x < nr \<Longrightarrow> snd x < nc \<Longrightarrow> mat nr nc f $$ x = f x"
-  apply (cases x) by auto
+(* lemma index_mat_fstsnd:  "fst x < nr \<Longrightarrow> snd x < nc \<Longrightarrow> mat nr nc f $$ x = f x"
+  apply (cases x) by auto *)
 
 definition tensor_pack :: "nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat) \<Rightarrow> nat" where "tensor_pack X Y = (\<lambda>(x, y). x * Y + y)"
 definition tensor_unpack :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat)"  where "tensor_unpack X Y xy = (xy div Y, xy mod Y)"
@@ -117,24 +113,10 @@ class domain = enum
 instance prod :: (domain,domain) domain
   by intro_classes
 
-typedef (overloaded) ('a::enum) state =
-  \<open>carrier_vec CARD('a) :: complex vec set\<close>
-  apply (rule exI[of _ \<open>zero_vec CARD('a)\<close>])
-  by auto
-setup_lifting type_definition_state
+type_synonym 'a state = \<open>'a ell2\<close>
+type_synonym 'a domain_end = \<open>('a state, 'a state) cblinfun\<close>
 
-lift_definition rawket :: \<open>nat \<Rightarrow> 'a::enum state\<close> is (* TODO needed? *)
-  \<open>\<lambda>i. unit_vec CARD('a) i\<close>
-  by simp
-
-typedef (overloaded) ('a::enum, 'b::enum) operator =
-  \<open>carrier_mat CARD('b) CARD('a) :: complex mat set\<close>
-  apply (rule exI[of _ \<open>zero_mat CARD('b) CARD('a)\<close>])
-  by auto
-type_synonym 'a domain_end = \<open>('a,'a) operator\<close>
-setup_lifting type_definition_operator
-
-lift_definition index_op :: \<open>nat \<Rightarrow> nat \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
+(* lift_definition index_op :: \<open>nat \<Rightarrow> nat \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
   \<open>\<lambda>i j. mat CARD('b) CARD('a) (\<lambda>(k,l). if k=i \<and> l=j then 1 else 0)\<close>
   by auto
 
@@ -151,23 +133,23 @@ lift_definition apply_operator :: \<open>('a::enum, 'b::enum) operator \<Rightar
 
 lift_definition comp_op :: "('b::enum,'c::enum) operator \<Rightarrow> ('a::enum,'b) operator \<Rightarrow> ('a,'c) operator"  is
   "times"
-  by auto
+  by auto *)
 
-lemma comp_id_op_left[simp]: "comp_op id_operator a = a"
-  apply transfer by auto
+(* lemma comp_id_op_left[simp]: "comp_op id_operator a = a"
+  apply transfer by auto *)
 
 abbreviation comp_domain :: "'a::domain domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
-  "comp_domain \<equiv> comp_op"
+  "comp_domain \<equiv> timesOp"
 
-lemma comp_domain_assoc: "comp_op (comp_op a b) c = comp_op a (comp_op b c)"
-  apply transfer by auto
+lemma comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_domain b c)"
+  by (simp add: cblinfun_apply_assoc)
 
-lemma comp_apply_operator[simp]:
+(* lemma comp_apply_operator[simp]:
  "apply_operator (comp_op A B) \<psi> = apply_operator A (apply_operator B \<psi>)"
   apply transfer
-  by auto
+  by auto *)
 
-lift_definition conjugate_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
+(* lift_definition conjugate_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
   \<open>conjugate\<close>
   by auto
 
@@ -179,14 +161,16 @@ lift_definition transpose_op :: \<open>('a::enum, 'b::enum) operator \<Rightarro
   by auto
 
 definition adjoint_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('b::enum, 'a::enum) operator\<close> where
-  \<open>adjoint_op M = conjugate_op (transpose_op M)\<close>
+  \<open>adjoint_op M = conjugate_op (transpose_op M)\<close> *)
 
-lemma comp_adjoint_op: "adjoint_op (comp_op A B) = comp_op (adjoint_op B) (adjoint_op A)"
+(* times_adjoint
+lemma comp_adjoint_op: "adjoint (timesOp A B) = timesOp (adjoint B) (adjoint A)"
   unfolding adjoint_op_def apply transfer
   apply (auto simp: mat_eq_iff conjugate_mat_def scalar_prod_def simp flip: map_mat_transpose)
   by (meson mult.commute)
+*)
 
-typedef ('a,'b) superoperator = \<open>UNIV :: ('a\<times>'a, 'b\<times>'b) operator set\<close>
+(* typedef ('a,'b) superoperator = \<open>UNIV :: ('a\<times>'a, 'b\<times>'b) operator set\<close>
   by auto
 setup_lifting type_definition_superoperator
 
@@ -213,21 +197,18 @@ lemma flatten_unflatten_operator[simp]: "flatten_operator (unflatten_operator M)
 
 lemma comp_apply_superop[simp]: "apply_superop (comp_superop A B) \<psi> = apply_superop A (apply_superop B \<psi>)"
   apply transfer by auto
+ *)
 
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
 definition maps_hom :: \<open>('a::enum,'b::enum) maps_hom \<Rightarrow> bool\<close> where
-  "maps_hom F \<longleftrightarrow> (\<exists>M. F = apply_superop M)"
+  "maps_hom F \<longleftrightarrow> clinear F"
 
 lemma comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> maps_hom (G \<circ> F)"
-  unfolding maps_hom_def 
-  apply auto apply (rule exI[of _ "comp_superop _ _"])
-  apply (rule ext)
-  by auto
+  unfolding maps_hom_def
+  by (simp add: Complex_Vector_Spaces.linear_compose) 
 (* TODO category laws *)
 
-term transpose_op
-
-lift_definition transpose_op00 :: \<open>('a::enum \<times> 'b::enum, 'b \<times> 'a) operator\<close> is
+(* lift_definition transpose_op00 :: \<open>('a::enum \<times> 'b::enum, 'b \<times> 'a) operator\<close> is
   \<open>mat CARD('a\<times>'b) CARD('b\<times>'a) (\<lambda>(i,j).
     let (ia, ib) = tensor_unpack CARD('a) CARD('b) i in
     let (jb, ja) = tensor_unpack CARD('b) CARD('a) j in
@@ -243,62 +224,158 @@ lemma transpose_op_hom[simp]: \<open>maps_hom transpose_op\<close>
   apply (subst sum_single)
     apply auto[2]
   apply (subst sum_single)
-  by auto
+  by auto *)
 
 type_synonym ('a,'b,'c) maps_2hom = \<open>'a domain_end \<Rightarrow> 'b domain_end \<Rightarrow> 'c domain_end\<close>
 definition maps_2hom :: "('a::enum, 'b::enum, 'c::enum) maps_2hom \<Rightarrow> bool" where
   "maps_2hom F \<longleftrightarrow> (\<forall>a. maps_hom (F a)) \<and> (\<forall>b. maps_hom (\<lambda>a. F a b))"
 
-axiomatization where comp_2hom: "maps_2hom comp_op"
+lemma maps_2hom_bilinear: "maps_2hom F \<longleftrightarrow> cbilinear F"
+  by (meson cbilinear_def maps_2hom_def maps_hom_def)
 
+lemma comp_2hom: "maps_2hom timesOp"
+  unfolding maps_2hom_def maps_hom_def
+  by (auto intro!: clinearI simp add: cblinfun_apply_dist1 cblinfun_apply_dist2)
 
-lift_definition tensor_state :: \<open>('a::enum) state \<Rightarrow> ('b::enum) state \<Rightarrow> ('a\<times>'b) state\<close> is
-  \<open>\<lambda>\<psi> \<phi>. vec (CARD('a)*CARD('b)) (\<lambda>i. 
-       let (i1,i2) = tensor_unpack CARD('a) CARD('b) i in \<psi> $ i1 * \<phi> $ i2)\<close>
+lift_definition tensor_state :: \<open>'a::finite state \<Rightarrow> 'b::finite state \<Rightarrow> ('a\<times>'b) state\<close> is
+  \<open>\<lambda>\<psi> \<phi> (i,j). \<psi> i * \<phi> j\<close>
   by simp
 
-lift_definition tensor_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('c::enum, 'd::enum) operator 
+lemma tensor_state_add2: \<open>tensor_state a (b + c) = tensor_state a b + tensor_state a c\<close>
+  apply transfer apply (rule ext) apply (auto simp: case_prod_beta)
+  by (meson ordered_field_class.sign_simps(42))
+
+lemma tensor_state_add1: \<open>tensor_state (a + b) c = tensor_state a c + tensor_state b c\<close>
+  apply transfer apply (rule ext) apply (auto simp: case_prod_beta)
+  by (simp add: vector_space_over_itself.scale_left_distrib)
+
+lemma tensor_state_scaleC2: \<open>tensor_state a (c *\<^sub>C b) = c *\<^sub>C tensor_state a b\<close>
+  apply transfer apply (rule ext) by (auto simp: case_prod_beta)
+
+lemma tensor_state_scaleC1: \<open>tensor_state (c *\<^sub>C a) b = c *\<^sub>C tensor_state a b\<close>
+  apply transfer apply (rule ext) by (auto simp: case_prod_beta)
+
+lemma clinear_tensor_state1: "clinear (\<lambda>b. tensor_state a b)"
+  apply (rule clinearI; transfer)
+  apply (auto simp: case_prod_beta)
+  by (simp add: cond_case_prod_eta ordered_field_class.sign_simps(42))
+
+lemma clinear_tensor_state2: "clinear (\<lambda>a. tensor_state a b)"
+  apply (rule clinearI; transfer)
+  apply (auto simp: case_prod_beta)
+  by (simp add: case_prod_beta' mult.commute ordered_field_class.sign_simps(42))
+
+lemma tensor_state_ket[simp]: "tensor_state (ket i) (ket j) = ket (i,j)"
+  apply transfer by auto
+
+(* lift_definition tensor_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('c::enum, 'd::enum) operator 
                                  \<Rightarrow> ('a\<times>'c, 'b\<times>'d) operator\<close> is
   \<open>\<lambda>A B. mat (CARD('b)*CARD('d)) (CARD('a)*CARD('c)) 
       (\<lambda>(i,j). let (i1,i2) = tensor_unpack CARD('b) CARD('d) i in
                let (j1,j2) = tensor_unpack CARD('a) CARD('c) j in
                A $$ (i1, j1) * B $$ (i2, j2))\<close>
-  by auto
+  by auto *)
+
+definition tensor_op :: \<open>('a::finite ell2, 'b::finite ell2) cblinfun \<Rightarrow> ('c::finite ell2, 'd::finite ell2) cblinfun
+      \<Rightarrow> (('a\<times>'c) ell2, ('b\<times>'d) ell2) cblinfun\<close> where
+  \<open>tensor_op M N = (SOME P. \<forall>a c. P *\<^sub>V (ket (a,c))
+      = tensor_state (M *\<^sub>V ket a) (N *\<^sub>V ket c))\<close>
+
+lemma tensor_op_ket: 
+  fixes a :: \<open>'a::finite\<close> and b :: \<open>'b::finite\<close> and c :: \<open>'c::finite\<close> and d :: \<open>'d::finite\<close>
+  shows \<open>tensor_op M N *\<^sub>V (ket (a,c)) = tensor_state (M *\<^sub>V ket a) (N *\<^sub>V ket c)\<close>
+proof -
+  define S :: \<open>('a\<times>'c) state set\<close> where "S = ket ` UNIV"
+  define \<phi> where \<open>\<phi> = (\<lambda>(a,c). tensor_state (M *\<^sub>V ket a) (N *\<^sub>V ket c))\<close>
+  define \<phi>' where \<open>\<phi>' = \<phi> \<circ> inv ket\<close>
+
+  have def: \<open>tensor_op M N = (SOME P. \<forall>a c. P *\<^sub>V (ket (a,c)) = \<phi> (a,c))\<close>
+    unfolding tensor_op_def \<phi>_def by auto
+
+  have \<open>cindependent S\<close>
+    using S_def cindependent_ket by blast
+  moreover have \<open>cspan S = UNIV\<close>
+    by (metis S_def finite_class.finite_UNIV finite_imageI ket_ell2_span span_finite_dim)
+  moreover have \<open>finite S\<close>
+    using S_def finite_class.finite_UNIV by blast
+  ultimately have "cblinfun_extension_exists S \<phi>'"
+    by (rule cblinfun_extension_exists_finite)
+  then have "\<exists>P. \<forall>x\<in>S. P *\<^sub>V x = \<phi>' x"
+    unfolding cblinfun_extension_exists_def by auto
+  then have ex: \<open>\<exists>P. \<forall>a c. P *\<^sub>V ket (a,c) = \<phi> (a,c)\<close>
+    by (metis S_def \<phi>'_def comp_eq_dest_lhs inj_ket inv_f_f rangeI)
 
 
-lemma tensor_op_state: "apply_operator (tensor_op A B) (tensor_state \<psi> \<phi>)
-  = tensor_state (apply_operator A \<psi>) (apply_operator B \<phi>)"
+  then have \<open>tensor_op M N *\<^sub>V (ket (a,c)) = \<phi> (a,c)\<close>
+    unfolding def apply (rule someI2_ex[where P=\<open>\<lambda>P. \<forall>a c. P *\<^sub>V (ket (a,c)) = \<phi> (a,c)\<close>])
+    by auto
+  then show ?thesis
+    unfolding \<phi>_def by auto
+qed
+
+(* TODO should be in bounded operators. Implicitly proven in: *)
+thm equal_basis_0
+thm superposition_principle_linear_ket
+lemma cbounded_linear_equal_ket:
+  assumes \<open>cbounded_linear f\<close>
+  assumes \<open>cbounded_linear g\<close>
+  assumes \<open>\<And>i. f (ket i) = g (ket i)\<close>
+  shows \<open>f = g\<close>
+  sorry
+
+lemma cbounded_linear_finite_ell2[simp, intro!]:
+  fixes f :: \<open>'a::finite ell2 \<Rightarrow> 'b::complex_normed_vector\<close>
+  assumes "clinear f"
+  shows \<open>cbounded_linear f\<close>
+  apply (subst cblinfun_operator_finite_dim[where basis=\<open>ket ` UNIV\<close>])
+  using assms apply (auto intro!: cindependent_ket)
+  by (metis finite_class.finite_UNIV finite_imageI iso_tuple_UNIV_I ket_ell2_span span_finite_dim)
+
+lemma tensor_op_state: "tensor_op A B *\<^sub>V tensor_state \<psi> \<phi> = tensor_state (A *\<^sub>V \<psi>) (B *\<^sub>V \<phi>)"
+proof -
+  have 1: \<open>cbounded_linear (\<lambda>a. tensor_op A B *\<^sub>V tensor_state a (ket b))\<close> for b
+    apply auto apply (rule clinearI)
+    by (auto simp: tensor_state_add1 tensor_state_scaleC1 cblinfun_apply_add)
+  have 2: \<open>cbounded_linear (\<lambda>a. tensor_state (A *\<^sub>V a) (B *\<^sub>V ket b))\<close> for b
+    apply auto apply (rule clinearI)
+    by (auto simp: tensor_state_add1 tensor_state_scaleC1 cblinfun_apply_add)
+  have 3: \<open>cbounded_linear (\<lambda>a. tensor_op A B *\<^sub>V tensor_state \<psi> a)\<close>
+    apply auto apply (rule clinearI)
+    by (auto simp: tensor_state_add2 tensor_state_scaleC2 cblinfun_apply_add)
+  have 4: \<open>cbounded_linear (\<lambda>a. tensor_state (A *\<^sub>V \<psi>) (B *\<^sub>V a))\<close>
+    apply auto apply (rule clinearI)
+    by (auto simp: tensor_state_add2 tensor_state_scaleC2 cblinfun_apply_add)
+
+  have eq_ket_ket: \<open>tensor_op A B *\<^sub>V tensor_state (ket a) (ket b) = tensor_state (A *\<^sub>V ket a) (B *\<^sub>V ket b)\<close> for a b
+    by (simp add: tensor_op_ket)
+  have eq_ket: \<open>tensor_op A B *\<^sub>V tensor_state \<psi> (ket b) = tensor_state (A *\<^sub>V \<psi>) (B *\<^sub>V ket b)\<close> for b
+    apply (rule fun_cong[where x=\<psi>])
+    using 1 2 eq_ket_ket by (rule cbounded_linear_equal_ket)
+  show ?thesis 
+    apply (rule fun_cong[where x=\<phi>])
+    using 3 4 eq_ket by (rule cbounded_linear_equal_ket)
+qed
+
+lemma comp_tensor_op: "(tensor_op a b) o\<^sub>C\<^sub>L (tensor_op c d) = tensor_op (a o\<^sub>C\<^sub>L c) (b o\<^sub>C\<^sub>L d)"
+  apply (rule equal_ket)
+  apply (rename_tac ij, case_tac ij, rename_tac i j, hypsubst_thin)
+  by (simp flip: tensor_state_ket add: tensor_op_state times_applyOp)
+
+(* lemma tensor_op_conjugate[simp]: "tensor_op (conjugate_op a) (conjugate_op b) = conjugate_op (tensor_op a b)"
   apply transfer
-  apply (auto simp: case_prod_beta Let_def sum_product vec_eq_iff scalar_prod_def mult_mat_vec_def)
-  apply (rule sum.cong, simp)
-  apply (rule sum.cong, simp)
-  by auto
+  by (auto simp: conjugate_mat_def mat_eq_iff case_prod_beta) *)
 
-lemma comp_tensor_op: "comp_op (tensor_op a b) (tensor_op c d) = tensor_op (comp_op a c) (comp_op b d)"
+(* lemma tensor_op_transpose[simp]: "tensor_op (transpose_op a) (transpose_op b) = transpose_op (tensor_op a b)"
   apply transfer
-  apply (simp add: mat_eq_iff scalar_prod_def case_prod_beta Ball_def)
-  apply (intro allI impI)
-  unfolding sum_product
-  apply (rule sum.cong, simp)
-  apply (rule sum.cong, simp)
-  by simp
+  by (auto simp: mat_eq_iff case_prod_beta) *)
 
-lemma tensor_op_conjugate[simp]: "tensor_op (conjugate_op a) (conjugate_op b) = conjugate_op (tensor_op a b)"
-  apply transfer
-  by (auto simp: conjugate_mat_def mat_eq_iff case_prod_beta)
+(* lemma tensor_op_adjoint[simp]: "tensor_op (adjoint_op a) (adjoint_op b) = adjoint_op (tensor_op a b)"
+  unfolding adjoint_op_def by simp *)
 
-lemma tensor_op_transpose[simp]: "tensor_op (transpose_op a) (transpose_op b) = transpose_op (tensor_op a b)"
-  apply transfer
-  by (auto simp: mat_eq_iff case_prod_beta)
-
-lemma tensor_op_adjoint[simp]: "tensor_op (adjoint_op a) (adjoint_op b) = adjoint_op (tensor_op a b)"
-  unfolding adjoint_op_def by simp
-
-abbreviation tensor_maps :: \<open>'a::enum domain_end \<Rightarrow> 'b::enum domain_end \<Rightarrow> ('a\<times>'b) domain_end\<close> where
+abbreviation tensor_maps :: \<open>'a::finite domain_end \<Rightarrow> 'b::finite domain_end \<Rightarrow> ('a\<times>'b) domain_end\<close> where
   \<open>tensor_maps \<equiv> tensor_op\<close>
 
-
-lift_definition tensor_left0 :: "('a::enum,'a) operator \<Rightarrow> ('b::enum \<times> 'b, ('a\<times>'b) \<times> ('a\<times>'b)) operator" is
+(* lift_definition tensor_left0 :: "('a::enum,'a) operator \<Rightarrow> ('b::enum \<times> 'b, ('a\<times>'b) \<times> ('a\<times>'b)) operator" is
   \<open>\<lambda>A::complex mat. mat CARD(('a\<times>'b) \<times> ('a\<times>'b)) CARD('b\<times>'b) (\<lambda>(i,j). 
     let (j1,j2) = tensor_unpack CARD('b) CARD('b) j in
     let (i1,i2) = tensor_unpack CARD('a\<times>'b) CARD('a\<times>'b) i in
@@ -341,125 +418,177 @@ lemma tensor_right_tensor_maps: "apply_superop (tensor_right b) a = tensor_maps 
   apply (subst sum_single[where i=\<open>fst (tensor_unpack CARD('a) CARD('b) _)\<close>])
     apply auto
   apply (subst sum_single[where i=\<open>fst (tensor_unpack CARD('a) CARD('b) _)\<close>])
-  by auto
+  by auto *)
+
+(* TODO belongs into bounded operators *)
+lemma apply_cblinfun_distr_left: "(A + B) *\<^sub>V x = A *\<^sub>V x + B *\<^sub>V x"
+  apply transfer by simp
+
+lemma tensor_maps_cbilinear: \<open>cbilinear tensor_maps\<close>
+proof -
+  have \<open>clinear (\<lambda>b. tensor_maps a b)\<close> for a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
+    apply (rule clinearI)
+     apply (rule equal_ket, rename_tac ij, case_tac ij, rename_tac i j, hypsubst_thin)
+     apply (simp flip: tensor_state_ket add: tensor_op_state apply_cblinfun_distr_left tensor_state_add2)
+    apply (rule equal_ket, rename_tac ij, case_tac ij, rename_tac i j, hypsubst_thin)
+    by (simp flip: tensor_state_ket add: tensor_op_state apply_cblinfun_distr_left tensor_state_scaleC2)
+
+  moreover have \<open>clinear (\<lambda>a. tensor_maps a b)\<close> for b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+    apply (rule clinearI)
+     apply (rule equal_ket, rename_tac ij, case_tac ij, rename_tac i j, hypsubst_thin)
+     apply (simp flip: tensor_state_ket add: tensor_op_state apply_cblinfun_distr_left tensor_state_add1)
+    apply (rule equal_ket, rename_tac ij, case_tac ij, rename_tac i j, hypsubst_thin)
+    by (simp flip: tensor_state_ket add: tensor_op_state apply_cblinfun_distr_left tensor_state_scaleC1)
+
+  ultimately show ?thesis
+    unfolding cbilinear_def by auto
+qed
 
 lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
-  unfolding maps_2hom_def maps_hom_def
-  apply auto
-   apply (rule exI[of _ \<open>tensor_left _\<close>])
-   apply (rule ext)
-   apply (subst tensor_left_tensor_maps, simp)
-  apply (rule exI[of _ \<open>tensor_right _\<close>])
-  apply (rule ext)
-  by (subst tensor_right_tensor_maps, simp)
+  by (simp add: maps_2hom_bilinear tensor_maps_cbilinear)
 
 (* lift_definition operator_nth :: \<open>('a::enum,'b::enum) operator \<Rightarrow> (nat * nat) \<Rightarrow> complex\<close> is
   \<open>index_mat\<close>. *)
+
+definition \<open>butter i j = vector_to_cblinfun (ket i) o\<^sub>C\<^sub>L (vector_to_cblinfun (ket j) :: complex \<Rightarrow>\<^sub>C\<^sub>L _)*\<close>
+
+lemma sum_butter[simp]: \<open>(\<Sum>(i::'a::finite)\<in>UNIV. butter i i) = idOp\<close>
+  unfolding butter_def butterfly_def[symmetric]
+  sorry
+
+lemma linfun_cspan: \<open>cspan {butter i j| (i::'b::finite) (j::'a::finite). True} = UNIV\<close>
+proof (rule, simp, rule)
+  fix f :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  have frep: \<open>f = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butter j i))\<close>
+  proof (rule cblinfun_ext)
+    fix \<phi> :: \<open>'a ell2\<close>
+    have \<open>f *\<^sub>V \<phi> = f *\<^sub>V (\<Sum>i\<in>UNIV. butter i i) *\<^sub>V \<phi>\<close>
+      by auto
+    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. f *\<^sub>V butter i i *\<^sub>V \<phi>)\<close>
+      apply (subst (2) complex_vector.linear_sum)
+       apply (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
+      by simp
+    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. (\<Sum>j\<in>UNIV. butter j j) *\<^sub>V f *\<^sub>V butter i i *\<^sub>V \<phi>)\<close>
+      by simp
+    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV. butter j j *\<^sub>V f *\<^sub>V butter i i *\<^sub>V \<phi>)\<close>
+      apply (subst (3) complex_vector.linear_sum)
+       apply (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
+      by simp
+    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. butter j j *\<^sub>V f *\<^sub>V butter i i *\<^sub>V \<phi>)\<close>
+      by (simp add: sum.cartesian_product)
+    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butter j i *\<^sub>V \<phi>))\<close>
+      by (simp add: butter_def times_applyOp mult.commute)
+    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butter j i)) *\<^sub>V \<phi>\<close>
+      unfolding applyOp_scaleC1[symmetric] case_prod_beta
+      thm complex_vector.linear_sum
+      apply (subst complex_vector.linear_sum[where f=\<open>\<lambda>x. x *\<^sub>V \<phi>\<close>])
+       apply (simp add: apply_cblinfun_distr_left clinearI)
+      by simp
+    finally show \<open>f *\<^sub>V \<phi> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butter j i)) *\<^sub>V \<phi>\<close>
+      by -
+  qed
+  show \<open>f \<in> cspan {butter i j |i j. True}\<close>
+    apply (subst frep)
+    apply (auto simp: case_prod_beta)
+    by (metis (mono_tags, lifting) complex_vector.span_base complex_vector.span_scale complex_vector.span_sum mem_Collect_eq)
+qed
+
+ML \<open>
+\<^term>\<open>{f x y | x y. P x y}\<close>
+\<close>
+
+
+lemma linfun_cindependent: \<open>cindependent {butter i j| (i::'b::finite) (j::'a::finite). True}\<close>
+proof (rule independent_if_scalars_zero)
+  show finite: \<open>finite {butter (i::'b) (j::'a) |i j. True}\<close>
+    apply (subst (6) conj.left_neutral[symmetric])
+    apply (rule finite_image_set2)
+    by auto
+  fix f :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<Rightarrow> complex\<close> and g :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  define lin where \<open>lin = (\<Sum>g\<in>{butter i j |i j. True}. f g *\<^sub>C g)\<close>
+  assume \<open>lin = 0\<close>
+  assume \<open>g \<in> {butter i j |i j. True}\<close>
+  then obtain i j where g: \<open>g = butter i j\<close>
+    by auto
+  define bra :: "'b \<Rightarrow> (_,complex) cblinfun" where "bra i = vector_to_cblinfun (ket i)*" for i
+
+  have *: "bra i *\<^sub>V f g *\<^sub>C g *\<^sub>V ket j = 0"
+    if \<open>g\<in>{butter i j |i j. True} - {butter i j}\<close> for g 
+  proof -
+    from that
+    obtain i' j' where g: \<open>g = butter i' j'\<close>
+      by auto
+    from that have \<open>g \<noteq> butter i j\<close> by auto
+    with g consider (i) \<open>i\<noteq>i'\<close> | (j) \<open>j\<noteq>j'\<close>
+      by auto
+    then show \<open>bra i *\<^sub>V f g *\<^sub>C g *\<^sub>V ket j = 0\<close>
+    proof cases
+      case i
+      then show ?thesis 
+        unfolding g by (auto simp: butter_def times_applyOp bra_def ket_Kronecker_delta_neq)
+    next
+      case j
+      then show ?thesis
+        unfolding g by (auto simp: butter_def times_applyOp ket_Kronecker_delta_neq)
+    qed
+  qed
+
+  have \<open>0 = bra i *\<^sub>V lin *\<^sub>V ket j\<close>
+    using \<open>lin = 0\<close> by auto
+  also have \<open>\<dots> = (\<Sum>g\<in>{butter i j |i j. True}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
+    unfolding lin_def
+    apply (rule complex_vector.linear_sum)
+    by (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
+  also have \<open>\<dots> = (\<Sum>g\<in>{butter i j}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
+    apply (rule sum.mono_neutral_right)
+    using finite * by auto
+  also have \<open>\<dots> = bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j\<close>
+    by (simp add: g)
+  also have \<open>\<dots> = f g\<close>
+    unfolding g 
+    by (auto simp: butter_def times_applyOp bra_def ket_Kronecker_delta_eq)
+  finally show \<open>f g = 0\<close>
+    by simp
+qed
+
+lemma ket_Kronecker_delta: \<open>\<langle>ket i, ket j\<rangle> = (if i=j then 1 else 0)\<close>
+  by (simp add: ket_Kronecker_delta_eq ket_Kronecker_delta_neq)
+
+lemma tensor_butter: \<open>tensor_op (butter i j) (butter k l) = butter (i,k) (j,l)\<close>
+  apply (rule equal_ket, case_tac x)
+  apply (auto simp flip: tensor_state_ket simp: times_applyOp tensor_op_state butter_def)
+  apply (auto simp: tensor_state_scaleC1 tensor_state_scaleC2)
+  unfolding ket_Kronecker_delta
+  by simp
+
+lemma cspan_tensor_op: \<open>cspan {tensor_op (butter i j) (butter k l)| i j k l. True} = UNIV\<close>
+  unfolding tensor_butter
+  apply (subst linfun_cspan[symmetric])
+  by (metis surj_pair)
 
 lemma tensor_extensionality:
   fixes F G :: \<open>('a::enum\<times>'b::enum, 'c::enum) maps_hom\<close>
   assumes [simp]: "maps_hom F" "maps_hom G"
   assumes tensor_eq: "(\<And>a b. F (tensor_op a b) = G (tensor_op a b))"
   shows "F = G"
-proof -
-  from \<open>maps_hom F\<close> \<open>maps_hom G\<close>
-  obtain FSO GSO where FSO: "F = apply_superop FSO" and GSO: "G = apply_superop GSO"
-    unfolding maps_hom_def by auto
-  define FM where "FM = Rep_operator (Rep_superoperator FSO)"
-  define GM where "GM = Rep_operator (Rep_superoperator GSO)"
-  have [simp]: "dim_row FM = CARD('c) * CARD('c)"
-    unfolding FM_def apply transfer apply transfer by simp
-  have [simp]: "dim_col FM = (CARD('a) * CARD('b)) * (CARD('a) * CARD('b))"
-    unfolding FM_def apply transfer apply transfer by simp
-  have [simp]: "dim_row GM = CARD('c) * CARD('c)"
-    unfolding GM_def apply transfer apply transfer by simp
-  have [simp]: "dim_col GM = (CARD('a) * CARD('b)) * (CARD('a) * CARD('b))"
-    unfolding GM_def apply transfer apply transfer by simp
-
-  have "FM $$ (i,j) = GM $$ (i,j)" 
-    if [simp]: "i < CARD('c) * CARD('c)"
-      and [simp]: "j < (CARD('a) * CARD('b)) * (CARD('a) * CARD('b))"
-    for i j
-  proof -
-
-    obtain i1 i2 where i: "(i1,i2) = tensor_unpack CARD('c) CARD('c) i"
-      by (metis pivot_positions_main_gen.cases)
-    then have [simp]: \<open>i1 < CARD('c)\<close> \<open>i2 < CARD('c)\<close>
-      by (simp_all add: less_mult_imp_div_less tensor_unpack_def)
-    obtain j1 j2 where j: "(j1,j2) = tensor_unpack (CARD('a) * CARD('b)) (CARD('a) * CARD('b)) j"
-      by (metis pivot_positions_main_gen.cases)
-    then have [simp]: \<open>j1 < CARD('a) * CARD('b)\<close> \<open>j2 < CARD('a) * CARD('b)\<close>
-      by (simp_all add: less_mult_imp_div_less tensor_unpack_def)
-    obtain j11 j12 where j1: \<open>(j11, j12) = tensor_unpack CARD('a) CARD('b) j1\<close>
-      by (metis pivot_positions_main_gen.cases)
-    then have [simp]: \<open>j11 < CARD('a)\<close> \<open>j12 < CARD('b)\<close>
-      by (simp_all add: less_mult_imp_div_less tensor_unpack_def)
-    obtain j21 j22 where j2: \<open>(j21, j22) = tensor_unpack CARD('a) CARD('b) j2\<close>
-      by (metis pivot_positions_main_gen.cases)
-    then have [simp]: \<open>j21 < CARD('a)\<close> \<open>j22 < CARD('b)\<close>
-      by (simp_all add: less_mult_imp_div_less tensor_unpack_def)
-
-    have 1: "Rep_operator (F (tensor_op (index_op j11 j21) (index_op j12 j22))) $$ (i1,i2)
-      = FM $$ (i,j)"
-
-      unfolding FSO apply_superop.rep_eq unflatten_operator.rep_eq apply_operator.rep_eq
-        FM_def[symmetric] flatten_operator.rep_eq tensor_op.rep_eq index_op.rep_eq
-        mult_mat_vec_def scalar_prod_def case_prod_beta
-
-      apply (auto simp: case_prod_beta)
-
-      apply (subst sum_single[of _ j22], simp, simp)
-      apply (subst sum_single[of _ j21], simp, simp)
-      apply (subst sum_single[of _ j12], simp, simp)
-      apply (subst sum_single[of _ j11], simp, simp)
-
-      apply auto
-
-      using i j j1 j2
-      by auto
-
-    have 2: "Rep_operator (G (tensor_op (index_op j11 j21) (index_op j12 j22))) $$ (i1,i2)
-      = GM $$ (i,j)"
-
-      unfolding GSO apply_superop.rep_eq unflatten_operator.rep_eq apply_operator.rep_eq
-        GM_def[symmetric] flatten_operator.rep_eq tensor_op.rep_eq index_op.rep_eq
-        mult_mat_vec_def scalar_prod_def case_prod_beta
-
-      apply (auto simp: case_prod_beta)
-
-      apply (subst sum_single[of _ j22], simp, simp)
-      apply (subst sum_single[of _ j21], simp, simp)
-      apply (subst sum_single[of _ j12], simp, simp)
-      apply (subst sum_single[of _ j11], simp, simp)
-
-      apply auto
-
-      using i j j1 j2
-      by auto
-
-    from 1 2 tensor_eq
-    show ?thesis by simp
-  qed
-
-  then have "FM = GM"
-    unfolding mat_eq_iff
-    by auto
-
-  then show "F = G"
-    unfolding FSO GSO FM_def GM_def
-    by (simp add: Rep_operator_inject Rep_superoperator_inject)
+proof (rule ext, rule complex_vector.linear_eq_on_span[where f=F and g=G])
+  show \<open>clinear F\<close> and \<open>clinear G\<close>
+    using assms by (simp_all add: maps_hom_def)
+  show \<open>x \<in> cspan  {tensor_op (butter i j) (butter k l)| i j k l. True}\<close> 
+    for x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
+    using cspan_tensor_op by auto
+  show \<open>F x = G x\<close> if \<open>x \<in> {tensor_maps (butter i j) (butter k l) |i j k l. True}\<close> for x
+    using that by (auto simp: tensor_eq)
 qed
 
-lemma tensor_id[simp]: \<open>tensor_maps id_operator id_operator = id_operator\<close>
-  apply transfer
-  apply (auto simp: case_prod_beta mat_eq_iff)
-  by (metis prod.expand tensor_pack_unpack)
+lemma tensor_id[simp]: \<open>tensor_maps idOp idOp = idOp\<close>
+  apply (rule equal_ket, case_tac x)
+  by (simp flip: tensor_state_ket add: tensor_op_state)
 
 definition tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2hom
                             \<Rightarrow> (('a\<times>'b, 'c) maps_hom)\<close> where
 (* TODO *)
   "tensor_lift = undefined"
-
 
 lemma tensor_lift_hom: "maps_2hom F2 \<Longrightarrow> maps_hom (tensor_lift F2)"
   sorry
@@ -467,7 +596,6 @@ lemma tensor_existence:  \<open>maps_2hom F2 \<Longrightarrow> (\<lambda>a b. te
   sorry
 lemma tensor_uniqueness: \<open>maps_2hom F2 \<Longrightarrow> maps_hom F \<Longrightarrow> (\<lambda>a b. F (tensor_maps a b)) = F2 \<Longrightarrow> F = tensor_lift F2\<close>
   sorry
-(* Formalize the weak property instead *)
 
 
 lift_definition assoc00 :: \<open>((('a::enum\<times>'b::enum)\<times>'c::enum) \<times> (('a\<times>'b)\<times>'c),
