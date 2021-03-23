@@ -219,10 +219,16 @@ lemma compatible_FST_SND: "compatible FST SND"
 
 record bla = x :: "int*int"   y :: nat
 
-definition "xlv = lvalue_from_setter (\<lambda>a b. b\<lparr>x:=a\<rparr>)"
+definition "xlv = lvalue_from_setter x (\<lambda>a b. b\<lparr>x:=a\<rparr>)"
 
 lemma valid: \<open>valid_getter_setter x (\<lambda>a b. b\<lparr>x:=a\<rparr>)\<close>
   unfolding valid_getter_setter_def by auto
+
+lemma lvalue: \<open>lvalue xlv\<close>
+  by (simp add: valid xlv_def)
+
+
+
 
 
 end

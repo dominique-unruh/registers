@@ -203,7 +203,7 @@ lemma comp_apply_superop[simp]: "apply_superop (comp_superop A B) \<psi> = apply
  *)
 
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
-definition maps_hom :: \<open>('a::enum,'b::enum) maps_hom \<Rightarrow> bool\<close> where
+definition maps_hom :: \<open>('a::finite,'b::finite) maps_hom \<Rightarrow> bool\<close> where
   "maps_hom F \<longleftrightarrow> clinear F"
 
 lemma comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> maps_hom (G \<circ> F)"
@@ -379,6 +379,11 @@ lemma comp_tensor_op: "(tensor_op a b) o\<^sub>C\<^sub>L (tensor_op c d) = tenso
 
 (* lemma tensor_op_adjoint[simp]: "tensor_op (adjoint_op a) (adjoint_op b) = adjoint_op (tensor_op a b)"
   unfolding adjoint_op_def by simp *)
+
+lemma tensor_op_adjoint: \<open>(tensor_op a b)* = tensor_op (a*) (b*)\<close>
+  apply (rule cinner_ket_adjointI[symmetric])
+  apply (auto simp flip: tensor_state_ket simp: tensor_op_state)
+  by (simp add: adjoint_I)
 
 abbreviation tensor_maps :: \<open>'a::finite domain_end \<Rightarrow> 'b::finite domain_end \<Rightarrow> ('a\<times>'b) domain_end\<close> where
   \<open>tensor_maps \<equiv> tensor_op\<close>
@@ -582,7 +587,7 @@ lemma cindependent_tensor_op: \<open>cindependent {tensor_op (butter i j) (butte
 
 
 lemma tensor_extensionality:
-  fixes F G :: \<open>('a::enum\<times>'b::enum, 'c::enum) maps_hom\<close>
+  fixes F G :: \<open>('a::finite\<times>'b::finite, 'c::finite) maps_hom\<close>
   assumes [simp]: "maps_hom F" "maps_hom G"
   assumes tensor_eq: "(\<And>a b. F (tensor_op a b) = G (tensor_op a b))"
   shows "F = G"
@@ -678,23 +683,74 @@ qed
 lemma tensor_uniqueness: \<open>maps_2hom F2 \<Longrightarrow> maps_hom F \<Longrightarrow> (\<lambda>a b. F (tensor_maps a b)) = F2 \<Longrightarrow> F = tensor_lift F2\<close>
   using tensor_extensionality tensor_lift_hom tensor_existence by metis
 
-definition assoc :: \<open>(('a::enum\<times>'b::enum)\<times>'c::enum, 'a\<times>('b\<times>'c)) maps_hom\<close> where
-  \<open>assoc = undefined\<close>
+lift_definition assoc_state0 :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite) ell2 \<Rightarrow> ('a\<times>('b\<times>'c)) ell2\<close> is
+  \<open>\<lambda>f (a,(b,c)). f ((a,b),c)\<close>
   by auto
 
+lift_definition assoc_state0' :: \<open>('a::finite\<times>('b::finite\<times>'c::finite)) ell2 \<Rightarrow> (('a\<times>'b)\<times>'c) ell2\<close> is
+  \<open>\<lambda>f ((a,b),c). f (a,(b,c))\<close>
+  by auto
+
+lift_definition assoc_state :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>('b\<times>'c)) ell2\<close>
+  is assoc_state0
+  apply (rule cbounded_linear_finite_ell2)
+  apply (rule clinearI; transfer)
+  by auto
+
+lift_definition assoc_state' :: \<open>('a::finite\<times>('b::finite\<times>'c::finite)) ell2 \<Rightarrow>\<^sub>C\<^sub>L (('a\<times>'b)\<times>'c) ell2\<close> is
+  assoc_state0'
+  apply (rule cbounded_linear_finite_ell2)
+  apply (rule clinearI; transfer)
+  by auto
+
+lemma assoc_state_tensor: \<open>assoc_state *\<^sub>V tensor_state (tensor_state a b) c = tensor_state a (tensor_state b c)\<close>
+  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=a])
+    apply (simp add: cblinfun_apply_add clinearI tensor_state_add1 tensor_state_scaleC1)
+   apply (simp add: clinear_tensor_state2)
+  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=b])
+    apply (simp add: cblinfun_apply_add clinearI tensor_state_add1 tensor_state_add2 tensor_state_scaleC1 tensor_state_scaleC2)
+   apply (simp add: clinearI tensor_state_add1 tensor_state_add2 tensor_state_scaleC1 tensor_state_scaleC2)
+  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=c])
+    apply (simp add: cblinfun_apply_add clinearI tensor_state_add2 tensor_state_scaleC2)
+   apply (simp add: clinearI tensor_state_add2 tensor_state_scaleC2)
+  unfolding assoc_state.rep_eq
+  apply transfer
+  by auto
+
+lemma assoc_state'_tensor: \<open>assoc_state' *\<^sub>V tensor_state a (tensor_state b c) = tensor_state (tensor_state a b) c\<close>
+  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=a])
+    apply (simp add: cblinfun_apply_add clinearI tensor_state_add1 tensor_state_scaleC1)
+   apply (simp add: clinearI tensor_state_add1 tensor_state_scaleC1)
+  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=b])
+    apply (simp add: cblinfun_apply_add clinearI tensor_state_add1 tensor_state_add2 tensor_state_scaleC1 tensor_state_scaleC2)
+   apply (simp add: clinearI tensor_state_add1 tensor_state_add2 tensor_state_scaleC1 tensor_state_scaleC2)
+  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=c])
+    apply (simp add: cblinfun_apply_add clinearI tensor_state_add2 tensor_state_scaleC2)
+   apply (simp add: clinearI tensor_state_add2 tensor_state_scaleC2)
+  unfolding assoc_state'.rep_eq
+  apply transfer
+  by auto
+
+definition assoc :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite, 'a\<times>('b\<times>'c)) maps_hom\<close> where
+  \<open>assoc a = assoc_state o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L assoc_state'\<close>
+
 lemma assoc_hom: \<open>maps_hom assoc\<close>
-  unfolding maps_hom_def
-  by -
+  unfolding maps_hom_def assoc_def
+  by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
 
-lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
-  by -
+lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = tensor_maps a (tensor_maps b c)\<close>
+  apply (rule equal_ket)
+  apply (case_tac x)
+  by (simp add: assoc_def times_applyOp tensor_op_state assoc_state_tensor assoc_state'_tensor flip: tensor_state_ket)
 
-definition lvalue :: \<open>('a::enum, 'b::enum) maps_hom \<Rightarrow> bool\<close> where
+
+definition lvalue :: \<open>('a::finite, 'b::finite) maps_hom \<Rightarrow> bool\<close> where
   "lvalue F \<longleftrightarrow> 
      maps_hom F
-   \<and> F id_operator = id_operator 
-   \<and> (\<forall>a b. F(comp_op a b) = comp_op (F a) (F b))
-   \<and> (\<forall>a. F(adjoint_op a) = adjoint_op (F a))"
+   \<and> F idOp = idOp 
+   \<and> (\<forall>a b. F(a o\<^sub>C\<^sub>L b) = F a o\<^sub>C\<^sub>L F b)
+   \<and> (\<forall>a. F (a*) = (F a)*)"
+
 
 lemma lvalue_hom: "lvalue F \<Longrightarrow> maps_hom F"
   for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom"
@@ -703,17 +759,18 @@ lemma lvalue_hom: "lvalue F \<Longrightarrow> maps_hom F"
 lemma lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue (G \<circ> F)"
   for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
   unfolding lvalue_def
-  by (auto intro: comp_maps_hom)
+  apply auto
+  using comp_maps_hom by blast
 
 lemma lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain (F a) (F b)"
   for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
   unfolding lvalue_def
   by auto
 
-lift_definition map_superop :: \<open>(complex\<Rightarrow>complex) \<Rightarrow> ('a::enum, 'b::enum) superoperator \<Rightarrow> ('a, 'b) superoperator\<close> is
-  \<open>map_operator\<close>.
+(* lift_definition map_superop :: \<open>(complex\<Rightarrow>complex) \<Rightarrow> ('a::finite, 'b::finite) superoperator \<Rightarrow> ('a, 'b) superoperator\<close> is
+  \<open>map_operator\<close>. *)
 
-lemma maps_hom_conjugate: 
+(* lemma maps_hom_conjugate: 
   assumes \<open>maps_hom p\<close>
   shows \<open>maps_hom (conjugate_op \<circ> p \<circ> conjugate_op)\<close>
 proof -
@@ -726,94 +783,61 @@ proof -
     by (auto simp: mat_eq_iff scalar_prod_def)
   then show ?thesis
     unfolding maps_hom_def by auto
-qed
+qed *)
 
 lemma pair_lvalue_axiom: 
-  fixes F :: \<open>('a::enum, 'c::enum) maps_hom\<close> and G :: \<open>('b::enum, 'c::enum) maps_hom\<close>
+  fixes F :: \<open>('a::finite, 'c::finite) maps_hom\<close> and G :: \<open>('b::finite, 'c::finite) maps_hom\<close>
   assumes \<open>lvalue F\<close> and \<open>lvalue G\<close> and [simp]: \<open>maps_hom p\<close>
-  assumes compat: \<open>\<And>a b. comp_op (F a) (G b) = comp_op (G b) (F a)\<close>
-  assumes tensor: \<open>\<And>a b. p (tensor_op a b) = comp_op (F a) (G b)\<close>
+  assumes compat: \<open>\<And>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close>
+  assumes tensor: \<open>\<And>a b. p (tensor_op a b) = F a o\<^sub>C\<^sub>L G b\<close>
   shows \<open>lvalue p\<close>
 proof (unfold lvalue_def, intro conjI allI)
-  fix x y :: \<open>('a \<times> 'b, 'a \<times> 'b) operator\<close>
+  have h1: \<open>maps_hom (\<lambda>a. p (a o\<^sub>C\<^sub>L b))\<close> for b
+    apply (rule comp_maps_hom[unfolded o_def, of _ p])
+     apply (simp add: cblinfun_apply_dist1 clinearI maps_hom_def)
+    by simp
+  have h2: \<open>maps_hom (\<lambda>a. p a o\<^sub>C\<^sub>L p b)\<close> for b
+    apply (rule comp_maps_hom[unfolded o_def, of p])
+    apply simp
+    by (meson cblinfun_apply_dist1 clinearI maps_hom_def scalar_op_op)
+  have h3: \<open>maps_hom (\<lambda>c. p (d o\<^sub>C\<^sub>L c))\<close> for d
+    apply (rule comp_maps_hom[unfolded o_def, of _ p])
+     apply (simp add: cblinfun_apply_dist2 clinearI maps_hom_def)
+    by simp
+  have h4: \<open>maps_hom (\<lambda>c. p d o\<^sub>C\<^sub>L p c)\<close> for d
+    apply (rule comp_maps_hom[unfolded o_def, of p])
+    apply simp
+    by (simp add: cblinfun_apply_dist2 clinearI maps_hom_def)
+
+  fix x y :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
   show "maps_hom p"
     using assms by auto
-  show \<open>p id_operator = id_operator\<close>
+  show \<open>p idOp = idOp\<close>
     unfolding tensor_id[symmetric] tensor
     using \<open>lvalue F\<close> \<open>lvalue G\<close> unfolding lvalue_def by auto
-  show \<open>p (comp_op x y) = comp_op (p x) (p y)\<close>
-  proof -
-    have \<open>p (comp_op (tensor_op a b) (tensor_op a' b')) 
-          = comp_op (p (tensor_op a b)) (p  (tensor_op a' b'))\<close> for a b a' b'
-    proof -
-      have \<open>p (comp_op (tensor_op a b) (tensor_op a' b')) = p (tensor_op (comp_op a a') (comp_op b b'))\<close>
-        unfolding comp_tensor_op by simp
-      also have \<open>\<dots> = comp_op (F (comp_op a a')) (G (comp_op b b'))\<close>
-        unfolding tensor by simp
-      also have \<open>\<dots> = comp_op (comp_op (F a) (F a')) (comp_op (G b) (G b'))\<close>
-        using \<open>lvalue F\<close> \<open>lvalue G\<close> unfolding lvalue_def by simp
-      also have \<open>\<dots> = comp_op (comp_op (F a) (G b)) (comp_op (F a') (G b'))\<close>
-        using compat comp_domain_assoc by metis
-      also have \<open>\<dots> = comp_op (p (tensor_maps a b)) (p (tensor_maps a' b'))\<close>
-        unfolding tensor by simp
-      finally show ?thesis
-        by -
-    qed
-    then have \<open>p (comp_op x (tensor_op a' b')) 
-          = comp_op (p x) (p  (tensor_op a' b'))\<close> for a' b'
-      apply (rule tensor_extensionality[THEN fun_cong, rotated -1])
-       apply (rule comp_maps_hom[unfolded o_def, of _ p])
-      using comp_2hom maps_2hom_def apply auto[2]
-       apply (rule comp_maps_hom[unfolded o_def, of p])
-      using comp_2hom maps_2hom_def by auto
-    then show ?thesis
-      apply (rule tensor_extensionality[THEN fun_cong, rotated -1])
-       apply (rule comp_maps_hom[unfolded o_def, of _ p])
-      using comp_2hom maps_2hom_def apply auto[2]
-       apply (rule comp_maps_hom[unfolded o_def, of p])
-      using comp_2hom maps_2hom_def by auto
-  qed
-  show \<open>p (adjoint_op x) = adjoint_op (p x)\<close>
-  proof -
-    have hom1: \<open>maps_hom (conjugate_op \<circ> p \<circ> adjoint_op)\<close>
-    proof -
-      have \<open>maps_hom ((conjugate_op \<circ> p \<circ> conjugate_op) \<circ> transpose_op)\<close>
-        by (intro maps_hom_conjugate comp_maps_hom transpose_op_hom assms)
-      then show ?thesis
-        by (simp add: adjoint_op_def[abs_def] o_def)
-    qed
-    have hom2: \<open>maps_hom (conjugate_op \<circ> adjoint_op \<circ> p)\<close>
-      unfolding adjoint_op_def o_def apply simp unfolding o_def[symmetric]
-      by (intro comp_maps_hom transpose_op_hom assms)
 
-    have \<open>(p \<circ> adjoint_op) (tensor_op a b) = (adjoint_op \<circ> p) (tensor_op a b)\<close> for a b
-    proof -
-      have \<open>(p \<circ> adjoint_op) (tensor_op a b) = p (tensor_op (adjoint_op a) (adjoint_op b))\<close>
-        unfolding tensor_op_adjoint by simp
-      also have \<open>... = comp_op (F (adjoint_op a)) (G (adjoint_op b))\<close>
-        unfolding tensor by simp
-      also have \<open>... = comp_op (adjoint_op (F a)) (adjoint_op (G b))\<close>
-        using \<open>lvalue F\<close> \<open>lvalue G\<close> unfolding lvalue_def by simp
-      also have \<open>... = adjoint_op (comp_op (G b) (F a))\<close>
-        by (simp add: comp_adjoint_op)
-      also have \<open>... = adjoint_op (comp_op (F a) (G b))\<close>
-        using compat by simp
-      also have \<open>... = adjoint_op (p (tensor_op a b))\<close>
-        unfolding tensor by simp
-      also have \<open>\<dots> = (adjoint_op \<circ> p) (tensor_op a b)\<close>
-        by auto
-      finally show ?thesis
-        by-
-    qed
-    then have \<open>(conjugate_op \<circ> p \<circ> adjoint_op) (tensor_op a b) = (conjugate_op \<circ> adjoint_op \<circ> p) (tensor_op a b)\<close> for a b
-      by simp
-    then have \<open>conjugate_op \<circ> p \<circ> adjoint_op = conjugate_op \<circ> adjoint_op \<circ> p\<close>
-      using hom1 hom2 by (rule tensor_extensionality[rotated -1])
-    then have \<open>p \<circ> adjoint_op = adjoint_op \<circ> p\<close>
-      by (metis (no_types, lifting) comp_assoc conjugate_op_involution fun.map_id0 id_apply isomorphism_expand)
-    then show ?thesis
-      unfolding o_def by metis
-  qed
+  have *: \<open>p (tensor_op a b o\<^sub>C\<^sub>L tensor_op a' b') = p (tensor_op a b) o\<^sub>C\<^sub>L p (tensor_op a' b')\<close> for a b a' b'
+    using \<open>lvalue F\<close> \<open>lvalue G\<close>
+    apply (simp add: tensor comp_tensor_op lvalue_def)
+    by (metis cblinfun_apply_assoc compat)
+  show \<open>p (x o\<^sub>C\<^sub>L y) = p x o\<^sub>C\<^sub>L p y\<close>
+    using h1 h2 apply (rule tensor_extensionality[THEN fun_cong, where x=x])
+    using h3 h4 apply (rule tensor_extensionality[THEN fun_cong, where x=y])
+    using * by -
+
+  have hom_padjadj: \<open>maps_hom (\<lambda>a. p (a*)*)\<close>
+    using \<open>maps_hom p\<close>
+    by (auto simp: Adj_cblinfun_plus maps_hom_def complex_vector.linear_add complex_vector.linear_scale intro!: clinearI)
+
+  have *: \<open>(p (tensor_op a b*))* = p (tensor_op a b)\<close> for a b
+    using \<open>lvalue F\<close> \<open>lvalue G\<close>
+    by (simp add: compat tensor tensor_op_adjoint lvalue_def)
+  have \<open>(p (x*))* = p x\<close>
+    apply (rule fun_cong[where x=x])
+    apply (rule tensor_extensionality)
+    using hom_padjadj * by simp_all
+  then show \<open>p (x*) = (p x)*\<close>
+    by (metis adjoint_twice)
 qed
 
 end
