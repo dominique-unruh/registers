@@ -1,5 +1,5 @@
 theory Laws
-  imports Classical
+  imports Axioms
     "HOL-Library.Rewrite"
 begin
 
@@ -97,6 +97,17 @@ lemma swap_apply[simp]: "swap (a \<otimes> b) = (b \<otimes> a)"
   unfolding swap_def 
   apply (rule tensor_existence[THEN fun_cong, THEN fun_cong])
   apply (rule maps_2hom_sym) by (fact tensor_2hom)
+
+term \<open>(tensor_maps_hom swap id) \<circ> swap \<circ> assoc \<circ> (tensor_maps_hom swap id) \<circ> (swap :: ('a::domain\<times>('b::domain\<times>'c::domain), _) maps_hom)\<close>
+
+definition assoc' :: \<open>('a::domain\<times>('b::domain\<times>'c::domain), ('a\<times>'b)\<times>'c) maps_hom\<close> where 
+  "assoc' = (tensor_maps_hom swap id) \<circ> swap \<circ> assoc \<circ> (tensor_maps_hom swap id) \<circ> swap"
+
+lemma assoc'_hom: \<open>maps_hom assoc'\<close>
+  by (auto simp: assoc'_def intro!: comp_maps_hom tensor_maps_hom_hom id_maps_hom assoc_hom)
+
+lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_maps (tensor_maps a b) c)\<close>
+  unfolding assoc'_def by (simp add: id_maps_hom assoc_apply)
 
 subsection \<open>Pairs and compatibility\<close>
 
