@@ -23,7 +23,7 @@ lemma pair_comp_swap:
   apply (rule tensor_extensionality)
   apply (meson Complex_Vector_Spaces.linear_compose assms lvalue_hom pair_lvalue swap_hom)
   apply (simp add: assms compatible_sym lvalue_hom)
-  by (metis (no_types, lifting) Laws.swap_apply assms comp_def compatible_def lvalue_hom pair_apply)
+  by (metis (no_types, lifting) swap_apply assms comp_def compatible_def lvalue_hom pair_apply)
 
 lemma pair_comp_swap':
   assumes "compatible A B"
@@ -51,12 +51,10 @@ definition Fst where \<open>Fst a = tensor_maps a idOp\<close>
 definition Snd where \<open>Snd a = tensor_maps idOp a\<close>
 
 lemma lvalue_Fst[simp]: \<open>lvalue Fst\<close>
-  apply (auto simp: Fst_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
-  by (metis cbilinear_def tensor_maps_cbilinear)
+  by (auto simp: Fst_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
 
 lemma lvalue_Snd[simp]: \<open>lvalue Snd\<close>
-  apply (auto simp: Snd_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
-  by (metis cbilinear_def tensor_maps_cbilinear)
+  by (auto simp: Snd_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
 
 lemma lvalue_id[simp]: \<open>lvalue R \<Longrightarrow> R idOp = idOp\<close>
   by (auto simp: lvalue_def)
@@ -70,7 +68,7 @@ lemma lvalue_comp'1[simp]: \<open>lvalue R \<Longrightarrow> R A o\<^sub>C\<^sub
   by (simp add: assoc_left(1))
 
 
-instantiation bit :: domain begin
+instantiation bit :: enum begin
 definition "enum_bit = [0::bit,1]"
 definition "enum_all_bit P \<longleftrightarrow> P (0::bit) \<and> P 1"
 definition "enum_ex_bit P \<longleftrightarrow> P (0::bit) \<or> P 1"
@@ -81,10 +79,10 @@ instance
 end
 
 locale teleport_locale =
-  fixes X :: "(bit,'mem::domain) maps_hom"
-    and \<Phi> :: "(bit*bit,'mem::domain) maps_hom"
-    and A :: "('atype::domain,'mem) maps_hom"
-    and B :: "('btype::domain,'mem) maps_hom"
+  fixes X :: "(bit,'mem::finite) maps_hom"
+    and \<Phi> :: "(bit*bit,'mem::finite) maps_hom"
+    and A :: "('atype::finite,'mem) maps_hom"
+    and B :: "('btype::finite,'mem) maps_hom"
   assumes [compatible_lvalues]: "COMPATIBLE (X,\<Phi>,A,B)"
 begin
 
@@ -115,8 +113,8 @@ definition "teleport a b = [
 definition hoare :: \<open>'mem ell2 clinear_space \<Rightarrow> ('mem ell2 \<Rightarrow>\<^sub>C\<^sub>L 'mem ell2) list \<Rightarrow> 'mem ell2 clinear_space \<Rightarrow> bool\<close> where
   "hoare C p D \<longleftrightarrow> (\<forall>\<psi>\<in>space_as_set C. program p *\<^sub>V \<psi> \<in> space_as_set D)" for C p D
 
-definition "EQP R \<psi> = R (butterfly \<psi>)" for R :: \<open>('a::domain,'mem) maps_hom\<close>
-definition "EQ R \<psi> = EQP R \<psi> *\<^sub>S \<top>" for R :: \<open>('a::domain,'mem) maps_hom\<close>
+definition "EQP R \<psi> = R (butterfly \<psi>)" for R :: \<open>('a,'mem) maps_hom\<close>
+definition "EQ R \<psi> = EQP R \<psi> *\<^sub>S \<top>" for R :: \<open>('a,'mem) maps_hom\<close>
 
 lemma swap_EQP:
   assumes "compatible R S"
@@ -166,7 +164,7 @@ lemma hoare_apply:
   by (metis (no_types, lifting) applyOpSpace.rep_eq closure_subset imageI less_eq_clinear_space.rep_eq subsetD)
 
 lemma hoare_ifthen: 
-  fixes R :: \<open>('a::domain,'mem) maps_hom\<close>
+  fixes R :: \<open>('a,'mem) maps_hom\<close>
   assumes "EQP R (ket x) *\<^sub>S pre \<le> post"
   shows "hoare pre [ifthen R x] post"
   using assms 
@@ -249,8 +247,13 @@ proof -
     unfolding join1x
 
     apply (simp add: join1)
+    by -
+  show ?thesis
+    by -
 qed
 
 
+
+end
 
 end

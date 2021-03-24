@@ -7,13 +7,13 @@ from typing import Union, Sequence, Collection, Match
 classical = {
     'theory Laws': 'theory Laws_Classical',
     'Axioms': 'Classical',
-    'domain': 'type'
+    'domain': 'type',
 }
 
 quantum = {
     'theory Laws': 'theory Laws_Quantum',
     'Axioms': 'Quantum',
-    'domain': 'enum'
+    'domain': 'finite',
 }
 
 def multisubst(mappings: Collection[(Union[re.Pattern, str])], content: str) -> str:

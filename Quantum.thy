@@ -107,129 +107,28 @@ lemma tensor_unpack_fstsnd: \<open>fst (tensor_unpack B C (snd (tensor_unpack A 
   unfolding tensor_unpack_def apply auto
   by (metis (no_types, lifting) Euclidean_Division.div_eq_0_iff add_0_iff bits_mod_div_trivial div_mult_self4 mod_mult2_eq mod_mult_self1_is_0 mult.commute)
 
-
-
-
-
-
-class domain = enum
-instance prod :: (domain,domain) domain
-  by intro_classes
-
 type_synonym 'a state = \<open>'a ell2\<close>
 type_synonym 'a domain_end = \<open>('a state, 'a state) cblinfun\<close>
 
-(* lift_definition index_op :: \<open>nat \<Rightarrow> nat \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
-  \<open>\<lambda>i j. mat CARD('b) CARD('a) (\<lambda>(k,l). if k=i \<and> l=j then 1 else 0)\<close>
-  by auto
-
-lift_definition id_operator :: \<open>('a::enum, 'a::enum) operator\<close> is "one_mat CARD('a)"
-  by auto
-
-lift_definition map_operator :: \<open>(complex\<Rightarrow>complex) \<Rightarrow> ('a::enum, 'b::enum) operator \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
-  \<open>\<lambda>f M. map_mat f M\<close>
-  by auto
-
-lift_definition apply_operator :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> 'a state \<Rightarrow> 'b state\<close> is
-  "mult_mat_vec"
-  by auto
-
-lift_definition comp_op :: "('b::enum,'c::enum) operator \<Rightarrow> ('a::enum,'b) operator \<Rightarrow> ('a,'c) operator"  is
-  "times"
-  by auto *)
-
-(* lemma comp_id_op_left[simp]: "comp_op id_operator a = a"
-  apply transfer by auto *)
-
-abbreviation comp_domain :: "'a::domain domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
+abbreviation comp_domain :: "'a domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
   "comp_domain \<equiv> timesOp"
 
 lemma comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_domain b c)"
   by (simp add: cblinfun_apply_assoc)
 
-(* lemma comp_apply_operator[simp]:
- "apply_operator (comp_op A B) \<psi> = apply_operator A (apply_operator B \<psi>)"
-  apply transfer
-  by auto *)
-
-(* lift_definition conjugate_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('a::enum, 'b::enum) operator\<close> is
-  \<open>conjugate\<close>
-  by auto
-
-lemma conjugate_op_involution[simp]: "conjugate_op (conjugate_op A) = A"
-  apply transfer by auto
-
-lift_definition transpose_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('b::enum, 'a::enum) operator\<close> is
-  \<open>transpose_mat\<close>
-  by auto
-
-definition adjoint_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('b::enum, 'a::enum) operator\<close> where
-  \<open>adjoint_op M = conjugate_op (transpose_op M)\<close> *)
-
-(* times_adjoint
-lemma comp_adjoint_op: "adjoint (timesOp A B) = timesOp (adjoint B) (adjoint A)"
-  unfolding adjoint_op_def apply transfer
-  apply (auto simp: mat_eq_iff conjugate_mat_def scalar_prod_def simp flip: map_mat_transpose)
-  by (meson mult.commute)
-*)
-
-(* typedef ('a,'b) superoperator = \<open>UNIV :: ('a\<times>'a, 'b\<times>'b) operator set\<close>
-  by auto
-setup_lifting type_definition_superoperator
-
-(* Matrix to vector, in "reading order", first row len is 'a *)
-lift_definition flatten_operator :: \<open>('a::enum,'b::enum) operator \<Rightarrow> ('b\<times>'a) state\<close> is
-  \<open>\<lambda>M. vec CARD('b\<times>'a) (\<lambda>i. M $$ tensor_unpack CARD('b) CARD('a) i)\<close>
-  by auto
-
-lift_definition unflatten_operator :: \<open>('b\<times>'a) state \<Rightarrow> ('a::enum,'b::enum) operator\<close> is
-  \<open>\<lambda>v. mat CARD('b) CARD('a) (\<lambda>(i,j). v $ tensor_pack CARD('b) CARD('a) (i,j))\<close>
-  by auto
-
-lift_definition apply_superop :: \<open>('a::enum,'b::enum) superoperator \<Rightarrow> ('a,'a) operator \<Rightarrow> ('b,'b) operator\<close> is
-  \<open>\<lambda>(SO::('a\<times>'a, 'b\<times>'b) operator) M. unflatten_operator (apply_operator SO (flatten_operator M))\<close>
-  by -
-
-lift_definition comp_superop :: \<open>('b::enum, 'c::enum) superoperator \<Rightarrow> ('a::enum,'b) superoperator \<Rightarrow> ('a,'c) superoperator\<close> is
-  \<open>\<lambda>A B. comp_op A B\<close>
-  by -
-
-lemma flatten_unflatten_operator[simp]: "flatten_operator (unflatten_operator M) = M"
-  apply transfer unfolding vec_eq_iff
-  by (auto simp: index_mat_fstsnd)
-
-lemma comp_apply_superop[simp]: "apply_superop (comp_superop A B) \<psi> = apply_superop A (apply_superop B \<psi>)"
-  apply transfer by auto
- *)
 
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
-abbreviation (input) maps_hom :: \<open>('a::finite,'b::finite) maps_hom \<Rightarrow> bool\<close> where
+abbreviation (input) maps_hom :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close> where
   "maps_hom \<equiv> clinear"
+
+lemma id_maps_hom: \<open>maps_hom id\<close>
+  by (fact complex_vector.linear_id)
 
 lemma comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> maps_hom (G \<circ> F)"
   by (simp add: Complex_Vector_Spaces.linear_compose) 
-(* TODO category laws *)
-
-(* lift_definition transpose_op00 :: \<open>('a::enum \<times> 'b::enum, 'b \<times> 'a) operator\<close> is
-  \<open>mat CARD('a\<times>'b) CARD('b\<times>'a) (\<lambda>(i,j).
-    let (ia, ib) = tensor_unpack CARD('a) CARD('b) i in
-    let (jb, ja) = tensor_unpack CARD('b) CARD('a) j in
-    if ia=ja \<and> ib=jb then 1 else 0)\<close>
-  by auto
-
-lift_definition transpose_op0 :: \<open>('a::enum, 'a) superoperator\<close> is transpose_op00.
-
-lemma transpose_op_hom[simp]: \<open>maps_hom transpose_op\<close>
-  unfolding maps_hom_def apply (rule exI[of _ transpose_op0]) apply (rule ext)
-  apply transfer apply transfer
-  apply (auto simp: mat_eq_iff case_prod_beta scalar_prod_def)
-  apply (subst sum_single)
-    apply auto[2]
-  apply (subst sum_single)
-  by auto *)
 
 type_synonym ('a,'b,'c) maps_2hom = \<open>'a domain_end \<Rightarrow> 'b domain_end \<Rightarrow> 'c domain_end\<close>
-abbreviation (input) maps_2hom :: "('a::enum, 'b::enum, 'c::enum) maps_2hom \<Rightarrow> bool" where
+abbreviation (input) maps_2hom :: "('a, 'b, 'c) maps_2hom \<Rightarrow> bool" where
   "maps_2hom \<equiv> cbilinear"
 
 (* lemma maps_2hom_bilinear: "maps_2hom F \<longleftrightarrow> cbilinear F"
@@ -289,21 +188,13 @@ lemma clinear_tensor_state2: "clinear (\<lambda>a. tensor_state a b)"
 lemma tensor_state_ket[simp]: "tensor_state (ket i) (ket j) = ket (i,j)"
   apply transfer by auto
 
-(* lift_definition tensor_op :: \<open>('a::enum, 'b::enum) operator \<Rightarrow> ('c::enum, 'd::enum) operator 
-                                 \<Rightarrow> ('a\<times>'c, 'b\<times>'d) operator\<close> is
-  \<open>\<lambda>A B. mat (CARD('b)*CARD('d)) (CARD('a)*CARD('c)) 
-      (\<lambda>(i,j). let (i1,i2) = tensor_unpack CARD('b) CARD('d) i in
-               let (j1,j2) = tensor_unpack CARD('a) CARD('c) j in
-               A $$ (i1, j1) * B $$ (i2, j2))\<close>
-  by auto *)
-
-definition tensor_op :: \<open>('a::finite ell2, 'b::finite ell2) cblinfun \<Rightarrow> ('c::finite ell2, 'd::finite ell2) cblinfun
+definition tensor_op :: \<open>('a ell2, 'b::finite ell2) cblinfun \<Rightarrow> ('c ell2, 'd::finite ell2) cblinfun
       \<Rightarrow> (('a\<times>'c) ell2, ('b\<times>'d) ell2) cblinfun\<close> where
   \<open>tensor_op M N = (SOME P. \<forall>a c. P *\<^sub>V (ket (a,c))
       = tensor_state (M *\<^sub>V ket a) (N *\<^sub>V ket c))\<close>
 
 lemma tensor_op_ket: 
-  fixes a :: \<open>'a::finite\<close> and b :: \<open>'b::finite\<close> and c :: \<open>'c::finite\<close> and d :: \<open>'d::finite\<close>
+  fixes a :: \<open>'a::finite\<close> and b :: \<open>'b\<close> and c :: \<open>'c::finite\<close> and d :: \<open>'d\<close>
   shows \<open>tensor_op M N *\<^sub>V (ket (a,c)) = tensor_state (M *\<^sub>V ket a) (N *\<^sub>V ket c)\<close>
 proof -
   define S :: \<open>('a\<times>'c) state set\<close> where "S = ket ` UNIV"
@@ -379,6 +270,8 @@ proof -
 qed
 
 lemma comp_tensor_op: "(tensor_op a b) o\<^sub>C\<^sub>L (tensor_op c d) = tensor_op (a o\<^sub>C\<^sub>L c) (b o\<^sub>C\<^sub>L d)"
+  for a :: "'e::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2" and b :: "'f::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2" and
+  c :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'e ell2" and d :: "'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'f ell2"
   apply (rule equal_ket)
   apply (rename_tac ij, case_tac ij, rename_tac i j, hypsubst_thin)
   by (simp flip: tensor_state_ket add: tensor_op_state times_applyOp)
@@ -401,51 +294,6 @@ lemma tensor_op_adjoint: \<open>(tensor_op a b)* = tensor_op (a*) (b*)\<close>
 
 abbreviation tensor_maps :: \<open>'a::finite domain_end \<Rightarrow> 'b::finite domain_end \<Rightarrow> ('a\<times>'b) domain_end\<close> where
   \<open>tensor_maps \<equiv> tensor_op\<close>
-
-(* lift_definition tensor_left0 :: "('a::enum,'a) operator \<Rightarrow> ('b::enum \<times> 'b, ('a\<times>'b) \<times> ('a\<times>'b)) operator" is
-  \<open>\<lambda>A::complex mat. mat CARD(('a\<times>'b) \<times> ('a\<times>'b)) CARD('b\<times>'b) (\<lambda>(i,j). 
-    let (j1,j2) = tensor_unpack CARD('b) CARD('b) j in
-    let (i1,i2) = tensor_unpack CARD('a\<times>'b) CARD('a\<times>'b) i in
-    let (i1a,i1b) = tensor_unpack CARD('a) CARD('b) i1 in
-    let (i2a,i2b) = tensor_unpack CARD('a) CARD('b) i2 in
-    if i1b=j1 \<and> i2b=j2 then A $$ (i1a,i2a) else 0) :: complex mat\<close>
-  by auto
-
-
-lift_definition tensor_right0 :: "('b::enum,'b) operator \<Rightarrow> ('a::enum \<times> 'a, ('a\<times>'b) \<times> ('a\<times>'b)) operator" is
-  \<open>\<lambda>B::complex mat. mat CARD(('a\<times>'b) \<times> ('a\<times>'b)) CARD('a\<times>'a) (\<lambda>(i,j). 
-    let (j1,j2) = tensor_unpack CARD('a) CARD('a) j in
-    let (i1,i2) = tensor_unpack CARD('a\<times>'b) CARD('a\<times>'b) i in
-    let (i1a,i1b) = tensor_unpack CARD('a) CARD('b) i1 in
-    let (i2a,i2b) = tensor_unpack CARD('a) CARD('b) i2 in
-    if i1a=j1 \<and> i2a=j2 then B $$ (i1b,i2b) else 0) :: complex mat\<close>
-  by auto
-
-lift_definition tensor_left :: "('a::enum,'a) operator \<Rightarrow> ('b::enum,'a\<times>'b) superoperator" is
-  tensor_left0.
-
-lift_definition tensor_right :: "('b::enum,'b) operator \<Rightarrow> ('a::enum,'a\<times>'b) superoperator" is
-  tensor_right0.
-
-lemma tensor_left_tensor_maps: "apply_superop (tensor_left a) b = tensor_maps a b"
-  apply (transfer fixing: a b)
-  apply transfer
-  apply (simp add: Let_def case_prod_beta mat_eq_iff vec_eq_iff scalar_prod_def)
-  apply auto
-  apply (subst sum_single[where i=\<open>snd (tensor_unpack CARD('a) CARD('b) _)\<close>])
-    apply auto
-  apply (subst sum_single[where i=\<open>snd (tensor_unpack CARD('a) CARD('b) _)\<close>])
-  by auto
-
-lemma tensor_right_tensor_maps: "apply_superop (tensor_right b) a = tensor_maps a b"
-  apply (transfer fixing: a b)
-  apply transfer
-  apply (simp add: Let_def case_prod_beta mat_eq_iff vec_eq_iff scalar_prod_def)
-  apply auto
-  apply (subst sum_single[where i=\<open>fst (tensor_unpack CARD('a) CARD('b) _)\<close>])
-    apply auto
-  apply (subst sum_single[where i=\<open>fst (tensor_unpack CARD('a) CARD('b) _)\<close>])
-  by auto *)
 
 (* TODO belongs into bounded operators *)
 lemma apply_cblinfun_distr_left: "(A + B) *\<^sub>V x = A *\<^sub>V x + B *\<^sub>V x"
@@ -473,9 +321,6 @@ qed
 
 lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
   by (simp add: tensor_maps_cbilinear)
-
-(* lift_definition operator_nth :: \<open>('a::enum,'b::enum) operator \<Rightarrow> (nat * nat) \<Rightarrow> complex\<close> is
-  \<open>index_mat\<close>. *)
 
 definition \<open>butter i j = vector_to_cblinfun (ket i) o\<^sub>C\<^sub>L (vector_to_cblinfun (ket j) :: complex \<Rightarrow>\<^sub>C\<^sub>L _)*\<close>
 
@@ -585,23 +430,24 @@ proof (rule independent_if_scalars_zero)
 qed
 
 lemma tensor_butter: \<open>tensor_op (butter i j) (butter k l) = butter (i,k) (j,l)\<close>
+  for i :: "_" and j :: "_::finite" and k :: "_" and l :: "_::finite"
   apply (rule equal_ket, case_tac x)
   apply (auto simp flip: tensor_state_ket simp: times_applyOp tensor_op_state butter_def)
   by (auto simp: tensor_state_scaleC1 tensor_state_scaleC2)
 
-lemma cspan_tensor_op: \<open>cspan {tensor_op (butter i j) (butter k l)| i j k l. True} = UNIV\<close>
+lemma cspan_tensor_op: \<open>cspan {tensor_op (butter i j) (butter k l)| i (j::_::finite) k (l::_::finite). True} = UNIV\<close>
   unfolding tensor_butter
   apply (subst linfun_cspan[symmetric])
   by (metis surj_pair)
 
-lemma cindependent_tensor_op: \<open>cindependent {tensor_op (butter i j) (butter k l)| i j k l. True}\<close>
+lemma cindependent_tensor_op: \<open>cindependent {tensor_op (butter i j) (butter k l)| i (j::_::finite) k (l::_::finite). True}\<close>
   unfolding tensor_butter
   using linfun_cindependent
   by (smt (z3) Collect_mono_iff complex_vector.independent_mono)
 
 
 lemma tensor_extensionality:
-  fixes F G :: \<open>('a::finite\<times>'b::finite, 'c::finite) maps_hom\<close>
+  fixes F G :: \<open>('a::finite\<times>'b::finite, 'c) maps_hom\<close>
   assumes [simp]: "maps_hom F" "maps_hom G"
   assumes tensor_eq: "(\<And>a b. F (tensor_op a b) = G (tensor_op a b))"
   shows "F = G"
@@ -619,8 +465,7 @@ lemma tensor_id[simp]: \<open>tensor_maps idOp idOp = idOp\<close>
   apply (rule equal_ket, case_tac x)
   by (simp flip: tensor_state_ket add: tensor_op_state)
 
-definition tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2hom
-                            \<Rightarrow> (('a\<times>'b, 'c) maps_hom)\<close> where
+definition tensor_lift :: \<open>('a::finite, 'b::finite, 'c) maps_2hom \<Rightarrow> (('a\<times>'b, 'c) maps_hom)\<close> where
   "tensor_lift F2 = (SOME G. clinear G \<and> (\<forall>a b. G (tensor_maps a b) = F2 a b))"
 
 lemma assumes "maps_2hom F2"
@@ -758,7 +603,7 @@ lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = tensor_maps 
   by (simp add: assoc_def times_applyOp tensor_op_state assoc_state_tensor assoc_state'_tensor flip: tensor_state_ket)
 
 
-definition lvalue :: \<open>('a::finite, 'b::finite) maps_hom \<Rightarrow> bool\<close> where
+definition lvalue :: \<open>('a, 'b) maps_hom \<Rightarrow> bool\<close> where
   "lvalue F \<longleftrightarrow> 
      maps_hom F
    \<and> F idOp = idOp 
@@ -767,40 +612,22 @@ definition lvalue :: \<open>('a::finite, 'b::finite) maps_hom \<Rightarrow> bool
 
 
 lemma lvalue_hom: "lvalue F \<Longrightarrow> maps_hom F"
-  for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom"
+  for F :: "('a,'b) maps_hom" and G :: "('b,'c) maps_hom"
   unfolding lvalue_def by simp
 
 lemma lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue (G \<circ> F)"
-  for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
+  for F :: "('a,'b) maps_hom" and G :: "('b,'c) maps_hom" 
   unfolding lvalue_def
   apply auto
   using comp_maps_hom by blast
 
 lemma lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain (F a) (F b)"
-  for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
+  for F :: "('a,'b) maps_hom" and G :: "('b,'c) maps_hom" 
   unfolding lvalue_def
   by auto
 
-(* lift_definition map_superop :: \<open>(complex\<Rightarrow>complex) \<Rightarrow> ('a::finite, 'b::finite) superoperator \<Rightarrow> ('a, 'b) superoperator\<close> is
-  \<open>map_operator\<close>. *)
-
-(* lemma maps_hom_conjugate: 
-  assumes \<open>maps_hom p\<close>
-  shows \<open>maps_hom (conjugate_op \<circ> p \<circ> conjugate_op)\<close>
-proof -
-  obtain P where P: "p = apply_superop P"
-    using assms maps_hom_def by auto
-  (* define P' where \<open>P' = map_superop conjugate P\<close> *)
-  have \<open>conjugate_op \<circ> p \<circ> conjugate_op = apply_superop (map_superop conjugate P)\<close>
-    (* unfolding P'_def *)
-    unfolding P apply (rule ext) apply simp apply transfer apply transfer
-    by (auto simp: mat_eq_iff scalar_prod_def)
-  then show ?thesis
-    unfolding maps_hom_def by auto
-qed *)
-
 lemma pair_lvalue_axiom: 
-  fixes F :: \<open>('a::finite, 'c::finite) maps_hom\<close> and G :: \<open>('b::finite, 'c::finite) maps_hom\<close>
+  fixes F :: \<open>('a::finite, 'c) maps_hom\<close> and G :: \<open>('b::finite, 'c) maps_hom\<close>
   assumes \<open>lvalue F\<close> and \<open>lvalue G\<close> and [simp]: \<open>maps_hom p\<close>
   assumes compat: \<open>\<And>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close>
   assumes tensor: \<open>\<And>a b. p (tensor_op a b) = F a o\<^sub>C\<^sub>L G b\<close>

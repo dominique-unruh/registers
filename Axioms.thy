@@ -9,7 +9,6 @@ instance prod :: (domain,domain) domain
 typedecl 'a domain_end
 axiomatization comp_domain :: "'a::domain domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
   comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_domain b c)"
-(* TODO: category laws *)
 
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
 axiomatization maps_hom :: \<open>('a::domain,'b::domain) maps_hom \<Rightarrow> bool\<close>
