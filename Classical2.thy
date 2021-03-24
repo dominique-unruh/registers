@@ -1,5 +1,5 @@
 theory Classical2
-  imports Laws
+  imports Laws_Classical
 begin
 
 

@@ -2,10 +2,6 @@ theory Classical
   imports Main
 begin
 
-class domain
-instance prod :: (domain,domain) domain
-  by intro_classes
-
 type_synonym 'a domain_end = \<open>'a rel\<close>
 
 abbreviation (input) comp_domain :: "'a domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
@@ -19,6 +15,10 @@ lemma comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
 definition maps_hom :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close> where
   \<open>maps_hom F \<longleftrightarrow> (\<exists>R. F = Image R)\<close>
+
+lemma id_maps_hom: \<open>maps_hom id\<close>
+  unfolding maps_hom_def
+  by (metis Image_Id eq_id_iff)
 
 definition rel_of_maps_hom :: \<open>('a,'b) maps_hom \<Rightarrow> (('a\<times>'a)\<times>('b\<times>'b)) set\<close> where
   \<open>rel_of_maps_hom F = (SOME R. F = Image R)\<close>

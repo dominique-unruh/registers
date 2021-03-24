@@ -1,6 +1,5 @@
 theory Laws
-  imports Axioms
-    "HOL-Library.Rewrite"
+  imports Axioms "HOL-Library.Rewrite"
 begin
 
 unbundle lvalue_notation
@@ -171,10 +170,8 @@ proof (rule compatibleI)
   then have [simp]: \<open>maps_hom x\<close> \<open>maps_hom y\<close> \<open>maps_hom z\<close>
     using lvalue_hom by blast+
   have "(pair (pair x y) z) ((f \<otimes> g) \<otimes> h) = (pair z (pair x y)) (h \<otimes> (f \<otimes> g))" for f g h
-    apply auto using assms unfolding compatible_def
-    apply (smt (z3) comp_domain_assoc relcomp.relcompI)
-    by (smt (verit, ccfv_threshold) assms(2) assms(3) comp_domain_assoc compatible_def relcomp.relcompI)
-    (* by (metis comp_domain_assoc) *)
+    using assms apply (simp add: compatible_def comp_domain_assoc)
+    by (metis comp_domain_assoc)
   then have "(pair (pair x y) z \<circ> swap \<circ> (\<otimes>) h) (f \<otimes> g)
            = (pair z (pair x y) \<circ> (\<otimes>) h) (f \<otimes> g)" for f g h
     by auto
