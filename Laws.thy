@@ -2,7 +2,9 @@ theory Laws
   imports Axioms "HOL-Library.Rewrite"
 begin
 
-unbundle lvalue_notation
+notation comp_domain (infixl "\<circ>\<^sub>d" 55)
+notation tensor_maps (infixr "\<otimes>" 70)
+
 
 subsection \<open>Elementary facts\<close>
 
@@ -38,7 +40,7 @@ lemma tensor_maps_hom_apply[simp]:
   assumes \<open>maps_hom F\<close> and \<open>maps_hom G\<close>
   shows "tensor_maps_hom F G (a \<otimes> b) = F a \<otimes> G b"
   unfolding tensor_maps_hom_def 
-  using tensor_existence maps_2hom_F_tensor_G assms
+  using tensor_existence maps_2hom_F_tensor_G[OF assms] 
   by metis
 
 lemma maps_2hom_F_tensor[simp]: \<open>maps_hom F \<Longrightarrow> maps_2hom (\<lambda>a b. F (a \<otimes> b))\<close>
@@ -59,10 +61,13 @@ proof -
     by simp
 qed
 
-lemma left_tensor_hom[simp]: "maps_hom ((\<otimes>) a)"
+lemma left_tensor_hom[simp]: "maps_hom ((\<otimes>) a :: 'b::domain domain_end \<Rightarrow> _)" 
+  for a :: "'a::domain domain_end"
+  apply (rule maps_2hom_right)
   by (simp add: maps_2hom_right)
 
-lemma right_tensor_hom[simp]: "maps_hom (\<lambda>a. (\<otimes>) a b)"
+lemma right_tensor_hom[simp]: "maps_hom (\<lambda>a::'a::domain domain_end. (\<otimes>) a b)"
+  for b :: "'b::domain domain_end"
   by (simp add: maps_2hom_left)
 
 lemma tensor_extensionality3: 
@@ -78,7 +83,7 @@ proof -
     apply (rule tensor_extensionality[rotated -1])
     by (intro comp_maps_hom; simp)+
   then have "F (a \<otimes> bc) = G (a \<otimes> bc)" for a bc
-    using comp_eq_elim by blast
+    using comp_eq_elim by metis
   then show ?thesis
     by (rule tensor_extensionality[rotated -1]; simp)
 qed
@@ -152,7 +157,7 @@ lemma pair_apply[simp]:
   assumes \<open>maps_hom F\<close> and \<open>maps_hom G\<close>
   shows \<open>(pair F G) (a \<otimes> b) = (F a) \<circ>\<^sub>d (G b)\<close>
   unfolding pair_def 
-  using tensor_existence maps_2hom_F_comp_G assms
+  using tensor_existence maps_2hom_F_comp_G[OF assms]
   by metis
 
 lemma pair_lvalue[simp]:
@@ -191,7 +196,10 @@ qed
 
 lemma compatible_comp_left: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (x \<circ> z) y"
   by (simp add: compatible_def lvalue_comp)
-  
+
+lemma compatible_comp_right: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible x (y \<circ> z)"
+  by (simp add: compatible_def lvalue_comp)
+
 lemma compatible_comp_inner: 
   "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (z \<circ> x) (z \<circ> y)"
   by (smt (verit, best) comp_apply compatible_def lvalue_comp lvalue_mult)
@@ -327,15 +335,17 @@ lemma
 subsection \<open>Notation\<close>
 
 bundle lvalue_notation begin
-unbundle lvalue_notation
 notation tensor_maps_hom (infixr "\<otimes>\<^sub>h" 70)
-notation pair ("(_;_)")
+notation pair ("(_; _)")
+notation comp_domain (infixl "\<circ>\<^sub>d" 55)
+notation tensor_maps (infixr "\<otimes>" 70)
 end
 
 bundle no_lvalue_notation begin
-unbundle lvalue_notation
 no_notation tensor_maps_hom (infixr "\<otimes>\<^sub>h" 70)
-no_notation pair ("(_;_)")
+no_notation pair ("(_; _)")
+no_notation comp_domain (infixl "\<circ>\<^sub>d" 55)
+no_notation tensor_maps (infixr "\<otimes>" 70)
 end
 
 end

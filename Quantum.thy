@@ -203,11 +203,10 @@ lemma comp_apply_superop[simp]: "apply_superop (comp_superop A B) \<psi> = apply
  *)
 
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
-definition maps_hom :: \<open>('a::finite,'b::finite) maps_hom \<Rightarrow> bool\<close> where
-  "maps_hom F \<longleftrightarrow> clinear F"
+abbreviation (input) maps_hom :: \<open>('a::finite,'b::finite) maps_hom \<Rightarrow> bool\<close> where
+  "maps_hom \<equiv> clinear"
 
 lemma comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> maps_hom (G \<circ> F)"
-  unfolding maps_hom_def
   by (simp add: Complex_Vector_Spaces.linear_compose) 
 (* TODO category laws *)
 
@@ -230,17 +229,32 @@ lemma transpose_op_hom[simp]: \<open>maps_hom transpose_op\<close>
   by auto *)
 
 type_synonym ('a,'b,'c) maps_2hom = \<open>'a domain_end \<Rightarrow> 'b domain_end \<Rightarrow> 'c domain_end\<close>
-definition maps_2hom :: "('a::enum, 'b::enum, 'c::enum) maps_2hom \<Rightarrow> bool" where
-  "maps_2hom F \<longleftrightarrow> (\<forall>a. maps_hom (F a)) \<and> (\<forall>b. maps_hom (\<lambda>a. F a b))"
+abbreviation (input) maps_2hom :: "('a::enum, 'b::enum, 'c::enum) maps_2hom \<Rightarrow> bool" where
+  "maps_2hom \<equiv> cbilinear"
 
-lemma maps_2hom_bilinear: "maps_2hom F \<longleftrightarrow> cbilinear F"
-  by (meson cbilinear_def maps_2hom_def maps_hom_def)
+(* lemma maps_2hom_bilinear: "maps_2hom F \<longleftrightarrow> cbilinear F"
+  by (meson cbilinear_def maps_2hom_def maps_hom_def) *)
+
+lemma maps_hom_2hom_comp: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. G (F2 a b))\<close>
+  apply (auto simp: cbilinear_def intro!: clinearI)
+  apply (smt (z3) clinear_additive_D)
+  apply (metis complex_vector.linear_scale)
+  apply (simp add: clinear_additive_D)
+  by (simp add: complex_vector.linear_scale)
+lemma maps_2hom_hom_comp1: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. F2 (G a) b)\<close>
+  apply (auto simp: cbilinear_def intro!: clinearI)
+  apply (smt (z3) clinear_additive_D)
+  by (metis complex_vector.linear_scale)
+lemma maps_2hom_sym: \<open>maps_2hom F2 \<Longrightarrow> maps_2hom (\<lambda>a b. F2 b a)\<close> 
+  by (auto simp: cbilinear_def)
+lemma maps_2hom_left: \<open>maps_2hom F2 \<Longrightarrow> maps_hom (\<lambda>a. F2 a b)\<close>
+  by (auto simp: cbilinear_def)
+
 
 lemma comp_2hom: "maps_2hom timesOp"
-  unfolding maps_2hom_def maps_hom_def
-  by (auto intro!: clinearI simp add: cblinfun_apply_dist1 cblinfun_apply_dist2)
+  by (auto intro!: clinearI simp add: cbilinear_def cblinfun_apply_dist1 cblinfun_apply_dist2)
 
-lift_definition tensor_state :: \<open>'a::finite state \<Rightarrow> 'b::finite state \<Rightarrow> ('a\<times>'b) state\<close> is
+lift_definition tensor_state :: \<open>'a::finite state \<Rightarrow> 'b::finite state \<Rightarrow> ('a\<times>'b) state\<close> (infixr "\<otimes>\<^sub>s" 70) is
   \<open>\<lambda>\<psi> \<phi> (i,j). \<psi> i * \<phi> j\<close>
   by simp
 
@@ -458,7 +472,7 @@ proof -
 qed
 
 lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
-  by (simp add: maps_2hom_bilinear tensor_maps_cbilinear)
+  by (simp add: tensor_maps_cbilinear)
 
 (* lift_definition operator_nth :: \<open>('a::enum,'b::enum) operator \<Rightarrow> (nat * nat) \<Rightarrow> complex\<close> is
   \<open>index_mat\<close>. *)
@@ -593,7 +607,7 @@ lemma tensor_extensionality:
   shows "F = G"
 proof (rule ext, rule complex_vector.linear_eq_on_span[where f=F and g=G])
   show \<open>clinear F\<close> and \<open>clinear G\<close>
-    using assms by (simp_all add: maps_hom_def)
+    using assms by (simp_all add: cbilinear_def)
   show \<open>x \<in> cspan  {tensor_op (butter i j) (butter k l)| i j k l. True}\<close> 
     for x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
     using cspan_tensor_op by auto
@@ -610,8 +624,8 @@ definition tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2hom
   "tensor_lift F2 = (SOME G. clinear G \<and> (\<forall>a b. G (tensor_maps a b) = F2 a b))"
 
 lemma assumes "maps_2hom F2"
-  shows tensor_lift_hom: "maps_2hom F2 \<Longrightarrow> maps_hom (tensor_lift F2)"
-  and tensor_existence:  \<open>maps_2hom F2 \<Longrightarrow> (\<lambda>a b. tensor_lift F2 (tensor_maps a b)) = F2\<close>
+  shows tensor_lift_hom: "maps_hom (tensor_lift F2)"
+  and tensor_existence:  \<open>(\<lambda>a b. tensor_lift F2 (tensor_maps a b)) = F2\<close>
 proof -
   define F2' t4 \<phi> where
     \<open>F2' = tensor_lift F2\<close> and
@@ -662,14 +676,14 @@ proof -
     using * apply (auto intro!: linear_compose[unfolded o_def, where f=\<open>\<lambda>a. tensor_maps a _\<close> and g=\<open>(*\<^sub>V) G\<close>])
     apply (metis cbilinear_def tensor_maps_cbilinear)
     apply (simp add: cblinfun_apply_add clinearI)
-    using assms maps_2hom_def maps_hom_def by blast
+    using assms unfolding cbilinear_def by blast
   have G_F2: \<open>G *\<^sub>V tensor_maps a b = F2 a b\<close> for a b
     apply (rule complex_vector.linear_eq_on_span[where g=\<open>F2 a\<close> and B=\<open>{butter k l|k l. True}\<close>])
     unfolding linfun_cspan
     using * apply (auto simp: cblinfun_apply_add clinearI
                         intro!: linear_compose[unfolded o_def, where f=\<open>tensor_maps a\<close> and g=\<open>(*\<^sub>V) G\<close>])
     apply (meson cbilinear_def tensor_maps_cbilinear)
-    using assms maps_2hom_def maps_hom_def by blast
+    using assms unfolding cbilinear_def by blast
 
   have \<open>clinear F2' \<and> (\<forall>a b. F2' (tensor_maps a b) = F2 a b)\<close>
     unfolding F2'_def tensor_lift_def 
@@ -677,7 +691,7 @@ proof -
     using G_F2 by (simp add: cblinfun_apply_add clinearI)
 
   then show \<open>maps_hom F2'\<close> and \<open>(\<lambda>a b. tensor_lift F2 (tensor_maps a b)) = F2\<close>
-    using maps_hom_def unfolding F2'_def by auto
+    unfolding F2'_def by auto
 qed
 
 lemma tensor_uniqueness: \<open>maps_2hom F2 \<Longrightarrow> maps_hom F \<Longrightarrow> (\<lambda>a b. F (tensor_maps a b)) = F2 \<Longrightarrow> F = tensor_lift F2\<close>
@@ -735,7 +749,7 @@ definition assoc :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite, 'a
   \<open>assoc a = assoc_state o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L assoc_state'\<close>
 
 lemma assoc_hom: \<open>maps_hom assoc\<close>
-  unfolding maps_hom_def assoc_def
+  unfolding assoc_def
   by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
 
 lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = tensor_maps a (tensor_maps b c)\<close>
@@ -794,20 +808,20 @@ lemma pair_lvalue_axiom:
 proof (unfold lvalue_def, intro conjI allI)
   have h1: \<open>maps_hom (\<lambda>a. p (a o\<^sub>C\<^sub>L b))\<close> for b
     apply (rule comp_maps_hom[unfolded o_def, of _ p])
-     apply (simp add: cblinfun_apply_dist1 clinearI maps_hom_def)
+     apply (simp add: cblinfun_apply_dist1 clinearI)
     by simp
   have h2: \<open>maps_hom (\<lambda>a. p a o\<^sub>C\<^sub>L p b)\<close> for b
     apply (rule comp_maps_hom[unfolded o_def, of p])
     apply simp
-    by (meson cblinfun_apply_dist1 clinearI maps_hom_def scalar_op_op)
+    by (meson cblinfun_apply_dist1 clinearI scalar_op_op)
   have h3: \<open>maps_hom (\<lambda>c. p (d o\<^sub>C\<^sub>L c))\<close> for d
     apply (rule comp_maps_hom[unfolded o_def, of _ p])
-     apply (simp add: cblinfun_apply_dist2 clinearI maps_hom_def)
+     apply (simp add: cblinfun_apply_dist2 clinearI)
     by simp
   have h4: \<open>maps_hom (\<lambda>c. p d o\<^sub>C\<^sub>L p c)\<close> for d
     apply (rule comp_maps_hom[unfolded o_def, of p])
     apply simp
-    by (simp add: cblinfun_apply_dist2 clinearI maps_hom_def)
+    by (simp add: cblinfun_apply_dist2 clinearI)
 
   fix x y :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
   show "maps_hom p"
@@ -827,7 +841,7 @@ proof (unfold lvalue_def, intro conjI allI)
 
   have hom_padjadj: \<open>maps_hom (\<lambda>a. p (a*)*)\<close>
     using \<open>maps_hom p\<close>
-    by (auto simp: Adj_cblinfun_plus maps_hom_def complex_vector.linear_add complex_vector.linear_scale intro!: clinearI)
+    by (auto simp: Adj_cblinfun_plus complex_vector.linear_add complex_vector.linear_scale intro!: clinearI)
 
   have *: \<open>(p (tensor_op a b*))* = p (tensor_op a b)\<close> for a b
     using \<open>lvalue F\<close> \<open>lvalue G\<close>

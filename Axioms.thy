@@ -58,14 +58,4 @@ pair_lvalue_axiom: \<open>\<lbrakk>lvalue F; lvalue G; maps_hom p;
     \<And>a b. comp_domain (F a) (G b) = comp_domain (G b) (F a);
     \<And>a b. p (tensor_maps a b) = comp_domain (F a) (G b)\<rbrakk> \<Longrightarrow> lvalue p\<close>
 
-bundle lvalue_notation begin
-notation comp_domain (infixl "\<circ>\<^sub>d" 55)
-notation tensor_maps (infixr "\<otimes>" 70)
-end
-
-bundle no_lvalue_notation begin
-no_notation comp_domain (infixl "\<circ>\<^sub>d" 55)
-no_notation tensor_maps (infixr "\<otimes>" 70)
-end
-
 end
