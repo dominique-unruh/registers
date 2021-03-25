@@ -10,4 +10,6 @@ else
     FILES=()
 fi
 
-/opt/Isabelle2021/bin/isabelle jedit -l Bounded_Operators -d . "${FILES[@]}" "$@" &
+ISABELLE_DIR=/opt/Isabelle2021
+
+"$ISABELLE_DIR/bin/isabelle" jedit -l Bounded_Operators -d . "$ISABELLE_DIR/src/Pure/ROOT.ML" "${FILES[@]}" "$@" &

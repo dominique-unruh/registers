@@ -137,4 +137,21 @@ proof (rule independent_if_scalars_zero)
     by simp
 qed
 
+(* Declares the ML antiquotation @{fact ...}. In ML code,
+  @{fact f} for a theorem/fact name f is replaced by an ML string
+  containing a printable(!) representation of fact. (I.e.,
+  if you print that string using writeln, the user can ctrl-click on it.)
+ *)
+setup \<open>ML_Antiquotation.inline_embedded \<^binding>\<open>fact\<close>
+((Args.context -- Scan.lift Args.name_position) >> (fn (ctxt,namepos) => let
+  val facts = Proof_Context.facts_of ctxt
+  val fullname = Facts.check (Context.Proof ctxt) facts namepos
+  val (markup, shortname) = Proof_Context.markup_extern_fact ctxt fullname
+  val string = Markup.markups markup shortname
+  in ML_Syntax.print_string string end
+))
+\<close>
+
+
+
 end

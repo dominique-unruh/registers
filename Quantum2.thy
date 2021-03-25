@@ -83,7 +83,7 @@ locale teleport_locale =
     and \<Phi> :: "(bit*bit,'mem::finite) maps_hom"
     and A :: "('atype::finite,'mem) maps_hom"
     and B :: "('btype::finite,'mem) maps_hom"
-  assumes [compatible_lvalues]: "COMPATIBLE (X,\<Phi>,A,B)"
+  assumes compat[compatible]: "mutually compatible (X,\<Phi>,A,B)"
 begin
 
 definition "apply U R = R U" for R :: \<open>('a,'mem) maps_hom\<close>
@@ -173,12 +173,6 @@ lemma hoare_ifthen:
 
 lemma "hoare (teleport_pre \<psi>) (teleport a b) (teleport_post \<psi>)" for \<psi> a b
 proof -
-(* TODO: should be simpler: *)
-  have \<open>compatible X \<Phi>\<close>
-    by simp
-  then have [simp]: \<open>lvalue \<Phi>\<close>
-    by (simp add: compatible_def)
-
   define XZ :: \<open>bit domain_end\<close> where "XZ = (if a=1 then (if b=1 then pauliZ o\<^sub>C\<^sub>L pauliX else pauliX) else (if b=1 then pauliZ else idOp))"
 
   define pre post where "pre = teleport_pre \<psi>" and "post = teleport_post \<psi>"
@@ -229,14 +223,14 @@ proof -
     by (auto simp add: teleport_def)
 
   have join1: "\<Phi> M = (pair X \<Phi>) (idOp \<otimes> M)" for M
-    by (metis \<open>compatible X \<Phi>\<close> compatible_def join_lvalues lvalue_id times_idOp2)
+    by (metis (no_types, lifting) compat compatible_lvalue2 join_lvalues lvalue_def times_idOp2)
   have join2: \<open>(pair (\<Phi> \<circ> Fst) X) M = (pair X \<Phi>) ((id \<otimes>\<^sub>h Fst) (swap M))\<close> for M
     apply (subst pair_comp_tensor', simp)
     apply (subst pair_comp_swap', simp)
-    using \<open>compatible X \<Phi>\<close> compatible_comp_right lvalue_Fst apply blast
+    using compat compatible_comp_right lvalue_Fst apply blast
     by simp
   have join3: "X M = (pair X \<Phi>) (M \<otimes> idOp)" for M
-    by (metis \<open>compatible X \<Phi>\<close> \<open>lvalue \<Phi>\<close> join_lvalues lvalue_id times_idOp1)
+    by (metis (no_types, lifting) compat compatible_def join_lvalues lvalue_id times_idOp1)
   have join4: \<open>(pair X (\<Phi> \<circ> Fst)) M = (pair X \<Phi>) ((id \<otimes>\<^sub>h Fst) M)\<close> for M
     apply (subst pair_comp_tensor', simp)
     by simp

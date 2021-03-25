@@ -4,7 +4,7 @@
  *)
 
 theory Laws_Classical
-  imports Classical "HOL-Library.Rewrite"
+  imports Classical "HOL-Library.Rewrite" Misc
 begin
 
 notation comp_domain (infixl "\<circ>\<^sub>d" 55)
@@ -171,7 +171,7 @@ lemma pair_lvalue[simp]:
   apply (rule pair_lvalue_axiom[where F=F and G=G and p=\<open>pair F G\<close>])
   using assms by (auto simp: compatible_def lvalue_hom)
   
-lemma compatible3:
+lemma compatible3[simp]:
   assumes [simp]: "compatible x y" and "compatible y z" and "compatible x z"
   shows "compatible (pair x y) z"
 proof (rule compatibleI)
@@ -209,133 +209,96 @@ lemma compatible_comp_inner:
   "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (z \<circ> x) (z \<circ> y)"
   by (smt (verit, best) comp_apply compatible_def lvalue_comp lvalue_mult)
 
+lemma compatible_lvalue1: \<open>compatible x y \<Longrightarrow> lvalue x\<close>
+  by (simp add: compatible_def)
+lemma compatible_lvalue2: \<open>compatible x y \<Longrightarrow> lvalue y\<close>
+  by (simp add: compatible_def)
 
-subsection \<open>Heterogenous variable lists\<close>
+subsection \<open>Compatibility simplification\<close>
 
-(* TODO: should not be axioms (or not be here) *)
-typedecl 'a untyped_lvalue
-axiomatization make_untyped_lvalue :: \<open>('a,'b) maps_hom \<Rightarrow> 'b untyped_lvalue\<close>
-  and compatible_untyped :: \<open>'b untyped_lvalue \<Rightarrow> 'b untyped_lvalue \<Rightarrow> bool\<close>
-axiomatization where
-  compatible_untyped: \<open>compatible_untyped (make_untyped_lvalue F) (make_untyped_lvalue G)
-    \<longleftrightarrow> compatible F G\<close>
+(* The simproc compatibility_warn produces helpful warnings for "compatible x y"
+   subgoals that are probably unsolvable due to missing declarations of 
+   variable compatibility facts. *)
+simproc_setup "compatibility_warn" ("compatible x y") = \<open>fn m => fn ctxt => fn ct => let
+  val (x,y) = case Thm.term_of ct of
+                 Const(\<^const_name>\<open>compatible\<close>,_ ) $ x $ y => (x,y)
+  val str : string lazy = Lazy.lazy (fn () => Syntax.string_of_term ctxt (Thm.term_of ct))
+  fun w msg = warning (msg ^ "\n(Disable these warnings with: using [[simproc del: compatibility_warn]])")
+  val _ = \<^print> (x,y)
+  val _ = case (x,y) of (Free(n,T), Free(n',T')) => 
+            if String.isPrefix ":" n orelse String.isPrefix ":" n' then 
+                      w ("Simplification subgoal " ^ Lazy.force str ^ " contains a bound variable.\n" ^
+                      "Try to add some assumptions that makes this goal solvable by the simplifier")
+            else if n=n' then (if T=T' then () 
+                          else w ("In simplification subgoal " ^ Lazy.force str ^ 
+                               ", variables have same name and different types.\n" ^
+                               "Probably something is wrong."))
+                    else w ("Simplification subgoal " ^ Lazy.force str ^ 
+                            " occurred but cannot be solved.\n" ^
+                            "Please add assumption/fact  [simp]: \<open>" ^ Lazy.force str ^ 
+                            "\<close>  somewhere.")
+          | _ => w ("Simplification subgoal " ^ Lazy.force str ^ 
+                    "\ncannot be reduced to a compatibility of two variables (such as \<open>compatibility x y\<close>).\n" ^
+                    "Try adding a simplification rule that breaks it down (such as, e.g., " ^ @{fact compatible3} ^ ").")
+  in NONE end\<close>
 
-inductive mutually_compatible :: \<open>'a untyped_lvalue list \<Rightarrow> bool\<close> where
-  \<open>mutually_compatible []\<close>
-| \<open>mutually_compatible vs \<Longrightarrow> list_all (compatible_untyped v) vs
-    \<Longrightarrow> mutually_compatible (v#vs)\<close>
 
-inductive compatible_with_all :: \<open>('a,'b) maps_hom \<Rightarrow> 'b untyped_lvalue list \<Rightarrow> bool\<close> where
-  \<open>compatible_with_all _ []\<close>
-| \<open>compatible_with_all v ws \<Longrightarrow> compatible_untyped (make_untyped_lvalue v) w \<Longrightarrow> compatible_with_all v (w#ws)\<close>
+(* Abbreviations: "mutually f (x1,x2,x3,\<dots>)" expands to a conjunction
+   of all "f xi xj" with i\<noteq>y.
 
-lemma l1:
-  assumes \<open>mutually_compatible (make_untyped_lvalue a # as)\<close>
-  shows \<open>compatible_with_all a as\<close>
-  using assms apply cases apply (induction as)
-   apply (simp add: compatible_with_all.intros(1))
-  using compatible_with_all.intros(2) mutually_compatible.cases by fastforce
+   "each f (x1,x2,x3,\<dots>)" expands to a conjunction of all "f xi". *)
 
-lemma l2:
-  assumes \<open>mutually_compatible (a # as)\<close>
-  shows \<open>mutually_compatible as\<close>
-  using assms mutually_compatible.cases by blast
+syntax "_mutually" :: "'a \<Rightarrow> args \<Rightarrow> 'b" ("mutually _ '(_')")
+syntax "_mutually2" :: "'a \<Rightarrow> 'b \<Rightarrow> args \<Rightarrow> args \<Rightarrow> 'c"
 
-lemma l3:
-  assumes \<open>compatible_with_all b (a # as)\<close>
-  shows \<open>compatible_with_all b as\<close>
-  using assms compatible_with_all.cases by auto
+translations "mutually f (x)" => "CONST True"
+translations "mutually f (_args x y)" => "f x y \<and> f y x"
+translations "mutually f (_args x (_args x' xs))" => "_mutually2 f x (_args x' xs) (_args x' xs)"
+translations "_mutually2 f x y zs" => "f x y \<and> f y x \<and> _mutually f zs"
+translations "_mutually2 f x (_args y ys) zs" => "f x y \<and> f y x \<and> _mutually2 f x ys zs"
 
-lemma l4:
-  assumes \<open>compatible_with_all b (make_untyped_lvalue a # as)\<close>
-  shows \<open>compatible b a\<close>
-  using assms compatible_untyped compatible_with_all.cases by blast
+syntax "_each" :: "'a \<Rightarrow> args \<Rightarrow> 'b" ("each _ '(_')")
+translations "each f (x)" => "f x"
+translations "_each f (_args x xs)" => "f x \<and> _each f xs"
 
-lemma l4':
-  assumes \<open>compatible_with_all b (make_untyped_lvalue a # as)\<close>
-  shows \<open>compatible a b\<close>
-  using assms compatible_sym l4 by blast
-
-nonterminal untyped_lvalues
-syntax "_COMPATIBLE" :: "args \<Rightarrow> 'b" ("COMPATIBLE '(_')")
-syntax "_LVALUE_LIST" :: "args \<Rightarrow> 'b" ("UNTYPED'_LVALUE'_LIST '(_')")
-syntax "_insert_make_untyped_lvalue" :: "args \<Rightarrow> 'b"
-
-translations "COMPATIBLE (x)" == "CONST mutually_compatible (UNTYPED_LVALUE_LIST (x))"
-translations "UNTYPED_LVALUE_LIST (x)" => "CONST make_untyped_lvalue x # CONST Nil"
-translations "UNTYPED_LVALUE_LIST (x,xs)" => "CONST make_untyped_lvalue x # UNTYPED_LVALUE_LIST (xs)"
-
-named_theorems compatible_lvalues
-
-ML \<open>
-fun show_compatibility_fact ctxt x y = let
-  val facts = case Proof_Context.lookup_fact ctxt \<^named_theorems>\<open>compatible_lvalues\<close>
-              of SOME {thms=thms, ...} => thms | NONE => error "internal error"
-  fun show fact = let 
-    val list = case Thm.prop_of fact of Const(\<^const_name>\<open>Trueprop\<close>,_) $ 
-                (Const(\<^const_name>\<open>mutually_compatible\<close>, _) $ list) => list
-                | _ => raise TERM("show_compatibility_fact 1",[])
-    val list = HOLogic.dest_list list
-    val list = map (fn t => case t of Const(\<^const_name>\<open>make_untyped_lvalue\<close>, _) $ x => x 
-                     | _ => raise TERM("show_compatibility_fact 2",[])) list
-    val index1 = find_index (fn v => v=x) list
-    val _ = if index1 = ~1 then raise TERM("show_compatibility_fact 3",[]) else ()
-    val index2 = find_index (fn v => v=y) list
-    val _ = if index2 = ~1 then raise TERM("show_compatibility_fact 4",[]) else ()
-    val _ = if index1 = index2 then raise TERM("show_compatibility_fact 5",[]) else ()
-    val swap = index1 >= index2
-    val (first,second) = if swap then (index2,index1) else (index1,index2)
-    fun show'' 0 fact = let
-          (* val _ = \<^print> (fact) *)
-          val fact = (if swap then @{thm l4'} else @{thm l4}) OF [fact]
-          in fact end
-      | show'' pos fact = let
-          (* val _ = \<^print> (pos, fact) *)
-          val fact = @{thm l3} OF [fact]
-          in show'' (pos-1) fact end
-    fun show' 0 second fact = let 
-          val fact = @{thm l1} OF [fact]
-          in show'' (second-1) fact end
-      | show' first second fact = let
-          val fact = @{thm l2} OF [fact]
-          in show' (first - 1) (second - 1) fact end
-    val result = show' first second fact
-  in result end
-  fun find [] = NONE
-    | find (fact::facts) = 
-        SOME (show fact) handle TERM _ => find facts
-  in find facts end
-;;
-show_compatibility_fact \<^context> \<^term>\<open>b\<close> \<^term>\<open>d\<close>
+(* Declares the attribute [compat]. If applied to a conjunction 
+   of "compatible x y" facts, it will add all of them to the simplifier
+   (as [simp] does), but additionally add all "lvalue x", "lvalue y" facts. *)
+setup \<open>
+let 
+fun add (thm:thm) results = 
+  Net.insert_term (K true) (Thm.concl_of thm, thm) results
+  handle Net.INSERT => results
+fun collect thm results = case Thm.concl_of thm of
+  Const(\<^const_name>\<open>Trueprop\<close>,_) $ (Const(\<^const_name>\<open>conj\<close>,_) $ _ $ _) => 
+    collect (@{thm conjunct1} OF [thm]) (collect (@{thm conjunct2} OF [thm]) results)
+  | Const(\<^const_name>\<open>Trueprop\<close>,_) $ (Const(\<^const_name>\<open>compatible\<close>,_) $ _ $ _) =>
+    collect (@{thm compatible_lvalue1} OF [thm]) (collect (@{thm compatible_lvalue2} OF [thm]) (add thm results))
+  | _ => add thm results
+fun declare thm context = let
+  val thms = collect thm (Net.empty) |> Net.entries
+  in Simplifier.map_ss (fn ctxt => ctxt addsimps thms) context end
+in
+Attrib.setup \<^binding>\<open>compatible\<close>
+ (Scan.succeed (Thm.declaration_attribute declare))
+  "Add 'compatible x y' style rules to simplifier. (Also adds 'lvalue x', 'lvalue y')"
+end
 \<close>
 
 
-ML \<open>
-fun compatibility_tac ctxt = SUBGOAL (fn (t,i) => (
-  case t of
-    Const(\<^const_name>\<open>Trueprop\<close>,_) $ (Const(\<^const_name>\<open>compatible\<close>,_) $
-      (Const(\<^const_name>\<open>pair\<close>,_) $ _ $ _) $ _) =>
-        (resolve_tac ctxt [@{thm compatible3}] THEN_ALL_NEW compatibility_tac ctxt) i
-(* TODO pair on the right side, chain *)
-  | Const(\<^const_name>\<open>Trueprop\<close>,_) $ (Const(\<^const_name>\<open>compatible\<close>,_) $ x $ y) =>
-      case show_compatibility_fact ctxt x y of
-        SOME thm => solve_tac ctxt [thm] i
-      | NONE => no_tac)) 
-\<close>
-
-simproc_setup "compatibility" ("compatible x y") = \<open>fn m => fn ctxt => fn ct => let
-  val goal = Thm.apply (Thm.apply \<^cterm>\<open>(==) :: bool\<Rightarrow>bool\<Rightarrow>prop\<close> ct) \<^cterm>\<open>True\<close> |> Goal.init
-  val goal = SINGLE (resolve_tac ctxt @{thms Eq_TrueI} 1) goal
-  val goal = Option.mapPartial (SINGLE (compatibility_tac ctxt 1)) goal
-  val thm = Option.map (Goal.finish ctxt) goal
-  in thm end\<close>
+experiment begin
+lemma 
+  assumes [compatible]: "mutually compatible (a,b,c)"
+  shows True
+proof -
+  have "lvalue b" by simp
+  have "compatible b c" by simp
+  have "compatible (pair a b) c" by simp
+  show ?thesis by simp
+qed
+end
 
 
-
-lemma
-  assumes [compatible_lvalues]: "COMPATIBLE (a,b,c,d,e)"
-  shows "compatible d b"
-  by simp
 
 subsection \<open>Notation\<close>
 
