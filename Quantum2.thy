@@ -231,15 +231,8 @@ qed
 
 end
 
-typedef a_state = "{1,2,3::int}" by auto
-print_theorems
-instance a_state :: finite
-  apply intro_classes using Rep_a_state Rep_a_state_inject
-  by auto
-typedef b_state = "{1,2,3,4::int}" by auto
-instance b_state :: finite
-  apply intro_classes
-  sorry
+type_synonym a_state = "64 word"
+type_synonym b_state = "1000000 word"
 
 locale concrete_teleport_vars begin
 type_synonym mem = "a_state * bit * bit * b_state * bit"
