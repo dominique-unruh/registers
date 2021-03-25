@@ -2,3 +2,5 @@
 /output/
 /lvalues-isabelle.pdf
 .*.marks
+/Laws_Classical.thy
+/Laws_Quantum.thy

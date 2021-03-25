@@ -1,4 +1,8 @@
-theory Classical
+(* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Classical.thy)
+ 
+   domain \<rightarrow> type *)
+
+theory Axioms_Classical
   imports Main
 begin
 
@@ -136,7 +140,7 @@ proof (intro ext)
   define R2 where \<open>R2 = rel_of_maps_2hom F2\<close>
   then have F2R2: "F2 a b = R2 `` (a \<times> b)" for a b
     using rel_of_maps_2hom assms by metis
-  show \<open>tensor_lift F2 (Classical.rel_prod a b) = F2 a b\<close>
+  show \<open>tensor_lift F2 (rel_prod a b) = F2 a b\<close>
   proof (intro set_eqI, case_tac x, rename_tac x y, hypsubst, rule iffI)
     fix x y :: 'c
     assume "(x, y) \<in> F2 a b"

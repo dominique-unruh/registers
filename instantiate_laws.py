@@ -1,20 +1,13 @@
 #!/usr/bin/python3
+import glob
 import os
 import re
+import sys
 from stat import S_IREAD, S_IRGRP, S_IROTH
-from typing import Union, Sequence, Collection, Match
+from typing import Union, Collection, Match, Dict, Optional, Tuple
 
-classical = {
-    'theory Laws': 'theory Laws_Classical',
-    'Axioms': 'Classical',
-    'domain': 'type',
-}
+had_errors = False
 
-quantum = {
-    'theory Laws': 'theory Laws_Quantum',
-    'Axioms': 'Quantum',
-    'domain': 'finite',
-}
 
 def multisubst(mappings: Collection[(Union[re.Pattern, str])], content: str) -> str:
     replacements = []
@@ -22,33 +15,37 @@ def multisubst(mappings: Collection[(Union[re.Pattern, str])], content: str) -> 
     i = 0
     for pat, repl in mappings:
         if isinstance(pat, str):
-            patStr = re.escape(pat)
+            pat_str = re.escape(pat)
         else:
-            patStr = pat.pattern
+            pat_str = pat.pattern
         replacements.append(repl)
-        patterns.append(f"(?P<GROUP_{i}>\\b(?:{patStr})\\b)")
+        patterns.append(f"(?P<GROUP_{i}>\\b(?:{pat_str})\\b)")
         i += 1
 
     pattern = re.compile("|".join(patterns))
 
-    def replFunc(m:Match):
+    def repl_func(m: Match):
         # print(m)
         for name, text in m.groupdict().items():
-            if text is None: continue
-            if text.startswith("GROUP_"): continue
+            if text is None:
+                continue
+            if text.startswith("GROUP_"):
+                continue
             idx = int(name[6:])
             # print(name, idx)
             return replacements[idx]
         assert False
 
-    return pattern.sub(replFunc, content)
+    return pattern.sub(repl_func, content)
+
 
 def rewrite_laws(outputfile, substitutions):
+    print(f"Rewriting Laws.thy -> {outputfile}")
     with open('Laws.thy', 'rt') as f:
         content = f.read()
-    newContent = multisubst(substitutions.items(), content)
+    new_content = multisubst(substitutions.items(), content)
 
-    # print(newContent)
+    # print(new_content)
     try: os.remove(outputfile)
     except FileNotFoundError: pass
     
@@ -59,9 +56,54 @@ def rewrite_laws(outputfile, substitutions):
  *)
 
 """)
-        f.write(newContent)
-    os.chmod(outputfile, S_IREAD|S_IRGRP|S_IROTH)
+        f.write(new_content)
+    os.chmod(outputfile, S_IREAD | S_IRGRP | S_IROTH)
 
-rewrite_laws('Laws_Classical.thy', classical)
-rewrite_laws('Laws_Quantum.thy', quantum)
 
+def read_instantiation_header(file: str) -> Optional[Tuple[str, Dict[str, str]]]:
+    global had_errors
+    with open(file, 'rt') as f:
+        content = f.read()
+
+    assert file.startswith("Axioms_")
+    basename = file[len("Axioms_"):]
+    assert basename.endswith(".thy")
+    basename = basename[:-len(".thy")]
+
+    m = re.compile(r"""\(\* AXIOM INSTANTIATION [^\n]*\n(.*?)\*\)""", re.DOTALL).search(content)
+    if m is None:
+        print(f"*** Could not find AXIOM INSTANTIATION header in {file}.")
+        had_errors = True
+        lines = []
+    else:
+        lines = m.group(1).splitlines()
+    substitutions = {
+        'theory Laws': f'theory Laws_{basename}',
+        'Axioms': f'Axioms_{basename}'
+    }
+    # print(substitutions)
+    for line in lines:
+        if line.strip() == "":
+            continue
+        m = re.match(r"^\s*(\S+)\s+\\<rightarrow>\s+(\S+)\s*$", line)
+        if m is None:
+            print(f"*** Invalid AXIOM INSTANTIATION line in {file}: {line}")
+            had_errors = True
+            continue
+        key = m.group(1)
+        val = m.group(2)
+        if key in substitutions:
+            print(f"*** Repeated AXIOM INSTANTIATION key in {file}: {line}")
+            had_errors = True
+        substitutions[key] = val
+    # print(substitutions)
+    return (f"Laws_{basename}.thy", substitutions)
+
+def rewrite_all():
+    for f in glob.glob("Axioms_*.thy"):
+        lawfile, substitutions = read_instantiation_header(f)
+        rewrite_laws(lawfile, substitutions)
+
+rewrite_all()
+if had_errors:
+    sys.exit(1)

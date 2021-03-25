@@ -3,9 +3,6 @@ theory Classical2
 begin
 
 
-
-
-
 lemma lvalue_single_valued:
   assumes lvalueF: \<open>lvalue F\<close>
   assumes single: \<open>single_valued a\<close>
