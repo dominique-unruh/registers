@@ -6,13 +6,13 @@ begin
 no_notation meet (infixl "\<sqinter>\<index>" 70)
 unbundle lvalue_notation
 
-lemma pair_comp_tensor:
-  assumes "compatible A B"
-  shows "(pair A B) o (C \<otimes>\<^sub>h D) = pair (A o C) (B o D)"
-  sorry
+lemma lvalue_id[simp]: \<open>lvalue id\<close>
+  unfolding lvalue_def by auto
+
+(* declare lvalue_hom[simp] *)
 
 lemma pair_comp_tensor':
-  assumes "compatible A B"
+  assumes "compatible A B" and \<open>lvalue C\<close> and \<open>lvalue D\<close>
   shows "(pair A B) ((C \<otimes>\<^sub>h D) x) = (pair (A o C) (B o D)) x"
   using pair_comp_tensor[OF assms]
   by (smt (z3) fcomp_comp fcomp_def)
@@ -56,16 +56,19 @@ lemma lvalue_Fst[simp]: \<open>lvalue Fst\<close>
 lemma lvalue_Snd[simp]: \<open>lvalue Snd\<close>
   by (auto simp: Snd_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
 
-lemma lvalue_id[simp]: \<open>lvalue R \<Longrightarrow> R idOp = idOp\<close>
-  by (auto simp: lvalue_def)
+lemma clinear_Fst[simp]: \<open>clinear Fst\<close>
+  by (auto simp: Fst_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
 
-(* TODO Laws *)
-lemma lvalue_comp[simp]: \<open>lvalue R \<Longrightarrow> R A o\<^sub>C\<^sub>L R B = R (A o\<^sub>C\<^sub>L B)\<close>
+lemma clinear_Snd[simp]: \<open>clinear Snd\<close>
+  by (auto simp: Snd_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
+
+(* TODO in Laws *)
+lemma lvalue_of_id[simp]: \<open>lvalue R \<Longrightarrow> R idOp = idOp\<close>
   by (auto simp: lvalue_def)
 
 (* TODO Laws *)
 lemma lvalue_comp'1[simp]: \<open>lvalue R \<Longrightarrow> R A o\<^sub>C\<^sub>L (R B o\<^sub>C\<^sub>L C) = R (A o\<^sub>C\<^sub>L B) o\<^sub>C\<^sub>L C\<close>
-  by (simp add: assoc_left(1))
+  by (metis (no_types, lifting) assoc_left(1) lvalue_mult)
 
 
 instantiation bit :: enum begin
@@ -217,7 +220,7 @@ proof -
   define O7 where \<open>O7 = (\<Phi> \<circ> Snd) XZ o\<^sub>C\<^sub>L O5\<close>
   have \<open>hoare (O6 *\<^sub>S pre) [apply (if b=1 then pauliZ else idOp) (\<Phi> \<circ> Snd)] (O7 *\<^sub>S pre)\<close>
     apply (rule hoare_apply) 
-    by (auto simp add: O6_def O7_def assoc_left(2) XZ_def)
+    by (auto simp add: O6_def O7_def assoc_left(2) XZ_def lvalue_mult)
 
   finally have \<open>hoare pre (teleport a b) (O7 *\<^sub>S pre)\<close>
     by (auto simp add: teleport_def)
@@ -225,22 +228,23 @@ proof -
   have join1: "\<Phi> M = (pair X \<Phi>) (idOp \<otimes> M)" for M
     by (metis (no_types, lifting) compat compatible_lvalue2 join_lvalues lvalue_def times_idOp2)
   have join2: \<open>(pair (\<Phi> \<circ> Fst) X) M = (pair X \<Phi>) ((id \<otimes>\<^sub>h Fst) (swap M))\<close> for M
-    apply (subst pair_comp_tensor', simp)
+    apply (subst pair_comp_tensor')
+       apply simp_all[3]
     apply (subst pair_comp_swap', simp)
-    using compat compatible_comp_right lvalue_Fst apply blast
     by simp
   have join3: "X M = (pair X \<Phi>) (M \<otimes> idOp)" for M
-    by (metis (no_types, lifting) compat compatible_def join_lvalues lvalue_id times_idOp1)
+    by (metis (no_types, lifting) compat compatible_def join_lvalues lvalue_of_id times_idOp1)
   have join4: \<open>(pair X (\<Phi> \<circ> Fst)) M = (pair X \<Phi>) ((id \<otimes>\<^sub>h Fst) M)\<close> for M
-    apply (subst pair_comp_tensor', simp)
-    by simp
+    apply (subst pair_comp_tensor')
+    by simp_all
 
   have "O7 = xxx"
     unfolding O7_def O5_def' O3_def O2_def O1_def
-    apply (simp add: join1 join2 join3 join4 EQP_def)
+    apply (simp only: join1 join2 join3 join4 EQP_def)
+    apply simp
     unfolding join1x
 
-    apply (simp add: join1)
+    apply (simp add: join1)x
     by -
   show ?thesis
     by -

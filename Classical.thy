@@ -234,7 +234,7 @@ lemma
   by (simp add: comp_maps_hom lvalue_def) 
 
 lemma
-  lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain (F a) (F b)"
+  lvalue_mult: "lvalue F \<Longrightarrow> comp_domain (F a) (F b) = F (comp_domain a b)"
   by (simp add: lvalue_def)
 
 lemma pair_lvalue_axiom: 

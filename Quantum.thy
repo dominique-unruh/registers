@@ -335,7 +335,7 @@ lemma lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue
   apply auto
   using comp_maps_hom by blast
 
-lemma lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain (F a) (F b)"
+lemma lvalue_mult: "lvalue F \<Longrightarrow> comp_domain (F a) (F b) = F (comp_domain a b)"
   for F :: "('a,'b) maps_hom" and G :: "('b,'c) maps_hom" 
   unfolding lvalue_def
   by auto

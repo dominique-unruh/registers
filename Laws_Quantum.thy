@@ -14,7 +14,7 @@ notation tensor_maps (infixr "\<otimes>" 70)
 subsection \<open>Elementary facts\<close>
 
 declare tensor_2hom[simp]
-
+declare id_maps_hom[simp]
 
 lemma maps_2hom_hom_comp2: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. F2 a (G b))\<close>
   apply (rule maps_2hom_sym) apply (rule maps_2hom_hom_comp1) apply (rule maps_2hom_sym) by simp
@@ -199,13 +199,13 @@ proof (rule compatibleI)
     by simp_all
 qed
 
-lemma compatible_comp_left: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (x \<circ> z) y"
+lemma compatible_comp_left[simp]: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (x \<circ> z) y"
   by (simp add: compatible_def lvalue_comp)
 
-lemma compatible_comp_right: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible x (y \<circ> z)"
+lemma compatible_comp_right[simp]: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible x (y \<circ> z)"
   by (simp add: compatible_def lvalue_comp)
 
-lemma compatible_comp_inner: 
+lemma compatible_comp_inner[simp]: 
   "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (z \<circ> x) (z \<circ> y)"
   by (smt (verit, best) comp_apply compatible_def lvalue_comp lvalue_mult)
 
@@ -213,6 +213,36 @@ lemma compatible_lvalue1: \<open>compatible x y \<Longrightarrow> lvalue x\<clos
   by (simp add: compatible_def)
 lemma compatible_lvalue2: \<open>compatible x y \<Longrightarrow> lvalue y\<close>
   by (simp add: compatible_def)
+
+lemma pair_comp_tensor':
+  \<comment> \<open>Slightly more general than \<open>pair_comp_tensor\<close> below, but the latter seems 
+     better suited for simplification (we are more likely to have \<open>lvalue C\<close>
+     in the simpset than \<open>maps_hom C\<close>.\<close>
+  assumes "compatible A B" and [simp]: \<open>maps_hom C\<close> and [simp]: \<open>maps_hom D\<close>
+  shows "(pair A B) o (tensor_maps_hom C D) = pair (A o C) (B o D)"
+proof (rule tensor_extensionality)
+  have [simp]: \<open>maps_hom A\<close>
+    by (metis assms(1) compatible_lvalue1 lvalue_hom)
+  have [simp]: \<open>maps_hom B\<close>
+    by (metis (mono_tags, lifting) assms(1) compatible_lvalue2 lvalue_hom)
+  show \<open>maps_hom (pair A B \<circ> tensor_maps_hom C D)\<close>
+    by (metis assms(1) assms(2) assms(3) comp_maps_hom compatible_lvalue1 compatible_lvalue2 lvalue_hom pair_hom tensor_maps_hom_hom)
+  show \<open>maps_hom (pair (A \<circ> C) (B \<circ> D))\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) assms(3) comp_maps_hom compatible_lvalue1 compatible_lvalue2 lvalue_hom pair_hom)
+
+  show \<open>(pair A B \<circ> tensor_maps_hom C D) (a \<otimes> b) = pair (A \<circ> C) (B \<circ> D) (a \<otimes> b)\<close> for a b
+    by (simp add: comp_maps_hom)
+qed
+
+lemma pair_comp_tensor[simp]:
+  assumes "compatible A B" and [simp]: \<open>lvalue C\<close> and [simp]: \<open>lvalue D\<close>
+  shows "(pair A B) o (tensor_maps_hom C D) = pair (A o C) (B o D)"
+  by (metis assms(1) assms(2) assms(3) lvalue_hom pair_comp_tensor')
+
+(* lemma pair_comp_swap[simp]:
+  assumes "compatible A B"
+  shows "(pair A B) o swap = pair B A" *)
+
 
 subsection \<open>Compatibility simplification\<close>
 
@@ -224,7 +254,7 @@ simproc_setup "compatibility_warn" ("compatible x y") = \<open>fn m => fn ctxt =
                  Const(\<^const_name>\<open>compatible\<close>,_ ) $ x $ y => (x,y)
   val str : string lazy = Lazy.lazy (fn () => Syntax.string_of_term ctxt (Thm.term_of ct))
   fun w msg = warning (msg ^ "\n(Disable these warnings with: using [[simproc del: compatibility_warn]])")
-  val _ = \<^print> (x,y)
+  (* val _ = \<^print> (x,y) *)
   val _ = case (x,y) of (Free(n,T), Free(n',T')) => 
             if String.isPrefix ":" n orelse String.isPrefix ":" n' then 
                       w ("Simplification subgoal " ^ Lazy.force str ^ " contains a bound variable.\n" ^

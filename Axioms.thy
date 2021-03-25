@@ -49,7 +49,7 @@ axiomatization lvalue :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close>
 axiomatization where
   lvalue_hom: "lvalue F \<Longrightarrow> maps_hom F" and
   lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue (G \<circ> F)"  and
-  lvalue_mult: "lvalue F \<Longrightarrow> F (comp_domain a b) = comp_domain (F a) (F b)"
+  lvalue_mult: "lvalue F \<Longrightarrow> comp_domain (F a) (F b) = F (comp_domain a b)"
   for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
 
 axiomatization where
