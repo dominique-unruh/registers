@@ -138,6 +138,10 @@ lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_m
 
 subsection \<open>Pairs and compatibility\<close>
 
+(* TODO: needed? *)
+definition compatible0 :: \<open>('a::type,'c::type) maps_hom \<Rightarrow> ('b::type,'c) maps_hom \<Rightarrow> bool\<close> where
+  \<open>compatible0 F G \<longleftrightarrow> (\<forall>a b. F a \<circ>\<^sub>d G b = G b \<circ>\<^sub>d F a)\<close>
+
 definition compatible :: \<open>('a::type,'c::type) maps_hom \<Rightarrow> ('b::type,'c) maps_hom \<Rightarrow> bool\<close> where
   \<open>compatible F G \<longleftrightarrow> lvalue F \<and> lvalue G \<and> (\<forall>a b. F a \<circ>\<^sub>d G b = G b \<circ>\<^sub>d F a)\<close>
 
@@ -216,6 +220,13 @@ proof (rule compatibleI)
   show "lvalue z" and  "lvalue (pair x y)"
     by simp_all
 qed
+
+lemma compatible3'[simp]:
+  assumes "compatible x y" and "compatible y z" and "compatible x z"
+  shows "compatible x (pair y z)"
+  apply (rule compatible_sym)
+  apply (rule compatible3)
+  using assms by (auto simp: compatible_sym)
 
 lemma compatible_comp_left[simp]: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (x \<circ> z) y"
   by (simp add: compatible_def lvalue_comp)

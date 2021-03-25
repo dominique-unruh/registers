@@ -6,9 +6,6 @@ begin
 no_notation meet (infixl "\<sqinter>\<index>" 70)
 unbundle lvalue_notation
 
-lemma lvalue_id[simp]: \<open>lvalue id\<close>
-  unfolding lvalue_def by auto
-
 declare lvalue_hom[simp]
 
 lemma pair_comp_tensor':
@@ -44,12 +41,6 @@ lemma lvalue_Fst[simp]: \<open>lvalue Fst\<close>
 lemma lvalue_Snd[simp]: \<open>lvalue Snd\<close>
   by (auto simp: Snd_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
 
-lemma clinear_Fst[simp]: \<open>clinear Fst\<close>
-  by (auto simp: Fst_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
-
-lemma clinear_Snd[simp]: \<open>clinear Snd\<close>
-  by (auto simp: Snd_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
-
 (* TODO in Laws *)
 lemma lvalue_of_id[simp]: \<open>lvalue R \<Longrightarrow> R idOp = idOp\<close>
   by (auto simp: lvalue_def)
@@ -58,28 +49,6 @@ lemma lvalue_of_id[simp]: \<open>lvalue R \<Longrightarrow> R idOp = idOp\<close
 lemma lvalue_comp'1[simp]: \<open>lvalue R \<Longrightarrow> R A o\<^sub>C\<^sub>L (R B o\<^sub>C\<^sub>L C) = R (A o\<^sub>C\<^sub>L B) o\<^sub>C\<^sub>L C\<close>
   by (metis (no_types, lifting) assoc_left(1) lvalue_mult)
 
-
-instantiation bit :: enum begin
-definition "enum_bit = [0::bit,1]"
-definition "enum_all_bit P \<longleftrightarrow> P (0::bit) \<and> P 1"
-definition "enum_ex_bit P \<longleftrightarrow> P (0::bit) \<or> P 1"
-instance
-  apply intro_classes
-  apply (auto simp: enum_bit_def enum_all_bit_def enum_ex_bit_def)
-  by (metis bit_not_one_imp)+
-end
-
-locale teleport_locale =
-  fixes X :: "(bit,'mem::finite) maps_hom"
-    and \<Phi> :: "(bit*bit,'mem::finite) maps_hom"
-    and A :: "('atype::finite,'mem) maps_hom"
-    and B :: "('btype::finite,'mem) maps_hom"
-  assumes compat[compatible]: "mutually compatible (X,\<Phi>,A,B)"
-begin
-
-definition "apply U R = R U" for R :: \<open>('a,'mem) maps_hom\<close>
-definition "ifthen R x = R (butter x x)" for R :: \<open>('a,'mem) maps_hom\<close>
-definition "program S = fold (o\<^sub>C\<^sub>L) S idOp" for S :: \<open>'mem domain_end list\<close>
 
 definition "matrix_CNOT = mat_of_rows_list 4 [ [1::complex,0,0,0], [0,1,0,0], [0,0,0,1], [0,0,1,0] ]"
 definition CNOT :: \<open>(bit*bit) domain_end\<close> where "CNOT = cblinfun_of_mat matrix_CNOT"
@@ -91,6 +60,26 @@ definition "matrix_pauliZ = mat_of_rows_list 2 [ [1::complex, 0], [0, -1] ]"
 definition pauliZ :: \<open>bit domain_end\<close> where "pauliZ = cblinfun_of_mat matrix_pauliZ"
 definition "vector_\<beta>00 = vec_of_list [ 1/sqrt 2::complex, 0, 0, 1/sqrt 2 ]"
 definition \<beta>00 :: \<open>(bit*bit) ell2\<close> where "\<beta>00 = onb_enum_of_vec vector_\<beta>00"
+
+
+
+locale program =
+  fixes memory_type :: "'mem::finite itself"
+begin
+
+definition "apply U R = R U" for R :: \<open>('a,'mem) maps_hom\<close>
+definition "ifthen R x = R (butter x x)" for R :: \<open>('a,'mem) maps_hom\<close>
+definition "program S = fold (o\<^sub>C\<^sub>L) S idOp" for S :: \<open>'mem domain_end list\<close>
+
+end
+
+locale teleport_locale = program "TYPE('mem::finite)" +
+  fixes X :: "(bit,'mem::finite) maps_hom"
+    and \<Phi> :: "(bit*bit,'mem) maps_hom"
+    and A :: "('atype::finite,'mem) maps_hom"
+    and B :: "('btype::finite,'mem) maps_hom"
+  assumes compat[compatible]: "mutually compatible (X,\<Phi>,A,B)"
+begin
 
 definition "teleport a b = [
     apply CNOT (pair X (\<Phi> \<circ> Fst)),
@@ -162,7 +151,7 @@ lemma hoare_ifthen:
   apply (auto simp: hoare_def program_def ifthen_def EQP_def butter_def)
   by (metis (no_types, lifting) applyOpSpace.rep_eq butterfly_def closure_subset imageI less_eq_clinear_space.rep_eq subsetD)
 
-lemma "hoare (teleport_pre \<psi>) (teleport a b) (teleport_post \<psi>)" for \<psi> a b
+lemma teleport: "hoare (teleport_pre \<psi>) (teleport a b) (teleport_post \<psi>)" for \<psi> a b
 proof -
   define XZ :: \<open>bit domain_end\<close> where "XZ = (if a=1 then (if b=1 then pauliZ o\<^sub>C\<^sub>L pauliX else pauliX) else (if b=1 then pauliZ else idOp))"
 
@@ -242,4 +231,99 @@ qed
 
 end
 
+typedef a_state = "{1,2,3::int}" by auto
+print_theorems
+instance a_state :: finite
+  apply intro_classes using Rep_a_state Rep_a_state_inject
+  by auto
+typedef b_state = "{1,2,3,4::int}" by auto
+instance b_state :: finite
+  apply intro_classes
+  sorry
+
+locale concrete_teleport_vars begin
+type_synonym mem = "a_state * bit * bit * b_state * bit"
+
+definition A :: "(a_state,mem) maps_hom" 
+  where \<open>A a = a \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
+
+definition X :: "(bit,mem) maps_hom" 
+  where \<open>X a = idOp \<otimes> a \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
+
+definition \<Phi>1 :: "(bit,mem) maps_hom" 
+  where \<open>\<Phi>1 a = idOp \<otimes> idOp \<otimes> a \<otimes> idOp \<otimes> idOp\<close>
+
+definition B :: "(b_state,mem) maps_hom" 
+  where \<open>B a = idOp \<otimes> idOp \<otimes> idOp \<otimes> a \<otimes> idOp\<close>
+
+definition \<Phi>2 :: "(bit,mem) maps_hom" 
+  where \<open>\<Phi>2 a = idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> a\<close>
 end
+
+lemma compatible_compatible0:
+  assumes \<open>lvalue F\<close> and \<open>lvalue G\<close>
+  assumes \<open>compatible0 F G\<close>
+  shows \<open>compatible F G\<close>
+  using assms unfolding compatible0_def compatible_def by simp
+
+lemma lvalue_left_idOp[intro!]:
+  assumes \<open>lvalue F\<close>
+  shows \<open>lvalue (\<lambda>a. idOp \<otimes> F a)\<close>
+  using assms unfolding lvalue_def 
+  apply auto
+  using left_tensor_hom[of idOp] linear_compose[of F \<open>\<lambda>x. idOp \<otimes> x\<close>, unfolded o_def] o_def
+  apply (smt (z3))
+  apply (metis (no_types, hide_lams) comp_tensor_op times_idOp2)
+  by (metis (full_types) idOp_adjoint tensor_op_adjoint)
+
+lemma lvalue_right_idOp[intro!]:
+  assumes \<open>lvalue F\<close>
+  shows \<open>lvalue (\<lambda>a. F a \<otimes> idOp)\<close>
+  using assms unfolding lvalue_def 
+  apply auto
+  using right_tensor_hom[of idOp] linear_compose[of F \<open>\<lambda>x. x \<otimes> idOp\<close>, unfolded o_def] o_def
+  apply (smt (z3))
+  apply (metis (no_types, hide_lams) comp_tensor_op times_idOp2)
+  by (metis (full_types) idOp_adjoint tensor_op_adjoint)
+
+lemma lvalue_id'[simp]: \<open>lvalue (\<lambda>x. x)\<close>
+  by (metis (mono_tags, lifting) complex_vector.module_hom_ident lvalue_def)
+
+lemma compatible_left_idOp[intro!]:
+  assumes "compatible F G"
+  shows "compatible (\<lambda>a. idOp \<otimes> F a) (\<lambda>a. idOp \<otimes> G a)"
+  using assms unfolding compatible_def apply auto
+  by (metis comp_tensor_op)
+
+lemma compatible_left_idOp1[intro!]:
+  assumes "lvalue F" and "lvalue G"
+  shows "compatible (\<lambda>a. F a \<otimes> idOp) (\<lambda>a. idOp \<otimes> G a)"
+  using assms unfolding compatible_def apply auto
+  by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2)
+
+lemma compatible_left_idOp2[intro!]:
+  assumes "lvalue F" and "lvalue G"
+  shows "compatible (\<lambda>a. idOp \<otimes> F a) (\<lambda>a. G a \<otimes> idOp)"
+  using assms unfolding compatible_def apply auto
+  by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2)
+
+interpretation teleport_concrete:
+  concrete_teleport_vars +
+  teleport_locale concrete_teleport_vars.X
+                  \<open>pair concrete_teleport_vars.\<Phi>1 concrete_teleport_vars.\<Phi>2\<close>
+                  concrete_teleport_vars.A
+                  concrete_teleport_vars.B
+  apply standard
+  using [[simproc del: compatibility_warn]]
+  by (auto simp: concrete_teleport_vars.X_def[abs_def]
+                    concrete_teleport_vars.\<Phi>1_def[abs_def]
+                    concrete_teleport_vars.\<Phi>2_def[abs_def]
+                    concrete_teleport_vars.A_def[abs_def]
+                    concrete_teleport_vars.B_def[abs_def]
+    intro!: compatible3' compatible3)
+
+thm teleport
+thm teleport_def
+
+end
+

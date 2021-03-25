@@ -1,5 +1,5 @@
 theory Misc
-  imports Bounded_Operators.Complex_L2
+  imports Bounded_Operators.Complex_L2 "HOL-Library.Z2"
 begin
 
 unbundle cblinfun_notation
@@ -152,6 +152,16 @@ setup \<open>ML_Antiquotation.inline_embedded \<^binding>\<open>fact\<close>
 ))
 \<close>
 
+
+instantiation bit :: enum begin
+definition "enum_bit = [0::bit,1]"
+definition "enum_all_bit P \<longleftrightarrow> P (0::bit) \<and> P 1"
+definition "enum_ex_bit P \<longleftrightarrow> P (0::bit) \<or> P 1"
+instance
+  apply intro_classes
+  apply (auto simp: enum_bit_def enum_all_bit_def enum_ex_bit_def)
+  by (metis bit_not_one_imp)+
+end
 
 
 end
