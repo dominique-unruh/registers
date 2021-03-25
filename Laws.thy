@@ -256,7 +256,11 @@ proof (rule tensor_extensionality)
   show \<open>maps_hom (pair B A)\<close>
     by (metis (no_types, lifting) assms compatible_sym lvalue_hom pair_lvalue)
   show \<open>(pair A B \<circ> swap) (a \<otimes> b) = pair B A (a \<otimes> b)\<close> for a b
-    apply auto
+    (* Without the "only:", we would not need the "apply subst",
+       but that proof fails when instantiated in Classical.thy *)
+    apply (simp only: o_def swap_apply)
+    apply (subst pair_apply, simp, simp)
+    apply (subst pair_apply, simp, simp)
     by (metis (no_types, lifting) assms compatible_def)
 qed
 

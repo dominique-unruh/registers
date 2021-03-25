@@ -170,6 +170,9 @@ lemma tensor_op_adjoint: \<open>(tensor_op a b)* = tensor_op (a*) (b*)\<close>
   apply (auto simp flip: tensor_ell2_ket simp: tensor_op_state)
   by (simp add: adjoint_I)
 
-
+lemma tensor_butterfly[simp]: "tensor_op (butterfly \<psi>) (butterfly \<phi>) = butterfly (tensor_ell2 \<psi> \<phi>)"
+  apply (rule equal_ket, case_tac x)
+  by (simp flip: tensor_ell2_ket add: tensor_op_state butterfly_def'
+      times_applyOp tensor_ell2_scaleC1 tensor_ell2_scaleC2)
 
 end

@@ -23,10 +23,6 @@ lemma pair_comp_swap':
   using pair_comp_swap[OF assms]
   by (metis comp_def)
 
-
-lemma tensor_butterfly[simp]: "butterfly \<psi> \<otimes> butterfly \<phi> = butterfly (\<psi> \<otimes>\<^sub>s \<phi>)"
-  sorry
-
 (* TODO Laws *)
 lemma swap_lvalues:
   assumes "compatible R S"
