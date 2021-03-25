@@ -2,7 +2,6 @@ theory Teleport
   imports QHoare
 begin
 
-
 locale teleport_locale = qhoare "TYPE('mem::finite)" +
   fixes X :: "(bit,'mem::finite) maps_hom"
     and \<Phi> :: "(bit*bit,'mem) maps_hom"
@@ -103,21 +102,13 @@ locale concrete_teleport_vars begin
 type_synonym a_state = "64 word"
 type_synonym b_state = "1000000 word"
 type_synonym mem = "a_state * bit * bit * b_state * bit"
+type_synonym 'a var = \<open>('a,mem) maps_hom\<close>
 
-definition A :: "(a_state,mem) maps_hom" 
-  where \<open>A a = a \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
-
-definition X :: "(bit,mem) maps_hom" 
-  where \<open>X a = idOp \<otimes> a \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
-
-definition \<Phi>1 :: "(bit,mem) maps_hom" 
-  where \<open>\<Phi>1 a = idOp \<otimes> idOp \<otimes> a \<otimes> idOp \<otimes> idOp\<close>
-
-definition B :: "(b_state,mem) maps_hom" 
-  where \<open>B a = idOp \<otimes> idOp \<otimes> idOp \<otimes> a \<otimes> idOp\<close>
-
-definition \<Phi>2 :: "(bit,mem) maps_hom" 
-  where \<open>\<Phi>2 a = idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> a\<close>
+definition A :: "a_state var" where \<open>A a = a \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
+definition X :: \<open>bit var\<close> where \<open>X a = idOp \<otimes> a \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
+definition \<Phi>1 :: \<open>bit var\<close> where \<open>\<Phi>1 a = idOp \<otimes> idOp \<otimes> a \<otimes> idOp \<otimes> idOp\<close>
+definition B :: \<open>b_state var\<close> where \<open>B a = idOp \<otimes> idOp \<otimes> idOp \<otimes> a \<otimes> idOp\<close>
+definition \<Phi>2 :: \<open>bit var\<close> where \<open>\<Phi>2 a = idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> a\<close>
 end
 
 
@@ -130,11 +121,11 @@ interpretation teleport_concrete:
   apply standard
   using [[simproc del: compatibility_warn]]
   by (auto simp: concrete_teleport_vars.X_def[abs_def]
-                    concrete_teleport_vars.\<Phi>1_def[abs_def]
-                    concrete_teleport_vars.\<Phi>2_def[abs_def]
-                    concrete_teleport_vars.A_def[abs_def]
-                    concrete_teleport_vars.B_def[abs_def]
-    intro!: compatible3' compatible3)
+                 concrete_teleport_vars.\<Phi>1_def[abs_def]
+                 concrete_teleport_vars.\<Phi>2_def[abs_def]
+                 concrete_teleport_vars.A_def[abs_def]
+                 concrete_teleport_vars.B_def[abs_def]
+           intro!: compatible3' compatible3)
 
 thm teleport
 thm teleport_def

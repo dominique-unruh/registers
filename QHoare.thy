@@ -41,12 +41,14 @@ lemma join_EQP':
   shows "EQP R \<psi> o\<^sub>C\<^sub>L (EQP S \<phi> o\<^sub>C\<^sub>L C) = EQP (pair R S) (\<psi> \<otimes>\<^sub>s \<phi>) o\<^sub>C\<^sub>L C"
   by (simp add: assms assoc_left(1) join_EQP)
 
-lemma program_seq: "program (p1@p2) = program p2 o\<^sub>C\<^sub>L program p1"
-  apply (induction p1)
-  unfolding program_def
-   apply auto
-  sorry
+lemma program_skip[simp]: "program [] = idOp"
+  by (simp add: qhoare.program_def)
 
+
+lemma program_seq: "program (p1@p2) = program p2 o\<^sub>C\<^sub>L program p1"
+  apply (induction p2 rule:rev_induct)
+   apply (simp_all add: program_def)
+  by (meson assoc_left(1))
 
 lemma hoare_seq[trans]: "hoare C p1 D \<Longrightarrow> hoare D p2 E \<Longrightarrow> hoare C (p1@p2) E"
   by (auto simp: program_seq hoare_def times_applyOp)
