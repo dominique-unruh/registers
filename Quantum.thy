@@ -188,29 +188,29 @@ lemma assumes "maps_2hom F2"
 proof -
   define F2' t4 \<phi> where
     \<open>F2' = tensor_lift F2\<close> and
-    \<open>t4 = (\<lambda>(i,j,k,l). tensor_maps (butter i j) (butter k l))\<close> and
-    \<open>\<phi> m = (let (i,j,k,l) = inv t4 m in F2 (butter i j) (butter k l))\<close> for m
+    \<open>t4 = (\<lambda>(i,j,k,l). tensor_maps (butterket i j) (butterket k l))\<close> and
+    \<open>\<phi> m = (let (i,j,k,l) = inv t4 m in F2 (butterket i j) (butterket k l))\<close> for m
   have t4inj: "x = y" if "t4 x = t4 y" for x y
   proof (rule ccontr)
     obtain i  j  k  l  where x: "x = (i,j,k,l)" by (meson prod_cases4) 
     obtain i' j' k' l' where y: "y = (i',j',k',l')" by (meson prod_cases4) 
     have 1: "bra (i,k) *\<^sub>V t4 x *\<^sub>V ket (j,l) = 1"
-      by (auto simp: bra_def t4_def x tensor_op_state butter_def times_applyOp ket_Kronecker_delta_eq
+      by (auto simp: bra_def t4_def x tensor_op_state butterfly_def' times_applyOp ket_Kronecker_delta_eq
                simp flip: tensor_ell2_ket)
     assume \<open>x \<noteq> y\<close>
     then have 2: "bra (i,k) *\<^sub>V t4 y *\<^sub>V ket (j,l) = 0"
-      by (auto simp: bra_def t4_def x y tensor_op_state butter_def times_applyOp ket_Kronecker_delta_neq
+      by (auto simp: bra_def t4_def x y tensor_op_state butterfly_def' times_applyOp ket_Kronecker_delta_neq
                simp flip: tensor_ell2_ket)
     from 1 2 that
     show False
       by auto
   qed
-  have \<open>\<phi> (tensor_maps (butter i j) (butter k l)) = F2 (butter i j) (butter k l)\<close> for i j k l
-    apply (subst asm_rl[of \<open>tensor_maps (butter i j) (butter k l) = t4 (i,j,k,l)\<close>])
+  have \<open>\<phi> (tensor_maps (butterket i j) (butterket k l)) = F2 (butterket i j) (butterket k l)\<close> for i j k l
+    apply (subst asm_rl[of \<open>tensor_maps (butterket i j) (butterket k l) = t4 (i,j,k,l)\<close>])
      apply (simp add: t4_def)
     by (auto simp add: injI t4inj inv_f_f \<phi>_def)
 
-  have *: \<open>range t4 = {tensor_op (butter i j) (butter k l) |i j k l. True}\<close>
+  have *: \<open>range t4 = {tensor_op (butterket i j) (butterket k l) |i j k l. True}\<close>
     apply (auto simp: case_prod_beta t4_def)
     using image_iff by fastforce
 
@@ -221,23 +221,23 @@ proof -
     using cspan_tensor_op
     by auto
 
-  then obtain G where G: \<open>G *\<^sub>V (t4 (i,j,k,l)) = F2 (butter i j) (butter k l)\<close> for i j k l
+  then obtain G where G: \<open>G *\<^sub>V (t4 (i,j,k,l)) = F2 (butterket i j) (butterket k l)\<close> for i j k l
     apply atomize_elim
     unfolding cblinfun_extension_exists_def
     apply auto
     by (metis (no_types, lifting) t4inj \<phi>_def f_inv_into_f rangeI split_conv)
 
-  have *: \<open>G *\<^sub>V tensor_maps (butter i j) (butter k l) = F2 (butter i j) (butter k l)\<close> for i j k l
+  have *: \<open>G *\<^sub>V tensor_maps (butterket i j) (butterket k l) = F2 (butterket i j) (butterket k l)\<close> for i j k l
     using G by (auto simp: t4_def)
-  have *: \<open>G *\<^sub>V tensor_maps a (butter k l) = F2 a (butter k l)\<close> for a k l
-    apply (rule complex_vector.linear_eq_on_span[where g=\<open>\<lambda>a. F2 a _\<close> and B=\<open>{butter k l|k l. True}\<close>])
+  have *: \<open>G *\<^sub>V tensor_maps a (butterket k l) = F2 a (butterket k l)\<close> for a k l
+    apply (rule complex_vector.linear_eq_on_span[where g=\<open>\<lambda>a. F2 a _\<close> and B=\<open>{butterket k l|k l. True}\<close>])
     unfolding linfun_cspan
     using * apply (auto intro!: linear_compose[unfolded o_def, where f=\<open>\<lambda>a. tensor_maps a _\<close> and g=\<open>(*\<^sub>V) G\<close>])
     apply (metis cbilinear_def tensor_op_cbilinear)
     apply (simp add: cblinfun_apply_add clinearI)
     using assms unfolding cbilinear_def by blast
   have G_F2: \<open>G *\<^sub>V tensor_maps a b = F2 a b\<close> for a b
-    apply (rule complex_vector.linear_eq_on_span[where g=\<open>F2 a\<close> and B=\<open>{butter k l|k l. True}\<close>])
+    apply (rule complex_vector.linear_eq_on_span[where g=\<open>F2 a\<close> and B=\<open>{butterket k l|k l. True}\<close>])
     unfolding linfun_cspan
     using * apply (auto simp: cblinfun_apply_add clinearI
                         intro!: linear_compose[unfolded o_def, where f=\<open>tensor_maps a\<close> and g=\<open>(*\<^sub>V) G\<close>])

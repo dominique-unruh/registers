@@ -68,7 +68,7 @@ locale program =
 begin
 
 definition "apply U R = R U" for R :: \<open>('a,'mem) maps_hom\<close>
-definition "ifthen R x = R (butter x x)" for R :: \<open>('a,'mem) maps_hom\<close>
+definition "ifthen R x = R (butterket x x)" for R :: \<open>('a,'mem) maps_hom\<close>
 definition "program S = fold (o\<^sub>C\<^sub>L) S idOp" for S :: \<open>'mem domain_end list\<close>
 
 end
@@ -93,7 +93,7 @@ definition "teleport a b = [
 definition hoare :: \<open>'mem ell2 clinear_space \<Rightarrow> ('mem ell2 \<Rightarrow>\<^sub>C\<^sub>L 'mem ell2) list \<Rightarrow> 'mem ell2 clinear_space \<Rightarrow> bool\<close> where
   "hoare C p D \<longleftrightarrow> (\<forall>\<psi>\<in>space_as_set C. program p *\<^sub>V \<psi> \<in> space_as_set D)" for C p D
 
-definition "EQP R \<psi> = R (butterfly \<psi>)" for R :: \<open>('a,'mem) maps_hom\<close>
+definition "EQP R \<psi> = R (selfbutter \<psi>)" for R :: \<open>('a,'mem) maps_hom\<close>
 definition "EQ R \<psi> = EQP R \<psi> *\<^sub>S \<top>" for R :: \<open>('a,'mem) maps_hom\<close>
 
 lemma swap_EQP:
@@ -148,8 +148,8 @@ lemma hoare_ifthen:
   assumes "EQP R (ket x) *\<^sub>S pre \<le> post"
   shows "hoare pre [ifthen R x] post"
   using assms 
-  apply (auto simp: hoare_def program_def ifthen_def EQP_def butter_def)
-  by (metis (no_types, lifting) applyOpSpace.rep_eq butterfly_def closure_subset imageI less_eq_clinear_space.rep_eq subsetD)
+  apply (auto simp: hoare_def program_def ifthen_def EQP_def butterfly_def')
+  by (metis (no_types, lifting) applyOpSpace.rep_eq closure_subset imageI less_eq_clinear_space.rep_eq subsetD)
 
 lemma teleport: "hoare (teleport_pre \<psi>) (teleport a b) (teleport_post \<psi>)" for \<psi> a b
 proof -

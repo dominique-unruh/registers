@@ -36,47 +36,48 @@ lemma ket_Kronecker_delta: \<open>\<langle>ket i, ket j\<rangle> = (if i=j then 
   by (simp add: ket_Kronecker_delta_eq ket_Kronecker_delta_neq)
 
 
-definition \<open>butter i j = vector_to_cblinfun (ket i) o\<^sub>C\<^sub>L (vector_to_cblinfun (ket j) :: complex \<Rightarrow>\<^sub>C\<^sub>L _)*\<close>
+(* definition \<open>butter i j = vector_to_cblinfun (ket i) o\<^sub>C\<^sub>L (vector_to_cblinfun (ket j) :: complex \<Rightarrow>\<^sub>C\<^sub>L _)*\<close> *)
+abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
 
-lemma sum_butter[simp]: \<open>(\<Sum>(i::'a::finite)\<in>UNIV. butter i i) = idOp\<close>
+lemma sum_butter[simp]: \<open>(\<Sum>(i::'a::finite)\<in>UNIV. butterket i i) = idOp\<close>
   apply (rule equal_ket)
   apply (subst complex_vector.linear_sum[where f=\<open>\<lambda>y. y *\<^sub>V ket _\<close>])
-  apply (auto simp add: apply_cblinfun_distr_left clinearI butter_def times_applyOp ket_Kronecker_delta)
+  apply (auto simp add: apply_cblinfun_distr_left clinearI butterfly_def' times_applyOp ket_Kronecker_delta)
   apply (subst sum.mono_neutral_cong_right[where S=\<open>{_}\<close>])
   by auto
 
-lemma linfun_cspan: \<open>cspan {butter i j| (i::'b::finite) (j::'a::finite). True} = UNIV\<close>
+lemma linfun_cspan: \<open>cspan {butterket i j| (i::'b::finite) (j::'a::finite). True} = UNIV\<close>
 proof (rule, simp, rule)
   fix f :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
-  have frep: \<open>f = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butter j i))\<close>
+  have frep: \<open>f = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i))\<close>
   proof (rule cblinfun_ext)
     fix \<phi> :: \<open>'a ell2\<close>
-    have \<open>f *\<^sub>V \<phi> = f *\<^sub>V (\<Sum>i\<in>UNIV. butter i i) *\<^sub>V \<phi>\<close>
+    have \<open>f *\<^sub>V \<phi> = f *\<^sub>V (\<Sum>i\<in>UNIV. butterket i i) *\<^sub>V \<phi>\<close>
       by auto
-    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. f *\<^sub>V butter i i *\<^sub>V \<phi>)\<close>
+    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       apply (subst (2) complex_vector.linear_sum)
        apply (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
       by simp
-    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. (\<Sum>j\<in>UNIV. butter j j) *\<^sub>V f *\<^sub>V butter i i *\<^sub>V \<phi>)\<close>
+    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. (\<Sum>j\<in>UNIV. butterket j j) *\<^sub>V f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       by simp
-    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV. butter j j *\<^sub>V f *\<^sub>V butter i i *\<^sub>V \<phi>)\<close>
-      apply (subst (3) complex_vector.linear_sum)
+    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV. butterket j j *\<^sub>V f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
+      apply (subst (5) complex_vector.linear_sum)
        apply (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
       by simp
-    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. butter j j *\<^sub>V f *\<^sub>V butter i i *\<^sub>V \<phi>)\<close>
+    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. butterket j j *\<^sub>V f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       by (simp add: sum.cartesian_product)
-    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butter j i *\<^sub>V \<phi>))\<close>
-      by (simp add: butter_def times_applyOp mult.commute)
-    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butter j i)) *\<^sub>V \<phi>\<close>
+    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i *\<^sub>V \<phi>))\<close>
+      by (simp add: butterfly_def' times_applyOp mult.commute)
+    also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i)) *\<^sub>V \<phi>\<close>
       unfolding applyOp_scaleC1[symmetric] case_prod_beta
       thm complex_vector.linear_sum
       apply (subst complex_vector.linear_sum[where f=\<open>\<lambda>x. x *\<^sub>V \<phi>\<close>])
        apply (simp add: apply_cblinfun_distr_left clinearI)
       by simp
-    finally show \<open>f *\<^sub>V \<phi> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butter j i)) *\<^sub>V \<phi>\<close>
+    finally show \<open>f *\<^sub>V \<phi> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i)) *\<^sub>V \<phi>\<close>
       by -
   qed
-  show \<open>f \<in> cspan {butter i j |i j. True}\<close>
+  show \<open>f \<in> cspan {butterket i j |i j. True}\<close>
     apply (subst frep)
     apply (auto simp: case_prod_beta)
     by (metis (mono_tags, lifting) complex_vector.span_base complex_vector.span_scale complex_vector.span_sum mem_Collect_eq)
@@ -84,55 +85,55 @@ qed
 
 definition bra :: "'a \<Rightarrow> (_,complex) cblinfun" where "bra i = vector_to_cblinfun (ket i)*" for i
 
-lemma linfun_cindependent: \<open>cindependent {butter i j| (i::'b::finite) (j::'a::finite). True}\<close>
+lemma linfun_cindependent: \<open>cindependent {butterket i j| (i::'b::finite) (j::'a::finite). True}\<close>
 proof (rule independent_if_scalars_zero)
-  show finite: \<open>finite {butter (i::'b) (j::'a) |i j. True}\<close>
+  show finite: \<open>finite {butterket (i::'b) (j::'a) |i j. True}\<close>
     apply (subst (6) conj.left_neutral[symmetric])
     apply (rule finite_image_set2)
     by auto
   fix f :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<Rightarrow> complex\<close> and g :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
-  define lin where \<open>lin = (\<Sum>g\<in>{butter i j |i j. True}. f g *\<^sub>C g)\<close>
+  define lin where \<open>lin = (\<Sum>g\<in>{butterket i j |i j. True}. f g *\<^sub>C g)\<close>
   assume \<open>lin = 0\<close>
-  assume \<open>g \<in> {butter i j |i j. True}\<close>
-  then obtain i j where g: \<open>g = butter i j\<close>
+  assume \<open>g \<in> {butterket i j |i j. True}\<close>
+  then obtain i j where g: \<open>g = butterket i j\<close>
     by auto
   (* define bra :: "'b \<Rightarrow> (_,complex) cblinfun" where "bra i = vector_to_cblinfun (ket i)*" for i *)
 
   have *: "bra i *\<^sub>V f g *\<^sub>C g *\<^sub>V ket j = 0"
-    if \<open>g\<in>{butter i j |i j. True} - {butter i j}\<close> for g 
+    if \<open>g\<in>{butterket i j |i j. True} - {butterket i j}\<close> for g 
   proof -
     from that
-    obtain i' j' where g: \<open>g = butter i' j'\<close>
+    obtain i' j' where g: \<open>g = butterket i' j'\<close>
       by auto
-    from that have \<open>g \<noteq> butter i j\<close> by auto
+    from that have \<open>g \<noteq> butterket i j\<close> by auto
     with g consider (i) \<open>i\<noteq>i'\<close> | (j) \<open>j\<noteq>j'\<close>
       by auto
     then show \<open>bra i *\<^sub>V f g *\<^sub>C g *\<^sub>V ket j = 0\<close>
     proof cases
       case i
       then show ?thesis 
-        unfolding g by (auto simp: butter_def times_applyOp bra_def ket_Kronecker_delta_neq)
+        unfolding g by (auto simp: butterfly_def' times_applyOp bra_def ket_Kronecker_delta_neq)
     next
       case j
       then show ?thesis
-        unfolding g by (auto simp: butter_def times_applyOp ket_Kronecker_delta_neq)
+        unfolding g by (auto simp: butterfly_def' times_applyOp ket_Kronecker_delta_neq)
     qed
   qed
 
   have \<open>0 = bra i *\<^sub>V lin *\<^sub>V ket j\<close>
     using \<open>lin = 0\<close> by auto
-  also have \<open>\<dots> = (\<Sum>g\<in>{butter i j |i j. True}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
+  also have \<open>\<dots> = (\<Sum>g\<in>{butterket i j |i j. True}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
     unfolding lin_def
     apply (rule complex_vector.linear_sum)
     by (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
-  also have \<open>\<dots> = (\<Sum>g\<in>{butter i j}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
+  also have \<open>\<dots> = (\<Sum>g\<in>{butterket i j}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
     apply (rule sum.mono_neutral_right)
     using finite * by auto
   also have \<open>\<dots> = bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j\<close>
     by (simp add: g)
   also have \<open>\<dots> = f g\<close>
     unfolding g 
-    by (auto simp: butter_def times_applyOp bra_def ket_Kronecker_delta_eq)
+    by (auto simp: butterfly_def' times_applyOp bra_def ket_Kronecker_delta_eq)
   finally show \<open>f g = 0\<close>
     by simp
 qed

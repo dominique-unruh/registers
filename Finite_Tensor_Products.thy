@@ -129,18 +129,18 @@ proof -
 qed
 
 
-lemma tensor_butter: \<open>tensor_op (butter i j) (butter k l) = butter (i,k) (j,l)\<close>
+lemma tensor_butter: \<open>tensor_op (butterket i j) (butterket k l) = butterket (i,k) (j,l)\<close>
   for i :: "_" and j :: "_::finite" and k :: "_" and l :: "_::finite"
   apply (rule equal_ket, case_tac x)
-  apply (auto simp flip: tensor_ell2_ket simp: times_applyOp tensor_op_state butter_def)
+  apply (auto simp flip: tensor_ell2_ket simp: times_applyOp tensor_op_state butterfly_def')
   by (auto simp: tensor_ell2_scaleC1 tensor_ell2_scaleC2)
 
-lemma cspan_tensor_op: \<open>cspan {tensor_op (butter i j) (butter k l)| i (j::_::finite) k (l::_::finite). True} = UNIV\<close>
+lemma cspan_tensor_op: \<open>cspan {tensor_op (butterket i j) (butterket k l)| i (j::_::finite) k (l::_::finite). True} = UNIV\<close>
   unfolding tensor_butter
   apply (subst linfun_cspan[symmetric])
   by (metis surj_pair)
 
-lemma cindependent_tensor_op: \<open>cindependent {tensor_op (butter i j) (butter k l)| i (j::_::finite) k (l::_::finite). True}\<close>
+lemma cindependent_tensor_op: \<open>cindependent {tensor_op (butterket i j) (butterket k l)| i (j::_::finite) k (l::_::finite). True}\<close>
   unfolding tensor_butter
   using linfun_cindependent
   by (smt (z3) Collect_mono_iff complex_vector.independent_mono)
@@ -154,10 +154,10 @@ lemma tensor_extensionality:
 proof (rule ext, rule complex_vector.linear_eq_on_span[where f=F and g=G])
   show \<open>clinear F\<close> and \<open>clinear G\<close>
     using assms by (simp_all add: cbilinear_def)
-  show \<open>x \<in> cspan  {tensor_op (butter i j) (butter k l)| i j k l. True}\<close> 
+  show \<open>x \<in> cspan  {tensor_op (butterket i j) (butterket k l)| i j k l. True}\<close> 
     for x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('c \<times> 'd) ell2\<close>
     using cspan_tensor_op by auto
-  show \<open>F x = G x\<close> if \<open>x \<in> {tensor_op (butter i j) (butter k l) |i j k l. True}\<close> for x
+  show \<open>F x = G x\<close> if \<open>x \<in> {tensor_op (butterket i j) (butterket k l) |i j k l. True}\<close> for x
     using that by (auto simp: tensor_eq)
 qed
 
@@ -170,7 +170,7 @@ lemma tensor_op_adjoint: \<open>(tensor_op a b)* = tensor_op (a*) (b*)\<close>
   apply (auto simp flip: tensor_ell2_ket simp: tensor_op_state)
   by (simp add: adjoint_I)
 
-lemma tensor_butterfly[simp]: "tensor_op (butterfly \<psi>) (butterfly \<phi>) = butterfly (tensor_ell2 \<psi> \<phi>)"
+lemma tensor_butterfly[simp]: "tensor_op (butterfly \<psi> \<psi>') (butterfly \<phi> \<phi>') = butterfly (tensor_ell2 \<psi> \<phi>) (tensor_ell2 \<psi>' \<phi>')"
   apply (rule equal_ket, case_tac x)
   by (simp flip: tensor_ell2_ket add: tensor_op_state butterfly_def'
       times_applyOp tensor_ell2_scaleC1 tensor_ell2_scaleC2)
