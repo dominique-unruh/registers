@@ -88,6 +88,24 @@ proof -
     by (rule tensor_extensionality[rotated -1]; simp)
 qed
 
+lemma tensor_extensionality3':
+  fixes F G :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'd::domain) maps_hom\<close>
+  assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close>
+  assumes "\<And>f g h. F ((f \<otimes> g) \<otimes> h) = G ((f \<otimes> g) \<otimes> h)"
+  shows "F = G"
+proof -
+  from assms
+  have "(F \<circ> (\<lambda>x. x \<otimes> c)) (a \<otimes> b) = (G \<circ> (\<lambda>x. x \<otimes> c)) (a \<otimes> b)" for a b c
+    by auto
+  then have "F \<circ> (\<lambda>x. x \<otimes> c) = G \<circ> (\<lambda>x. x \<otimes> c)" for c
+    apply (rule tensor_extensionality[rotated -1])
+    by (intro comp_maps_hom; simp)+
+  then have "F (ab \<otimes> c) = G (ab \<otimes> c)" for ab c
+    using comp_eq_elim by metis
+  then show ?thesis
+    by (rule tensor_extensionality[rotated -1]; simp)
+qed
+
 
 subsection \<open>Swap and assoc\<close>
 
@@ -209,10 +227,7 @@ lemma compatible_lvalue1: \<open>compatible x y \<Longrightarrow> lvalue x\<clos
 lemma compatible_lvalue2: \<open>compatible x y \<Longrightarrow> lvalue y\<close>
   by (simp add: compatible_def)
 
-lemma pair_comp_tensor':
-  \<comment> \<open>Slightly more general than \<open>pair_comp_tensor\<close> below, but the latter seems 
-     better suited for simplification (we are more likely to have \<open>lvalue C\<close>
-     in the simpset than \<open>maps_hom C\<close>.\<close>
+lemma pair_comp_tensor:
   assumes "compatible A B" and [simp]: \<open>maps_hom C\<close> and [simp]: \<open>maps_hom D\<close>
   shows "(pair A B) o (tensor_maps_hom C D) = pair (A o C) (B o D)"
 proof (rule tensor_extensionality)
@@ -229,14 +244,45 @@ proof (rule tensor_extensionality)
     by (simp add: comp_maps_hom)
 qed
 
-lemma pair_comp_tensor[simp]:
-  assumes "compatible A B" and [simp]: \<open>lvalue C\<close> and [simp]: \<open>lvalue D\<close>
-  shows "(pair A B) o (tensor_maps_hom C D) = pair (A o C) (B o D)"
-  by (metis assms(1) assms(2) assms(3) lvalue_hom pair_comp_tensor')
-
-(* lemma pair_comp_swap[simp]:
+lemma pair_comp_swap[simp]:
   assumes "compatible A B"
-  shows "(pair A B) o swap = pair B A" *)
+  shows "(pair A B) o swap = pair B A"
+proof (rule tensor_extensionality)
+  have [simp]: "maps_hom A" "maps_hom B"
+    apply (metis (no_types, hide_lams) assms compatible_lvalue1 lvalue_hom)
+    by (metis (full_types) assms compatible_lvalue2 lvalue_hom)
+  then show \<open>maps_hom (pair A B \<circ> swap)\<close>
+    by (metis (no_types, hide_lams) comp_maps_hom pair_hom swap_hom)
+  show \<open>maps_hom (pair B A)\<close>
+    by (metis (no_types, lifting) assms compatible_sym lvalue_hom pair_lvalue)
+  show \<open>(pair A B \<circ> swap) (a \<otimes> b) = pair B A (a \<otimes> b)\<close> for a b
+    apply auto
+    by (metis (no_types, lifting) assms compatible_def)
+qed
+
+lemma pair_comp_assoc[simp]:
+  assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close> \<open>maps_hom H\<close>
+  shows \<open>pair F (pair G H) \<circ> assoc = pair (pair F G) H\<close>
+proof (rule tensor_extensionality3')
+  show \<open>maps_hom (pair F (pair G H) \<circ> assoc)\<close>
+    by (metis assms(1) assms(2) assms(3) assoc_hom comp_maps_hom pair_hom)
+  show \<open>maps_hom (pair (pair F G) H)\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
+  show \<open>(pair F (pair G H) \<circ> assoc) ((f \<otimes> g) \<otimes> h) = pair (pair F G) H ((f \<otimes> g) \<otimes> h)\<close> for f g h
+    by (simp add: assoc_apply comp_domain_assoc)
+qed
+
+lemma pair_comp_assoc'[simp]:
+  assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close> \<open>maps_hom H\<close>
+  shows \<open>pair (pair F G) H \<circ> assoc' = pair F (pair G H)\<close>
+proof (rule tensor_extensionality3)
+  show \<open>maps_hom (pair (pair F G) H \<circ> assoc')\<close>
+    by (metis (no_types, hide_lams) assms(1) assms(2) assms(3) assoc'_hom comp_maps_hom pair_hom)
+  show \<open>maps_hom (pair F (pair G H))\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
+  show \<open>(pair (pair F G) H \<circ> assoc') (f \<otimes> g \<otimes> h) = pair F (pair G H) (f \<otimes> g \<otimes> h)\<close> for f g h
+    by (simp add: assoc'_apply comp_domain_assoc)
+qed
 
 
 subsection \<open>Compatibility simplification\<close>

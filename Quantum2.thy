@@ -9,21 +9,13 @@ unbundle lvalue_notation
 lemma lvalue_id[simp]: \<open>lvalue id\<close>
   unfolding lvalue_def by auto
 
-(* declare lvalue_hom[simp] *)
+declare lvalue_hom[simp]
 
 lemma pair_comp_tensor':
-  assumes "compatible A B" and \<open>lvalue C\<close> and \<open>lvalue D\<close>
+  assumes "compatible A B" and \<open>clinear C\<close> and \<open>clinear D\<close>
   shows "(pair A B) ((C \<otimes>\<^sub>h D) x) = (pair (A o C) (B o D)) x"
   using pair_comp_tensor[OF assms]
   by (smt (z3) fcomp_comp fcomp_def)
-
-lemma pair_comp_swap:
-  assumes "compatible A B"
-  shows "(pair A B) o swap = pair B A"
-  apply (rule tensor_extensionality)
-  apply (meson Complex_Vector_Spaces.linear_compose assms lvalue_hom pair_lvalue swap_hom)
-  apply (simp add: assms compatible_sym lvalue_hom)
-  by (metis (no_types, lifting) swap_apply assms comp_def compatible_def lvalue_hom pair_apply)
 
 lemma pair_comp_swap':
   assumes "compatible A B"
