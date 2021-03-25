@@ -15,7 +15,6 @@ axiomatization maps_hom :: \<open>('a::domain,'b::domain) maps_hom \<Rightarrow>
 axiomatization where
   comp_maps_hom: "maps_hom F \<Longrightarrow> maps_hom G \<Longrightarrow> maps_hom (G \<circ> F)" and
   id_maps_hom: \<open>maps_hom id\<close>
-(* TODO category laws *)
 
 type_synonym ('a,'b,'c) maps_2hom = \<open>'a domain_end \<Rightarrow> 'b domain_end \<Rightarrow> 'c domain_end\<close>
 

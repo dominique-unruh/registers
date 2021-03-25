@@ -30,11 +30,11 @@ lemma swap_EQP':
   by (simp add: assms assoc_left(1) swap_EQP)
 
 lemma join_EQP:
-  assumes "compatible R S"
+  assumes [compatible]: "compatible R S"
   shows "EQP R \<psi> o\<^sub>C\<^sub>L EQP S \<phi> = EQP (pair R S) (\<psi> \<otimes>\<^sub>s \<phi>)"
   unfolding EQP_def
-  apply (subst join_lvalues[OF assms])
-  by simp
+  apply (subst pair_apply[symmetric, where F=R and G=S])
+  using assms by auto
 
 lemma join_EQP':
   assumes "compatible R S"

@@ -14,8 +14,6 @@ abbreviation (input) comp_domain :: "'a domain_end \<Rightarrow> 'a domain_end \
 lemma comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_domain b c)"
   by auto
 
-(* TODO: category laws *)
-
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
 definition maps_hom :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close> where
   \<open>maps_hom F \<longleftrightarrow> (\<exists>R. F = Image R)\<close>

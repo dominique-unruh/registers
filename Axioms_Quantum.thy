@@ -175,11 +175,6 @@ abbreviation tensor_maps :: \<open>'a::finite domain_end \<Rightarrow> 'b::finit
 lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
   by (simp add: tensor_op_cbilinear)
 
-
-(* ML \<open>
-\<^term>\<open>{f x y | x y. P x y}\<close>
-\<close> *)
-
 (* TODO: move tensor stuff into Finite_Tensor_Product *)
 
 

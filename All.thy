@@ -1,5 +1,5 @@
 theory All
-  imports Laws Classical2 Quantum2
+  imports Laws Classical2 Teleport
 begin
 
 end

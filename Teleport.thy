@@ -53,10 +53,8 @@ proof -
   define O5 where \<open>O5 = EQP X (ket b) o\<^sub>C\<^sub>L O4\<close>
   have O5_def': "O5 = EQP (pair (\<Phi>\<circ>Fst) X) (ket (a,b)) o\<^sub>C\<^sub>L O3"
     unfolding O5_def O4_def
-    apply (subst swap_EQP')
-     apply (rule compatible_comp_right, simp, simp) (* TODO: automate *)
-    apply (subst join_EQP')
-     apply (rule compatible_comp_left, simp, simp) (* TODO: automate *)
+    apply (subst swap_EQP', simp)
+    apply (subst join_EQP', simp)
     by simp
   have \<open>hoare (O4 *\<^sub>S pre) [ifthen X b] (O5 *\<^sub>S pre)\<close>
     apply (rule hoare_ifthen) by (simp add: O5_def assoc_left(2))
@@ -76,14 +74,14 @@ proof -
     by (auto simp add: teleport_def)
 
   have join1: "\<Phi> M = (pair X \<Phi>) (idOp \<otimes> M)" for M
-    by (metis (no_types, lifting) compat compatible_lvalue2 join_lvalues lvalue_def times_idOp2)
+    by (metis (no_types, lifting) compat compatible_lvalue2 pair_apply lvalue_def times_idOp2)
   have join2: \<open>(pair (\<Phi> \<circ> Fst) X) M = (pair X \<Phi>) ((id \<otimes>\<^sub>h Fst) (swap M))\<close> for M
     apply (subst pair_comp_tensor')
        apply simp_all[3]
     apply (subst pair_comp_swap', simp)
     by simp
   have join3: "X M = (pair X \<Phi>) (M \<otimes> idOp)" for M
-    by (metis (no_types, lifting) compat compatible_def join_lvalues lvalue_of_id times_idOp1)
+    by force
   have join4: \<open>(pair X (\<Phi> \<circ> Fst)) M = (pair X \<Phi>) ((id \<otimes>\<^sub>h Fst) M)\<close> for M
     apply (subst pair_comp_tensor')
     by simp_all

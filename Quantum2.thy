@@ -20,17 +20,13 @@ lemma pair_comp_swap':
   using pair_comp_swap[OF assms]
   by (metis comp_def)
 
-(* TODO Laws *)
-lemma swap_lvalues:
-  assumes "compatible R S"
-  shows "R A o\<^sub>C\<^sub>L S B = S B o\<^sub>C\<^sub>L R A"
-  using assms compatible_def by blast
-
-(* TODO Laws *)
+(* (* TODO Laws *)
 lemma join_lvalues:
   assumes "compatible R S"
   shows "R A o\<^sub>C\<^sub>L S B = (pair R S) (A \<otimes> B)"
-  by (metis assms compatible_def lvalue_hom pair_apply)
+  apply (subst pair_apply)
+  apply auto
+  by (metis assms compatible_def lvalue_hom pair_apply) *)
 
 definition Fst where \<open>Fst a = tensor_maps a idOp\<close>
 definition Snd where \<open>Snd a = tensor_maps idOp a\<close>

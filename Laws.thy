@@ -83,7 +83,7 @@ proof -
     apply (rule tensor_extensionality[rotated -1])
     by (intro comp_maps_hom; simp)+
   then have "F (a \<otimes> bc) = G (a \<otimes> bc)" for a bc
-    using comp_eq_elim by metis
+    by (meson o_eq_elim)
   then show ?thesis
     by (rule tensor_extensionality[rotated -1]; simp)
 qed
@@ -101,7 +101,7 @@ proof -
     apply (rule tensor_extensionality[rotated -1])
     by (intro comp_maps_hom; simp)+
   then have "F (ab \<otimes> c) = G (ab \<otimes> c)" for ab c
-    using comp_eq_elim by metis
+    by (meson o_eq_elim)
   then show ?thesis
     by (rule tensor_extensionality[rotated -1]; simp)
 qed
@@ -133,10 +133,6 @@ lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_m
 
 subsection \<open>Pairs and compatibility\<close>
 
-(* TODO: needed? *)
-definition compatible0 :: \<open>('a::domain,'c::domain) maps_hom \<Rightarrow> ('b::domain,'c) maps_hom \<Rightarrow> bool\<close> where
-  \<open>compatible0 F G \<longleftrightarrow> (\<forall>a b. F a \<circ>\<^sub>d G b = G b \<circ>\<^sub>d F a)\<close>
-
 definition compatible :: \<open>('a::domain,'c::domain) maps_hom \<Rightarrow> ('b::domain,'c) maps_hom \<Rightarrow> bool\<close> where
   \<open>compatible F G \<longleftrightarrow> lvalue F \<and> lvalue G \<and> (\<forall>a b. F a \<circ>\<^sub>d G b = G b \<circ>\<^sub>d F a)\<close>
 
@@ -145,6 +141,11 @@ lemma compatibleI:
   assumes \<open>\<And>a b. (F a) \<circ>\<^sub>d (G b) = (G b) \<circ>\<^sub>d (F a)\<close>
   shows "compatible F G"
   using assms unfolding compatible_def by simp
+
+lemma swap_lvalues:
+  assumes "compatible R S"
+  shows "R a \<circ>\<^sub>d S b = S b \<circ>\<^sub>d R a"
+  using assms unfolding compatible_def by metis
 
 lemma compatible_sym: "compatible x y \<Longrightarrow> compatible y x"
   by (simp add: compatible_def)
@@ -181,6 +182,13 @@ lemma pair_apply[simp]:
   unfolding pair_def 
   using tensor_existence maps_2hom_F_comp_G[OF assms]
   by metis
+
+
+lemma pair_apply':
+  assumes \<open>compatible F G\<close>
+  shows \<open>(pair F G) (a \<otimes> b) = (G b) \<circ>\<^sub>d (F a)\<close>
+  apply (subst pair_apply)
+  using assms by (auto simp: compatible_def intro: lvalue_hom)
 
 lemma pair_lvalue[simp]:
   assumes "compatible F G"
