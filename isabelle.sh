@@ -10,7 +10,7 @@ else
     FILES=()
 fi
 
-SESSION=Bounded_Operators#-Prerequisites
+SESSION=Bounded_Operators #-Prerequisites
 
 ISABELLE_DIR=/opt/Isabelle2021
 

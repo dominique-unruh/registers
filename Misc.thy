@@ -4,10 +4,6 @@ begin
 
 unbundle cblinfun_notation
 
-(* TODO should be in bounded operators (non-finite case). Implicitly proven in: *)
-thm equal_basis_0
-thm equal_ket
-thm superposition_principle_linear_ket
 lemma cbounded_linear_equal_ket:
   fixes f g :: \<open>'a::finite ell2 \<Rightarrow> _\<close>
   assumes \<open>clinear f\<close>
@@ -27,8 +23,6 @@ lemma cbounded_linear_finite_ell2[simp, intro!]:
   using assms apply (auto intro!: cindependent_ket)
   by (metis finite_class.finite_UNIV finite_imageI iso_tuple_UNIV_I ket_ell2_span span_finite_dim)
 
-
-(* TODO belongs into bounded operators *)
 lemma apply_cblinfun_distr_left: "(A + B) *\<^sub>V x = A *\<^sub>V x + B *\<^sub>V x"
   apply transfer by simp
 

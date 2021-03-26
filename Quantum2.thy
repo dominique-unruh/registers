@@ -5,6 +5,7 @@ begin
 
 no_notation meet (infixl "\<sqinter>\<index>" 70)
 unbundle lvalue_notation
+unbundle cblinfun_notation
 
 declare lvalue_hom[simp]
 
@@ -20,14 +21,6 @@ lemma pair_comp_swap':
   using pair_comp_swap[OF assms]
   by (metis comp_def)
 
-(* (* TODO Laws *)
-lemma join_lvalues:
-  assumes "compatible R S"
-  shows "R A o\<^sub>C\<^sub>L S B = (pair R S) (A \<otimes> B)"
-  apply (subst pair_apply)
-  apply auto
-  by (metis assms compatible_def lvalue_hom pair_apply) *)
-
 definition Fst where \<open>Fst a = tensor_maps a idOp\<close>
 definition Snd where \<open>Snd a = tensor_maps idOp a\<close>
 
@@ -37,11 +30,9 @@ lemma lvalue_Fst[simp]: \<open>lvalue Fst\<close>
 lemma lvalue_Snd[simp]: \<open>lvalue Snd\<close>
   by (auto simp: Snd_def[abs_def] lvalue_def comp_tensor_op tensor_op_adjoint)
 
-(* TODO in Laws *)
 lemma lvalue_of_id[simp]: \<open>lvalue R \<Longrightarrow> R idOp = idOp\<close>
   by (auto simp: lvalue_def)
 
-(* TODO Laws *)
 lemma lvalue_comp'1[simp]: \<open>lvalue R \<Longrightarrow> R A o\<^sub>C\<^sub>L (R B o\<^sub>C\<^sub>L C) = R (A o\<^sub>C\<^sub>L B) o\<^sub>C\<^sub>L C\<close>
   by (metis (no_types, lifting) assoc_left(1) lvalue_mult)
 
@@ -55,9 +46,11 @@ definition pauliX :: \<open>bit domain_end\<close> where "pauliX = cblinfun_of_m
 definition "matrix_pauliZ = mat_of_rows_list 2 [ [1::complex, 0], [0, -1] ]"
 definition pauliZ :: \<open>bit domain_end\<close> where "pauliZ = cblinfun_of_mat matrix_pauliZ"
 definition "vector_\<beta>00 = vec_of_list [ 1/sqrt 2::complex, 0, 0, 1/sqrt 2 ]"
-definition \<beta>00 :: \<open>(bit*bit) ell2\<close> where "\<beta>00 = onb_enum_of_vec vector_\<beta>00"
-
-
+definition \<beta>00 :: \<open>(bit\<times>bit) ell2\<close> where "\<beta>00 = onb_enum_of_vec vector_\<beta>00"
+definition "vector_ketplus = vec_of_list [ 1/sqrt 2::complex, 1/sqrt 2 ]"
+definition ketplus :: \<open>bit ell2\<close> ("|+\<rangle>") where \<open>ketplus = onb_enum_of_vec vector_ketplus\<close>
+definition "matrix_Uswap = mat_of_rows_list 4 [ [1::complex, 0, 0, 0], [0,0,1,0], [0,1,0,0], [0,0,0,1] ]"
+definition Uswap :: \<open>(bit\<times>bit) domain_end\<close> where \<open>Uswap = cblinfun_of_mat matrix_Uswap\<close>
 
 (* lemma compatible_compatible0:
   assumes \<open>lvalue F\<close> and \<open>lvalue G\<close>
@@ -106,6 +99,60 @@ lemma compatible_left_idOp2[intro!]:
   using assms unfolding compatible_def apply auto
   by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2)
 
+lemma lvalue_projector:
+  assumes "lvalue F"
+  assumes "isProjector a"
+  shows "isProjector (F a)"
+  using assms unfolding lvalue_def isProjector_algebraic by metis
+
+lemma compatible_proj_intersect:
+  (* I think this also holds without isProjector, but my proof idea uses the Penrose-Moore 
+     pseudoinverse and we do not have an existence theorem for it. *)
+  assumes "compatible R S" and "isProjector a" and "isProjector b"
+  shows "(R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>) = ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)"
+proof (rule antisym)
+  have "((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>) \<le> (S b *\<^sub>S \<top>)"
+    apply (subst swap_lvalues[OF assms(1)])
+    by (auto simp: cblinfun_apply_assoc_subspace intro!: applyOpSpace_mono)
+  moreover have "((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>) \<le> (R a *\<^sub>S \<top>)"
+    by (auto simp: cblinfun_apply_assoc_subspace intro!: applyOpSpace_mono)
+  ultimately show \<open>((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>) \<le> (R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>)\<close>
+    by auto
+
+  have "isProjector (R a)"
+    using assms(1) assms(2) compatible_lvalue1 lvalue_projector by blast
+  have "isProjector (S b)"
+    using assms(1) assms(3) compatible_lvalue2 lvalue_projector by blast
+  show \<open>(R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>) \<le> (R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>\<close>
+  proof (unfold less_eq_clinear_space.rep_eq, rule)
+    fix \<psi>
+    assume asm: \<open>\<psi> \<in> space_as_set ((R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>))\<close>
+    then have \<open>\<psi> \<in> space_as_set (R a *\<^sub>S \<top>)\<close>
+      by auto
+    then have R: \<open>R a *\<^sub>V \<psi> = \<psi>\<close>
+      using \<open>isProjector (R a)\<close> apply_left_neutral isProjector_algebraic by blast
+    from asm have \<open>\<psi> \<in> space_as_set (S b *\<^sub>S \<top>)\<close>
+      by auto
+    then have S: \<open>S b *\<^sub>V \<psi> = \<psi>\<close>
+      using \<open>isProjector (S b)\<close> apply_left_neutral isProjector_algebraic by blast
+    from R S have \<open>\<psi> = (R a o\<^sub>C\<^sub>L S b) *\<^sub>V \<psi>\<close>
+      by (simp add: times_applyOp)
+    also have \<open>\<dots> \<in> space_as_set ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)\<close>
+      (* TODO: There should a theorem for this in the bounded operator library. *)
+      apply transfer
+      by (meson closure_subset range_eqI subsetD)
+    finally show \<open>\<psi> \<in> space_as_set ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)\<close>
+      by -
+  qed
+qed
+
+lemma compatible_proj_mult:
+  assumes "compatible R S" and "isProjector a" and "isProjector b"
+  shows "isProjector (R a o\<^sub>C\<^sub>L S b)"
+  using assms unfolding isProjector_algebraic compatible_def
+  apply auto
+  apply (metis comp_domain_assoc lvalue_mult)
+  by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
 end
 
