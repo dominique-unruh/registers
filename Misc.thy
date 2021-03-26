@@ -158,5 +158,11 @@ instance
   by (metis bit_not_one_imp)+
 end
 
+lemma sum_single: 
+  assumes "finite A"
+  assumes "\<And>j. j \<noteq> i \<Longrightarrow> j\<in>A \<Longrightarrow> f j = 0"
+  shows "sum f A = (if i\<in>A then f i else 0)"
+  apply (subst sum.mono_neutral_cong_right[where S=\<open>A \<inter> {i}\<close> and h=f])
+  using assms by auto
 
 end

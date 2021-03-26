@@ -47,10 +47,20 @@ definition "matrix_pauliZ = mat_of_rows_list 2 [ [1::complex, 0], [0, -1] ]"
 definition pauliZ :: \<open>bit domain_end\<close> where "pauliZ = cblinfun_of_mat matrix_pauliZ"
 definition "vector_\<beta>00 = vec_of_list [ 1/sqrt 2::complex, 0, 0, 1/sqrt 2 ]"
 definition \<beta>00 :: \<open>(bit\<times>bit) ell2\<close> where "\<beta>00 = onb_enum_of_vec vector_\<beta>00"
+lemma [simp]: "vec_of_onb_enum \<beta>00 = vector_\<beta>00"
+  by auto
 definition "vector_ketplus = vec_of_list [ 1/sqrt 2::complex, 1/sqrt 2 ]"
 definition ketplus :: \<open>bit ell2\<close> ("|+\<rangle>") where \<open>ketplus = onb_enum_of_vec vector_ketplus\<close>
+lemma [simp]: "vec_of_onb_enum ketplus = vector_ketplus"
+  by auto
 definition "matrix_Uswap = mat_of_rows_list 4 [ [1::complex, 0, 0, 0], [0,0,1,0], [0,1,0,0], [0,0,0,1] ]"
 definition Uswap :: \<open>(bit\<times>bit) domain_end\<close> where \<open>Uswap = cblinfun_of_mat matrix_Uswap\<close>
+lemma [simp]: "mat_of_cblinfun Uswap = matrix_Uswap"
+  by auto
+lemma [simp]: "dim_col matrix_Uswap = 4"
+  sorry
+lemma [simp]: "dim_row matrix_Uswap = 4"
+  sorry
 
 (* lemma compatible_compatible0:
   assumes \<open>lvalue F\<close> and \<open>lvalue G\<close>
