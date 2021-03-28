@@ -2,6 +2,7 @@ theory Classical2
   imports Laws_Classical
 begin
 
+no_notation m_inv ("inv\<index> _" [81] 80)
 
 lemma lvalue_single_valued:
   assumes lvalueF: \<open>lvalue F\<close>

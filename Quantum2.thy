@@ -39,28 +39,60 @@ lemma lvalue_comp'1[simp]: \<open>lvalue R \<Longrightarrow> R A o\<^sub>C\<^sub
 
 definition "matrix_CNOT = mat_of_rows_list 4 [ [1::complex,0,0,0], [0,1,0,0], [0,0,0,1], [0,0,1,0] ]"
 definition CNOT :: \<open>(bit*bit) domain_end\<close> where "CNOT = cblinfun_of_mat matrix_CNOT"
+
+lemma [simp]: "mat_of_cblinfun CNOT = matrix_CNOT"
+  apply (auto simp add: CNOT_def matrix_CNOT_def)
+  apply (subst cblinfun_of_mat_inverse)
+  by (auto simp add: canonical_basis_length_ell2_def)
+
 definition "matrix_hadamard = mat_of_rows_list 2 [ [1/sqrt 2::complex, 1/sqrt 2], [1/sqrt 2, -1/sqrt 2] ]"
 definition hadamard :: \<open>bit domain_end\<close> where "hadamard = cblinfun_of_mat matrix_hadamard"
+
+lemma [simp]: "mat_of_cblinfun hadamard = matrix_hadamard"
+  apply (auto simp add: hadamard_def matrix_hadamard_def)
+  apply (subst cblinfun_of_mat_inverse)
+  by (auto simp add: canonical_basis_length_ell2_def)
+
 definition "matrix_pauliX = mat_of_rows_list 2 [ [0::complex, 1], [1, 0] ]"
 definition pauliX :: \<open>bit domain_end\<close> where "pauliX = cblinfun_of_mat matrix_pauliX"
+lemma [simp]: "mat_of_cblinfun pauliX = matrix_pauliX"
+  apply (auto simp add: pauliX_def matrix_pauliX_def)
+  apply (subst cblinfun_of_mat_inverse)
+  by (auto simp add: canonical_basis_length_ell2_def)
+
 definition "matrix_pauliZ = mat_of_rows_list 2 [ [1::complex, 0], [0, -1] ]"
 definition pauliZ :: \<open>bit domain_end\<close> where "pauliZ = cblinfun_of_mat matrix_pauliZ"
+lemma [simp]: "mat_of_cblinfun pauliZ = matrix_pauliZ"
+  apply (auto simp add: pauliZ_def matrix_pauliZ_def)
+  apply (subst cblinfun_of_mat_inverse)
+  by (auto simp add: canonical_basis_length_ell2_def)
+
 definition "vector_\<beta>00 = vec_of_list [ 1/sqrt 2::complex, 0, 0, 1/sqrt 2 ]"
 definition \<beta>00 :: \<open>(bit\<times>bit) ell2\<close> where "\<beta>00 = onb_enum_of_vec vector_\<beta>00"
 lemma [simp]: "vec_of_onb_enum \<beta>00 = vector_\<beta>00"
-  by auto
+  apply (auto simp add: \<beta>00_def vector_\<beta>00_def)
+  apply (subst onb_enum_of_vec_inverse')
+  by (auto simp add: canonical_basis_length_ell2_def)
+
 definition "vector_ketplus = vec_of_list [ 1/sqrt 2::complex, 1/sqrt 2 ]"
 definition ketplus :: \<open>bit ell2\<close> ("|+\<rangle>") where \<open>ketplus = onb_enum_of_vec vector_ketplus\<close>
 lemma [simp]: "vec_of_onb_enum ketplus = vector_ketplus"
-  by auto
+  apply (auto simp add: ketplus_def vector_ketplus_def)
+  apply (subst onb_enum_of_vec_inverse')
+  by (auto simp add: canonical_basis_length_ell2_def)
+
 definition "matrix_Uswap = mat_of_rows_list 4 [ [1::complex, 0, 0, 0], [0,0,1,0], [0,1,0,0], [0,0,0,1] ]"
 definition Uswap :: \<open>(bit\<times>bit) domain_end\<close> where \<open>Uswap = cblinfun_of_mat matrix_Uswap\<close>
+
 lemma [simp]: "mat_of_cblinfun Uswap = matrix_Uswap"
-  by auto
+  apply (auto simp add: Uswap_def matrix_Uswap_def)
+  apply (subst cblinfun_of_mat_inverse)
+  by (auto simp add: canonical_basis_length_ell2_def)
+
 lemma [simp]: "dim_col matrix_Uswap = 4"
-  sorry
+  unfolding matrix_Uswap_def by simp
 lemma [simp]: "dim_row matrix_Uswap = 4"
-  sorry
+  unfolding matrix_Uswap_def by simp
 
 (* lemma compatible_compatible0:
   assumes \<open>lvalue F\<close> and \<open>lvalue G\<close>

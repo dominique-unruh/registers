@@ -398,14 +398,14 @@ subsection \<open>Notation\<close>
 
 bundle lvalue_notation begin
 notation tensor_maps_hom (infixr "\<otimes>\<^sub>h" 70)
-notation pair ("(_; _)")
+notation pair ("'(_;_')")
 notation comp_domain (infixl "\<circ>\<^sub>d" 55)
 notation tensor_maps (infixr "\<otimes>" 70)
 end
 
 bundle no_lvalue_notation begin
 no_notation tensor_maps_hom (infixr "\<otimes>\<^sub>h" 70)
-no_notation pair ("(_; _)")
+no_notation pair ("'(_;_')")
 no_notation comp_domain (infixl "\<circ>\<^sub>d" 55)
 no_notation tensor_maps (infixr "\<otimes>" 70)
 end

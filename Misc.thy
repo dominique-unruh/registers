@@ -1,5 +1,6 @@
 theory Misc
   imports Bounded_Operators.Complex_L2 "HOL-Library.Z2"
+    Jordan_Normal_Form.Matrix
 begin
 
 unbundle cblinfun_notation
@@ -132,6 +133,16 @@ proof (rule independent_if_scalars_zero)
     by simp
 qed
 
+lemma clinear_eq_butterketI:
+  fixes F G :: \<open>('a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2) \<Rightarrow> 'c::complex_vector\<close>
+  assumes "clinear F" and "clinear G"
+  assumes "\<And>i j. F (butterket i j) = G (butterket i j)"
+  shows "F = G"
+ apply (rule complex_vector.linear_eq_on_span[where f=F, THEN ext, rotated 3])
+     apply (subst linfun_cspan)
+  using assms by auto
+
+
 (* Declares the ML antiquotation @{fact ...}. In ML code,
   @{fact f} for a theorem/fact name f is replaced by an ML string
   containing a printable(!) representation of fact. (I.e.,
@@ -158,11 +169,20 @@ instance
   by (metis bit_not_one_imp)+
 end
 
+lemma card_bit[simp]: "CARD(bit) = 2"
+  using card_2_iff' by force
+
 lemma sum_single: 
   assumes "finite A"
   assumes "\<And>j. j \<noteq> i \<Longrightarrow> j\<in>A \<Longrightarrow> f j = 0"
   shows "sum f A = (if i\<in>A then f i else 0)"
   apply (subst sum.mono_neutral_cong_right[where S=\<open>A \<inter> {i}\<close> and h=f])
   using assms by auto
+
+lemma mat_of_rows_list_carrier[simp]:
+  "mat_of_rows_list n vs \<in> carrier_mat (length vs) n"
+  "dim_row (mat_of_rows_list n vs) = length vs"
+  "dim_col (mat_of_rows_list n vs) = n"
+  unfolding mat_of_rows_list_def by auto
 
 end

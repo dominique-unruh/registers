@@ -53,6 +53,15 @@ lemma program_seq: "program (p1@p2) = program p2 o\<^sub>C\<^sub>L program p1"
 lemma hoare_seq[trans]: "hoare C p1 D \<Longrightarrow> hoare D p2 E \<Longrightarrow> hoare C (p1@p2) E"
   by (auto simp: program_seq hoare_def times_applyOp)
 
+lemma hoare_weaken_left[trans]: \<open>A \<le> B \<Longrightarrow> hoare B p C \<Longrightarrow> hoare A p C\<close>
+  unfolding hoare_def
+  by (meson in_mono less_eq_clinear_space.rep_eq) 
+
+lemma hoare_weaken_right[trans]: \<open>hoare A p B \<Longrightarrow> B \<le> C \<Longrightarrow> hoare A p C\<close>
+  unfolding hoare_def 
+  by (meson in_mono less_eq_clinear_space.rep_eq) 
+
+
 lemma hoare_skip: "C \<le> D \<Longrightarrow> hoare C [] D"
   by (auto simp: program_def hoare_def times_applyOp in_mono less_eq_clinear_space.rep_eq)
 

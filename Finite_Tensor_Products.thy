@@ -3,6 +3,7 @@ theory Finite_Tensor_Products
 begin
 
 unbundle cblinfun_notation
+no_notation m_inv ("inv\<index> _" [81] 80)
 
 lift_definition tensor_ell2 :: \<open>'a::finite ell2 \<Rightarrow> 'b::finite ell2 \<Rightarrow> ('a\<times>'b) ell2\<close> (infixr "\<otimes>\<^sub>s" 70) is
   \<open>\<lambda>\<psi> \<phi> (i,j). \<psi> i * \<phi> j\<close>
