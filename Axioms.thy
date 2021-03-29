@@ -11,8 +11,8 @@ axiomatization comp_domain :: "'a::domain domain_end \<Rightarrow> 'a domain_end
   comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_domain b c)"
 (* TODO: reference in PDF *)
 axiomatization id_domain :: "'a::domain domain_end" where
-  id_compain_left: "comp_domain id_domain a = a" and
-  id_compain_right: "comp_domain a id_domain = a"
+  id_domain_left: "comp_domain id_domain a = a" and
+  id_domain_right: "comp_domain a id_domain = a"
 
 type_synonym ('a,'b) maps_hom = \<open>'a domain_end \<Rightarrow> 'b domain_end\<close>
 axiomatization maps_hom :: \<open>('a::domain,'b::domain) maps_hom \<Rightarrow> bool\<close>
@@ -25,7 +25,7 @@ type_synonym ('a,'b,'c) maps_2hom = \<open>'a domain_end \<Rightarrow> 'b domain
 axiomatization maps_2hom :: "('a::domain, 'b::domain, 'c::domain) maps_2hom \<Rightarrow> bool"
 axiomatization where maps_hom_2hom_comp: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. G (F2 a b))\<close>
 axiomatization where maps_2hom_hom_comp1: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. F2 (G a) b)\<close>
-axiomatization where maps_2hom_sym: \<open>maps_2hom F2 \<Longrightarrow> maps_2hom (\<lambda>a b. F2 b a)\<close> 
+axiomatization where maps_2hom_sym: \<open>maps_2hom F2 \<Longrightarrow> maps_2hom (\<lambda>a b. F2 b a)\<close> (* TODO: Can we get rid of this by using swap? *)
 axiomatization where maps_2hom_left: \<open>maps_2hom F2 \<Longrightarrow> maps_hom (\<lambda>a. F2 a b)\<close>
 
 
@@ -44,6 +44,9 @@ axiomatization tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2
   tensor_uniqueness: \<open>maps_2hom F2 \<Longrightarrow> maps_hom F \<Longrightarrow> (\<lambda>a b. F (tensor_maps a b)) = F2 \<Longrightarrow> F = tensor_lift F2\<close>
 (* Formalize the weak property instead *)
 
+axiomatization where tensor_mult: \<open>comp_domain (tensor_maps a c) (tensor_maps b d) = tensor_maps (comp_domain a b) (comp_domain c d)\<close>
+
+
 axiomatization assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a\<times>('b\<times>'c)) maps_hom\<close> where 
   assoc_hom: \<open>maps_hom assoc\<close> and
   assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
@@ -54,6 +57,10 @@ axiomatization where
   lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue (G \<circ> F)"  and
   lvalue_mult: "lvalue F \<Longrightarrow> comp_domain (F a) (F b) = F (comp_domain a b)"
   for F :: "('a::domain,'b::domain) maps_hom" and G :: "('b,'c::domain) maps_hom" 
+
+(* TODO: describe in PDF *)
+axiomatization where lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_maps a id_domain)\<close>
+axiomatization where lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_maps id_domain a)\<close>
 
 axiomatization where
 pair_lvalue_axiom: \<open>\<lbrakk>lvalue F; lvalue G; maps_hom p;

@@ -10,18 +10,15 @@ subsection \<open>Elementary facts\<close>
 
 declare tensor_2hom[simp]
 declare id_maps_hom[simp]
+declare id_domain_left[simp]
+declare id_domain_right[simp]
+
 
 lemma maps_2hom_hom_comp2: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. F2 a (G b))\<close>
   apply (rule maps_2hom_sym) apply (rule maps_2hom_hom_comp1) apply (rule maps_2hom_sym) by simp
 
 lemma maps_2hom_right: \<open>maps_2hom F2 \<Longrightarrow> maps_hom (\<lambda>b. F2 a b)\<close>
   apply (rule maps_2hom_left) by (rule maps_2hom_sym)
-
-(* lemma maps_hom_2hom_comp: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. G (F2 a b))\<close>
-  unfolding maps_2hom_def 
-  using comp_maps_hom[of \<open>\<lambda>a. F2 a _\<close> G]
-  using comp_maps_hom[of \<open>\<lambda>b. F2 _ b\<close> G]
-  unfolding o_def by auto *)
 
 subsection \<open>Tensor product of homs\<close>
 
@@ -119,8 +116,6 @@ lemma swap_apply[simp]: "swap (a \<otimes> b) = (b \<otimes> a)"
   unfolding swap_def 
   apply (rule tensor_existence[THEN fun_cong, THEN fun_cong])
   apply (rule maps_2hom_sym) by (fact tensor_2hom)
-
-term \<open>(tensor_maps_hom swap id) \<circ> swap \<circ> assoc \<circ> (tensor_maps_hom swap id) \<circ> (swap :: ('a::domain\<times>('b::domain\<times>'c::domain), _) maps_hom)\<close>
 
 definition assoc' :: \<open>('a::domain\<times>('b::domain\<times>'c::domain), ('a\<times>'b)\<times>'c) maps_hom\<close> where 
   "assoc' = (tensor_maps_hom swap id) \<circ> swap \<circ> assoc \<circ> (tensor_maps_hom swap id) \<circ> swap"
@@ -309,23 +304,39 @@ qed
 
 subsection \<open>Fst and Snd\<close>
 
+(* TODO: mention stuff from this section in PDF *)
+
 definition Fst where \<open>Fst a = tensor_maps a id_domain\<close>
 definition Snd where \<open>Snd a = tensor_maps id_domain a\<close>
 
 lemma swap_Fst: "swap o Fst = Snd"
-  sorry
+  by (auto simp add: Fst_def Snd_def)
 lemma swap_Snd: "swap o Snd = Fst"
-  sorry
+  by (auto simp add: Fst_def Snd_def)
 
 lemma lvalue_Fst[simp]: \<open>lvalue Fst\<close>
-  (* TODO: needs axiom *)
-  sorry
+  unfolding Fst_def by (rule lvalue_tensor_left)
 
 lemma lvalue_Snd[simp]: \<open>lvalue Snd\<close>
-  (* TODO: needs axiom *)
-  sorry
+  unfolding Snd_def by (rule lvalue_tensor_right)
 
-(* TODO: We might be able to show "lvalue swap" by using pair(Snd,Fst) = swap is lvalue *)
+lemma compatible_Fst_Snd[simp]: \<open>compatible Fst Snd\<close>
+  apply (rule compatibleI, simp, simp)
+  by (simp add: Fst_def Snd_def tensor_mult)
+
+lemmas compatible_Snd_Fst[simp] = compatible_Fst_Snd[THEN compatible_sym]
+
+lemma pair_Fst_Snd: \<open>pair Fst Snd = id\<close>
+  apply (rule tensor_extensionality)
+  by (simp_all add: pair_apply lvalue_hom Fst_def Snd_def tensor_mult)
+
+lemma pair_Snd_Fst: \<open>pair Snd Fst = swap\<close>
+  apply (rule tensor_extensionality)
+  by (simp_all add: pair_apply lvalue_hom Fst_def Snd_def tensor_mult)
+
+lemma lvalue_swap: \<open>lvalue swap\<close>
+  by (simp flip: pair_Snd_Fst)
+
 (* TODO: And maybe something analogous for assoc. Can it be defined in terms of pair even??? *)
 
 subsection \<open>Compatibility simplification\<close>

@@ -11,6 +11,14 @@ type_synonym 'a domain_end = \<open>'a rel\<close>
 abbreviation (input) comp_domain :: "'a domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
   "comp_domain a b \<equiv> b O a"
 
+abbreviation (input) id_domain :: "'a domain_end" where
+  "id_domain \<equiv> Id"
+
+lemma id_domain_left: "comp_domain id_domain a = a"
+  by (rule R_O_Id)
+lemma id_domain_right: "comp_domain a id_domain = a"
+  by (rule Id_O_R)
+
 lemma comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_domain b c)"
   by auto
 
@@ -58,10 +66,11 @@ lemma rel_of_maps_2hom: \<open>maps_2hom F2 \<Longrightarrow> F2 a b = rel_of_ma
 definition rel_prod :: "('a*'b) set => ('c*'d) set => (('a*'c) * ('b*'d)) set" where
   "rel_prod a b = (\<lambda>((a,b),(c,d)). ((a,c),(b,d))) ` (a \<times> b)"
 
-lemma rel_prod_comp: \<open>rel_prod a b O rel_prod c d = rel_prod (a O c) (b O d)\<close>
+lemma tensor_mult: \<open>rel_prod a b O rel_prod c d = rel_prod (a O c) (b O d)\<close>
   apply (auto simp: rel_prod_def relcomp_def relcompp_apply case_prod_beta image_def
       simp flip: Collect_case_prod)
   by force
+
 
 lemma rel_prod_converse: \<open>(rel_prod a b)\<inverse> = rel_prod (a\<inverse>) (b\<inverse>)\<close>
   apply (auto simp: rel_prod_def converse_unfold image_def case_prod_beta)
@@ -218,6 +227,7 @@ proof -
     using maps_hom_def by auto
 qed
 
+
 lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
   unfolding assoc_def rel_prod_def
   apply (auto simp: case_prod_beta image_def relcomp_def relcompp_apply)
@@ -225,6 +235,33 @@ lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps
 
 definition lvalue :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close> where
   \<open>lvalue F \<longleftrightarrow> maps_hom F \<and> (\<forall>a a'. F a O F a' = F (a O a')) \<and> F Id = Id \<and> (\<forall>a. F (a\<inverse>) = (F a)\<inverse>)\<close>
+
+lemma maps_hom_tensor_left: \<open>maps_hom (\<lambda>a. tensor_maps a id_domain)\<close>
+  unfolding maps_hom_def apply (rule exI[of _ \<open>{((a1,a2),((a1,b),(a2,b)))| a1 a2 b. True}\<close>])
+  apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
+  by (metis fst_conv snd_conv)
+lemma maps_hom_tensor_right: \<open>maps_hom (\<lambda>a. tensor_maps id_domain a)\<close>
+  unfolding maps_hom_def apply (rule exI[of _ \<open>{((a1,a2),((b,a1),(b,a2)))| a1 a2 b. True}\<close>])
+  apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
+  by (metis fst_conv snd_conv)
+
+lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_maps a id_domain)\<close>
+  apply (simp add: lvalue_def maps_hom_tensor_left)
+  apply (auto simp: rel_prod_def case_prod_beta relcomp_def relcompp_apply image_def)
+  apply (metis fst_conv pair_in_Id_conv prod.exhaust_sel)
+  apply (metis IdI fst_conv snd_conv)
+  apply (metis IdI fst_conv snd_conv)
+  by (metis IdI converse_iff fst_swap snd_conv swap_simp)
+
+lemma lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_maps id_domain a)\<close>
+  apply (simp add: lvalue_def maps_hom_tensor_right)
+  apply (auto simp: rel_prod_def case_prod_beta relcomp_def relcompp_apply image_def)
+  apply blast
+  apply (metis IdI fst_conv snd_conv)
+  apply (metis IdI fst_conv snd_eqD)
+  apply (metis IdI fst_conv snd_conv)
+  by (metis IdI converse_iff fst_conv snd_conv)
+
 
 lemma
   lvalue_hom: "lvalue F \<Longrightarrow> maps_hom F"
@@ -271,7 +308,7 @@ proof (unfold lvalue_def, intro conjI allI)
     apply (rule comp_maps_hom[where F=p, unfolded o_def])
     by (simp_all add: converse_hom)
   have \<open>p (tensor_maps a1 a2) O p (tensor_maps a1' a2') = p ((tensor_maps a1 a2) O (tensor_maps a1' a2'))\<close> for a1 a2 a1' a2'
-    unfolding ptensor rel_prod_comp
+    unfolding ptensor tensor_mult
     by (metis assms(1) assms(2) comp_domain_assoc lvalue_mult compat) 
   
   then have \<open>p (tensor_maps a1 a2) O p a' = p ((tensor_maps a1 a2) O a')\<close> for a1 a2 a'

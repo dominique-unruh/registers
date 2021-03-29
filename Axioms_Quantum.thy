@@ -13,109 +13,19 @@ unbundle cblinfun_notation
 no_notation m_inv ("inv\<index> _" [81] 80)
 
 
-(* instantiation mat :: (conjugate) conjugate
-begin
-
-definition conjugate_mat :: "'a :: conjugate mat \<Rightarrow> 'a mat"
-  where "conjugate M = map_mat conjugate M"
-
-instance
-proof intro_classes
-  fix M N :: \<open>'a mat\<close>
-  show \<open>conjugate (conjugate M) = M\<close>
-    unfolding conjugate_mat_def by auto
-  show \<open>(conjugate M = conjugate N) = (M = N)\<close>
-    unfolding conjugate_mat_def by (auto simp: mat_eq_iff)
-qed
-end
-
-lemma conjugate_carrier_mat[simp]: \<open>M \<in> carrier_mat n m \<Longrightarrow> conjugate M \<in> carrier_mat n m\<close>
-  unfolding conjugate_mat_def by auto
-
-lemma dim_row_conjugate[simp]: \<open>dim_row (conjugate M) = dim_row M\<close>
-  unfolding conjugate_mat_def by auto
-
-lemma dim_col_conjugate[simp]: \<open>dim_col (conjugate M) = dim_col M\<close>
-  unfolding conjugate_mat_def by auto
-
-lemma conjugate_index[simp]: \<open>i < dim_row A \<Longrightarrow> j < dim_col A \<Longrightarrow> conjugate A $$ (i,j) = conjugate (A $$ (i,j))\<close>
-  unfolding conjugate_mat_def by auto
-
-(* lemma row_conjugate_mat[simp]: \<open>i < dim_row A \<Longrightarrow> row (conjugate A) i = conjugate (row A i)\<close>
-  unfolding conjugate_mat_def by auto *)
-
-lemma col_conjugate_mat[simp]: \<open>i < dim_col A \<Longrightarrow> col (conjugate A) i = conjugate (col A i)\<close>
-  unfolding conjugate_mat_def by auto *)
-
-(* lemma sum_single: 
-  assumes "finite A"
-  assumes "\<And>j. j \<noteq> i \<Longrightarrow> j\<in>A \<Longrightarrow> f j = 0"
-  shows "sum f A = (if i\<in>A then f i else 0)"
-  apply (subst sum.mono_neutral_cong_right[where S=\<open>A \<inter> {i}\<close> and h=f])
-  using assms by auto *)
-
-(* lemma index_mat_fstsnd:  "fst x < nr \<Longrightarrow> snd x < nc \<Longrightarrow> mat nr nc f $$ x = f x"
-  apply (cases x) by auto *)
-
-(* definition tensor_pack :: "nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat) \<Rightarrow> nat" where "tensor_pack X Y = (\<lambda>(x, y). x * Y + y)"
-definition tensor_unpack :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat)"  where "tensor_unpack X Y xy = (xy div Y, xy mod Y)"
-
-lemma tensor_unpack_bound1[simp]: "i < A * B \<Longrightarrow> fst (tensor_unpack A B i) < A"
-  unfolding tensor_unpack_def
-  apply auto
-  using less_mult_imp_div_less by blast
-
-lemma tensor_unpack_bound2[simp]: "i < A * B \<Longrightarrow> snd (tensor_unpack A B i) < B"
-  unfolding tensor_unpack_def
-  apply auto
-  by (metis mod_less_divisor mult.commute mult_zero_left nat_neq_iff not_less0)
-
-lemma tensor_unpack_pack[simp]: "j < B \<Longrightarrow> tensor_unpack A B (tensor_pack A B (i, j)) = (i,j)"
-  unfolding tensor_unpack_def tensor_pack_def
-  by auto
-
-lemma tensor_pack_unpack[simp]: "x < A*B \<Longrightarrow> tensor_pack A B (tensor_unpack A B x) = x"
-  unfolding tensor_unpack_def tensor_pack_def
-  by auto
-
-lemma tensor_pack_bound[simp]:
-  "i < A \<Longrightarrow> j < B \<Longrightarrow> tensor_pack A B (i, j) < A * B"
-  unfolding tensor_pack_def apply auto
-  by (smt (verit, ccfv_SIG) Euclidean_Division.div_eq_0_iff div_mult2_eq div_mult_self3 le_add_same_cancel1 less_add_same_cancel1 mult.commute nat_neq_iff not_le)
-
-lemma tensor_pack_inj[simp]: \<open>inj_on (tensor_pack A B) ({0..<A} \<times> {0..<B})\<close>
-  apply (rule inj_onI)
-  by (metis SigmaE atLeastLessThan_iff tensor_unpack_pack)
-
-lemma tensor_pack_range[simp]: \<open>tensor_pack A B ` ({0..<A} \<times> {0..<B}) = {0..<A*B}\<close>
-  apply auto unfolding image_iff Bex_def
-  apply (rule_tac x=\<open>tensor_unpack A B x\<close> in exI)
-  by (auto simp: mem_Times_iff)
-
-lemma tensor_pack_sum[simp]: \<open>(\<Sum>ij = 0..<A*B. f ij) = 
-    (\<Sum>i = 0..<A. \<Sum>j = 0..<B. f (tensor_pack A B (i,j)))\<close>
-    apply (subst sum.cartesian_product) apply simp
-    apply (subst sum.reindex[where h=\<open>tensor_pack A B\<close>, unfolded o_def, symmetric])
-  by auto
-
-lemma tensor_unpack_fstfst: \<open>fst (tensor_unpack A B (fst (tensor_unpack (A * B) C i)))
-     = fst (tensor_unpack A (B * C) i)\<close>
-  unfolding tensor_unpack_def apply auto
-  by (metis div_mult2_eq mult.commute)
-lemma tensor_unpack_sndsnd: \<open>snd (tensor_unpack B C (snd (tensor_unpack A (B * C) i)))
-     = snd (tensor_unpack (A * B) C i)\<close>
-  unfolding tensor_unpack_def apply auto
-  by (meson dvd_triv_right mod_mod_cancel)
-lemma tensor_unpack_fstsnd: \<open>fst (tensor_unpack B C (snd (tensor_unpack A (B * C) i)))
-     = snd (tensor_unpack A B (fst (tensor_unpack (A * B) C i)))\<close>
-  unfolding tensor_unpack_def apply auto
-  by (metis (no_types, lifting) Euclidean_Division.div_eq_0_iff add_0_iff bits_mod_div_trivial div_mult_self4 mod_mult2_eq mod_mult_self1_is_0 mult.commute) *)
-
 type_synonym 'a state = \<open>'a ell2\<close>
 type_synonym 'a domain_end = \<open>('a state, 'a state) cblinfun\<close>
 
 abbreviation comp_domain :: "'a domain_end \<Rightarrow> 'a domain_end \<Rightarrow> 'a domain_end" where
   "comp_domain \<equiv> timesOp"
+
+abbreviation id_domain :: "'a domain_end" where
+  "id_domain \<equiv> idOp"
+
+lemma id_domain_left: "comp_domain id_domain a = a"
+  by simp
+lemma id_domain_right: "comp_domain a id_domain = a"
+  by simp
 
 lemma comp_domain_assoc: "comp_domain (comp_domain a b) c = comp_domain a (comp_domain b c)"
   by (simp add: cblinfun_apply_assoc)
@@ -157,20 +67,11 @@ lemma maps_2hom_left: \<open>maps_2hom F2 \<Longrightarrow> maps_hom (\<lambda>a
 lemma comp_2hom: "maps_2hom timesOp"
   by (auto intro!: clinearI simp add: cbilinear_def cblinfun_apply_dist1 cblinfun_apply_dist2)
 
-
-(* lemma tensor_op_conjugate[simp]: "tensor_op (conjugate_op a) (conjugate_op b) = conjugate_op (tensor_op a b)"
-  apply transfer
-  by (auto simp: conjugate_mat_def mat_eq_iff case_prod_beta) *)
-
-(* lemma tensor_op_transpose[simp]: "tensor_op (transpose_op a) (transpose_op b) = transpose_op (tensor_op a b)"
-  apply transfer
-  by (auto simp: mat_eq_iff case_prod_beta) *)
-
-(* lemma tensor_op_adjoint[simp]: "tensor_op (adjoint_op a) (adjoint_op b) = adjoint_op (tensor_op a b)"
-  unfolding adjoint_op_def by simp *)
-
 abbreviation tensor_maps :: \<open>'a::finite domain_end \<Rightarrow> 'b::finite domain_end \<Rightarrow> ('a\<times>'b) domain_end\<close> where
   \<open>tensor_maps \<equiv> tensor_op\<close>
+
+lemma tensor_mult: \<open>comp_domain (tensor_maps a c) (tensor_maps b d) = tensor_maps (comp_domain a b) (comp_domain c d)\<close>
+  by (rule comp_tensor_op)
 
 lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
   by (simp add: tensor_op_cbilinear)
@@ -210,6 +111,14 @@ lemma lvalue_mult: "lvalue F \<Longrightarrow> comp_domain (F a) (F b) = F (comp
   for F :: "('a,'b) maps_hom" and G :: "('b,'c) maps_hom" 
   unfolding lvalue_def
   by auto
+
+lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_maps a id_domain)\<close>
+  by (simp add: comp_tensor_op lvalue_def maps_2hom_left tensor_2hom tensor_op_adjoint)
+
+lemma lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_maps id_domain a)\<close>
+  apply (simp add: comp_tensor_op lvalue_def tensor_2hom tensor_op_adjoint)
+  by (meson cbilinear_def tensor_2hom)
+
 
 lemma pair_lvalue_axiom: 
   fixes F :: \<open>('a::finite, 'c) maps_hom\<close> and G :: \<open>('b::finite, 'c) maps_hom\<close>
