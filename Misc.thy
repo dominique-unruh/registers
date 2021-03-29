@@ -172,6 +172,14 @@ end
 lemma card_bit[simp]: "CARD(bit) = 2"
   using card_2_iff' by force
 
+instantiation bit :: card_UNIV begin
+definition "finite_UNIV = Phantom(bit) True"
+definition "card_UNIV = Phantom(bit) 2"
+instance
+  apply intro_classes
+  by (simp_all add: finite_UNIV_bit_def card_UNIV_bit_def)
+end
+
 lemma sum_single: 
   assumes "finite A"
   assumes "\<And>j. j \<noteq> i \<Longrightarrow> j\<in>A \<Longrightarrow> f j = 0"

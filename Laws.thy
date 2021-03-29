@@ -176,7 +176,7 @@ lemma pair_hom[simp]:
   shows "maps_hom (pair F G)"
   unfolding pair_def apply (rule tensor_lift_hom) using assms by simp
 
-lemma pair_apply[simp]:
+lemma pair_apply:
   assumes \<open>maps_hom F\<close> and \<open>maps_hom G\<close>
   shows \<open>(pair F G) (a \<otimes> b) = (F a) \<circ>\<^sub>d (G b)\<close>
   unfolding pair_def 
@@ -194,7 +194,7 @@ lemma pair_lvalue[simp]:
   assumes "compatible F G"
   shows "lvalue (pair F G)"
   apply (rule pair_lvalue_axiom[where F=F and G=G and p=\<open>pair F G\<close>])
-  using assms by (auto simp: compatible_def lvalue_hom)
+  using assms by (auto simp: pair_apply compatible_def lvalue_hom)
   
 lemma compatible3[simp]:
   assumes [simp]: "compatible x y" and "compatible y z" and "compatible x z"
@@ -205,7 +205,7 @@ proof (rule compatibleI)
   then have [simp]: \<open>maps_hom x\<close> \<open>maps_hom y\<close> \<open>maps_hom z\<close>
     using lvalue_hom by blast+
   have "(pair (pair x y) z) ((f \<otimes> g) \<otimes> h) = (pair z (pair x y)) (h \<otimes> (f \<otimes> g))" for f g h
-    using assms apply (simp add: compatible_def comp_domain_assoc)
+    using assms apply (simp add: pair_apply compatible_def comp_domain_assoc)
     by (metis comp_domain_assoc)
   then have "(pair (pair x y) z \<circ> swap \<circ> (\<otimes>) h) (f \<otimes> g)
            = (pair z (pair x y) \<circ> (\<otimes>) h) (f \<otimes> g)" for f g h
@@ -219,7 +219,7 @@ proof (rule compatibleI)
     using *
     using comp_eq_dest_lhs by fastforce
   then show "(pair x y fg) \<circ>\<^sub>d (z h) = (z h) \<circ>\<^sub>d (pair x y fg)" for fg h
-    unfolding compatible_def by simp
+    unfolding compatible_def by (simp add: pair_apply)
   show "lvalue z" and  "lvalue (pair x y)"
     by simp_all
 qed
@@ -260,7 +260,7 @@ proof (rule tensor_extensionality)
     by (metis (no_types, lifting) assms(1) assms(2) assms(3) comp_maps_hom compatible_lvalue1 compatible_lvalue2 lvalue_hom pair_hom)
 
   show \<open>(pair A B \<circ> tensor_maps_hom C D) (a \<otimes> b) = pair (A \<circ> C) (B \<circ> D) (a \<otimes> b)\<close> for a b
-    by (simp add: comp_maps_hom)
+    by (simp add: pair_apply comp_maps_hom)
 qed
 
 lemma pair_comp_swap[simp]:
@@ -292,7 +292,7 @@ proof (rule tensor_extensionality3')
   show \<open>maps_hom (pair (pair F G) H)\<close>
     by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
   show \<open>(pair F (pair G H) \<circ> assoc) ((f \<otimes> g) \<otimes> h) = pair (pair F G) H ((f \<otimes> g) \<otimes> h)\<close> for f g h
-    by (simp add: assoc_apply comp_domain_assoc)
+    by (simp add: pair_apply assoc_apply comp_domain_assoc)
 qed
 
 lemma pair_comp_assoc'[simp]:
@@ -304,9 +304,29 @@ proof (rule tensor_extensionality3)
   show \<open>maps_hom (pair F (pair G H))\<close>
     by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
   show \<open>(pair (pair F G) H \<circ> assoc') (f \<otimes> g \<otimes> h) = pair F (pair G H) (f \<otimes> g \<otimes> h)\<close> for f g h
-    by (simp add: assoc'_apply comp_domain_assoc)
+    by (simp add: pair_apply assoc'_apply comp_domain_assoc)
 qed
 
+subsection \<open>Fst and Snd\<close>
+
+definition Fst where \<open>Fst a = tensor_maps a id_domain\<close>
+definition Snd where \<open>Snd a = tensor_maps id_domain a\<close>
+
+lemma swap_Fst: "swap o Fst = Snd"
+  sorry
+lemma swap_Snd: "swap o Snd = Fst"
+  sorry
+
+lemma lvalue_Fst[simp]: \<open>lvalue Fst\<close>
+  (* TODO: needs axiom *)
+  sorry
+
+lemma lvalue_Snd[simp]: \<open>lvalue Snd\<close>
+  (* TODO: needs axiom *)
+  sorry
+
+(* TODO: We might be able to show "lvalue swap" by using pair(Snd,Fst) = swap is lvalue *)
+(* TODO: And maybe something analogous for assoc. Can it be defined in terms of pair even??? *)
 
 subsection \<open>Compatibility simplification\<close>
 
