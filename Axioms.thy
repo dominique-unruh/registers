@@ -46,10 +46,7 @@ axiomatization tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) maps_2
 
 axiomatization where tensor_mult: \<open>comp_domain (tensor_maps a c) (tensor_maps b d) = tensor_maps (comp_domain a b) (comp_domain c d)\<close>
 
-
-axiomatization assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a\<times>('b\<times>'c)) maps_hom\<close> where 
-  assoc_hom: \<open>maps_hom assoc\<close> and
-  assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
+(* TODO: In PDF: remove assoc, assoc' (now derived) *)
 
 axiomatization lvalue :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close>
 axiomatization where

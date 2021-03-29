@@ -76,7 +76,7 @@ lemma tensor_mult: \<open>comp_domain (tensor_maps a c) (tensor_maps b d) = tens
 lemma tensor_2hom: \<open>maps_2hom tensor_maps\<close>
   by (simp add: tensor_op_cbilinear)
 
-definition assoc :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite, 'a\<times>('b\<times>'c)) maps_hom\<close> where
+(* definition assoc :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite, 'a\<times>('b\<times>'c)) maps_hom\<close> where
   \<open>assoc a = assoc_ell2 o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L assoc_ell2'\<close>
 
 lemma assoc_hom: \<open>maps_hom assoc\<close>
@@ -86,7 +86,7 @@ lemma assoc_hom: \<open>maps_hom assoc\<close>
 lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = tensor_maps a (tensor_maps b c)\<close>
   apply (rule equal_ket)
   apply (case_tac x)
-  by (simp add: assoc_def times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor flip: tensor_ell2_ket)
+  by (simp add: assoc_def times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor flip: tensor_ell2_ket) *)
 
 
 definition lvalue :: \<open>('a, 'b) maps_hom \<Rightarrow> bool\<close> where

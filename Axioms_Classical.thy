@@ -211,7 +211,7 @@ lemma tensor_uniqueness:
   by (metis tensor_lift_hom)
 
 
-definition assoc :: \<open>(('a\<times>'b)\<times>'c, 'a\<times>('b\<times>'c)) maps_hom\<close> where 
+(* definition assoc :: \<open>(('a\<times>'b)\<times>'c, 'a\<times>('b\<times>'c)) maps_hom\<close> where 
   \<open>assoc r = {((a,(b,c)), ((a,b),c))| a b c. True} O r O {(((a,b),c), (a,(b,c)))| a b c. True}\<close>
 
 lemma assoc_hom: \<open>maps_hom assoc\<close>
@@ -231,7 +231,7 @@ qed
 lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
   unfolding assoc_def rel_prod_def
   apply (auto simp: case_prod_beta image_def relcomp_def relcompp_apply)
-  by (metis fst_conv snd_conv)+
+  by (metis fst_conv snd_conv)+ *)
 
 definition lvalue :: \<open>('a,'b) maps_hom \<Rightarrow> bool\<close> where
   \<open>lvalue F \<longleftrightarrow> maps_hom F \<and> (\<forall>a a'. F a O F a' = F (a O a')) \<and> F Id = Id \<and> (\<forall>a. F (a\<inverse>) = (F a)\<inverse>)\<close>

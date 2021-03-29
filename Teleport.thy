@@ -568,7 +568,7 @@ proof -
                 del: pair_apply comp_apply)
     apply (rule arg_cong[of _ _ X\<Phi>])
     apply (rule cblinfun_eq_mat_of_cblinfunI)
-    apply (simp add: assoc_def mat_of_cblinfun_assoc_ell2 mat_of_cblinfun_tensor_op butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket cblinfun_of_mat_id swap_sandwich[abs_def]  mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult tensor_maps_hom_sandwich2 vec_of_onb_enum_tensor_state mat_of_cblinfun_description)
+    apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_assoc_ell2 mat_of_cblinfun_tensor_op butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket cblinfun_of_mat_id swap_sandwich[abs_def]  mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult tensor_maps_hom_sandwich2 vec_of_onb_enum_tensor_state mat_of_cblinfun_description)
     by normalization
 
   have [simp]: "unitary XZ"

@@ -217,5 +217,13 @@ lemma compatible_proj_mult:
   apply (metis comp_domain_assoc lvalue_mult)
   by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
+lemma assoc_ell2_sandwich: \<open>assoc a = assoc_ell2 o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L assoc_ell2'\<close>
+  apply (rule tensor_extensionality3'[THEN fun_cong, where x=a])
+  apply (simp add: assoc_hom)
+   apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
+  apply (rule equal_ket)
+  apply (case_tac x)
+  by (simp add: assoc_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor flip: tensor_ell2_ket)
+
 end
 

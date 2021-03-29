@@ -12,7 +12,8 @@ declare tensor_2hom[simp]
 declare id_maps_hom[simp]
 declare id_domain_left[simp]
 declare id_domain_right[simp]
-
+declare lvalue_hom[simp]
+declare lvalue_comp[simp]
 
 lemma maps_2hom_hom_comp2: \<open>maps_2hom F2 \<Longrightarrow> maps_hom G \<Longrightarrow> maps_2hom (\<lambda>a b. F2 a (G b))\<close>
   apply (rule maps_2hom_sym) apply (rule maps_2hom_hom_comp1) apply (rule maps_2hom_sym) by simp
@@ -117,14 +118,14 @@ lemma swap_apply[simp]: "swap (a \<otimes> b) = (b \<otimes> a)"
   apply (rule tensor_existence[THEN fun_cong, THEN fun_cong])
   apply (rule maps_2hom_sym) by (fact tensor_2hom)
 
-definition assoc' :: \<open>('a::domain\<times>('b::domain\<times>'c::domain), ('a\<times>'b)\<times>'c) maps_hom\<close> where 
+(* definition assoc' :: \<open>('a::domain\<times>('b::domain\<times>'c::domain), ('a\<times>'b)\<times>'c) maps_hom\<close> where 
   "assoc' = (tensor_maps_hom swap id) \<circ> swap \<circ> assoc \<circ> (tensor_maps_hom swap id) \<circ> swap"
 
 lemma assoc'_hom: \<open>maps_hom assoc'\<close>
   by (auto simp: assoc'_def intro!: comp_maps_hom tensor_maps_hom_hom id_maps_hom assoc_hom)
 
 lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_maps (tensor_maps a b) c)\<close>
-  unfolding assoc'_def by (simp add: id_maps_hom assoc_apply)
+  unfolding assoc'_def by (simp add: id_maps_hom assoc_apply) *)
 
 subsection \<open>Pairs and compatibility\<close>
 
@@ -278,30 +279,6 @@ proof (rule tensor_extensionality)
     by (metis (no_types, lifting) assms compatible_def)
 qed
 
-lemma pair_comp_assoc[simp]:
-  assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close> \<open>maps_hom H\<close>
-  shows \<open>pair F (pair G H) \<circ> assoc = pair (pair F G) H\<close>
-proof (rule tensor_extensionality3')
-  show \<open>maps_hom (pair F (pair G H) \<circ> assoc)\<close>
-    by (metis assms(1) assms(2) assms(3) assoc_hom comp_maps_hom pair_hom)
-  show \<open>maps_hom (pair (pair F G) H)\<close>
-    by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
-  show \<open>(pair F (pair G H) \<circ> assoc) ((f \<otimes> g) \<otimes> h) = pair (pair F G) H ((f \<otimes> g) \<otimes> h)\<close> for f g h
-    by (simp add: pair_apply assoc_apply comp_domain_assoc)
-qed
-
-lemma pair_comp_assoc'[simp]:
-  assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close> \<open>maps_hom H\<close>
-  shows \<open>pair (pair F G) H \<circ> assoc' = pair F (pair G H)\<close>
-proof (rule tensor_extensionality3)
-  show \<open>maps_hom (pair (pair F G) H \<circ> assoc')\<close>
-    by (metis (no_types, hide_lams) assms(1) assms(2) assms(3) assoc'_hom comp_maps_hom pair_hom)
-  show \<open>maps_hom (pair F (pair G H))\<close>
-    by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
-  show \<open>(pair (pair F G) H \<circ> assoc') (f \<otimes> g \<otimes> h) = pair F (pair G H) (f \<otimes> g \<otimes> h)\<close> for f g h
-    by (simp add: pair_apply assoc'_apply comp_domain_assoc)
-qed
-
 subsection \<open>Fst and Snd\<close>
 
 (* TODO: mention stuff from this section in PDF *)
@@ -338,6 +315,49 @@ lemma lvalue_swap: \<open>lvalue swap\<close>
   by (simp flip: pair_Snd_Fst)
 
 (* TODO: And maybe something analogous for assoc. Can it be defined in terms of pair even??? *)
+
+definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a\<times>('b\<times>'c)) maps_hom\<close> where 
+  \<open>assoc = pair (pair Fst (Snd o Fst)) (Snd o Snd)\<close>
+
+lemma assoc_hom: \<open>maps_hom assoc\<close>
+  unfolding assoc_def
+  by (meson lvalue_Fst lvalue_Snd lvalue_comp lvalue_hom pair_hom)
+
+lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
+  by (auto simp: assoc_def pair_apply Fst_def Snd_def tensor_mult)
+
+definition assoc' :: \<open>('a::domain\<times>('b::domain\<times>'c::domain), ('a\<times>'b)\<times>'c) maps_hom\<close> where 
+  "assoc' = (tensor_maps_hom swap id) \<circ> swap \<circ> assoc \<circ> (tensor_maps_hom swap id) \<circ> swap"
+
+lemma assoc'_hom: \<open>maps_hom assoc'\<close>
+  by (auto simp: assoc'_def intro!: comp_maps_hom tensor_maps_hom_hom id_maps_hom assoc_hom)
+
+lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_maps (tensor_maps a b) c)\<close>
+  unfolding assoc'_def by (simp add: assoc_apply)
+
+lemma pair_comp_assoc[simp]:
+  assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close> \<open>maps_hom H\<close>
+  shows \<open>pair F (pair G H) \<circ> assoc = pair (pair F G) H\<close>
+proof (rule tensor_extensionality3')
+  show \<open>maps_hom (pair F (pair G H) \<circ> assoc)\<close>
+    by (metis assms(1) assms(2) assms(3) assoc_hom comp_maps_hom pair_hom)
+  show \<open>maps_hom (pair (pair F G) H)\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
+  show \<open>(pair F (pair G H) \<circ> assoc) ((f \<otimes> g) \<otimes> h) = pair (pair F G) H ((f \<otimes> g) \<otimes> h)\<close> for f g h
+    by (simp add: pair_apply assoc_apply comp_domain_assoc)
+qed
+
+lemma pair_comp_assoc'[simp]:
+  assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close> \<open>maps_hom H\<close>
+  shows \<open>pair (pair F G) H \<circ> assoc' = pair F (pair G H)\<close>
+proof (rule tensor_extensionality3)
+  show \<open>maps_hom (pair (pair F G) H \<circ> assoc')\<close>
+    by (metis (no_types, hide_lams) assms(1) assms(2) assms(3) assoc'_hom comp_maps_hom pair_hom)
+  show \<open>maps_hom (pair F (pair G H))\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
+  show \<open>(pair (pair F G) H \<circ> assoc') (f \<otimes> g \<otimes> h) = pair F (pair G H) (f \<otimes> g \<otimes> h)\<close> for f g h
+    by (simp add: pair_apply assoc'_apply comp_domain_assoc)
+qed
 
 subsection \<open>Compatibility simplification\<close>
 
