@@ -281,8 +281,6 @@ qed
 
 subsection \<open>Fst and Snd\<close>
 
-(* TODO: mention stuff from this section in PDF *)
-
 definition Fst where \<open>Fst a = tensor_maps a id_domain\<close>
 definition Snd where \<open>Snd a = tensor_maps id_domain a\<close>
 
@@ -314,26 +312,31 @@ lemma pair_Snd_Fst: \<open>pair Snd Fst = swap\<close>
 lemma lvalue_swap: \<open>lvalue swap\<close>
   by (simp flip: pair_Snd_Fst)
 
-(* TODO: And maybe something analogous for assoc. Can it be defined in terms of pair even??? *)
-
 definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a\<times>('b\<times>'c)) maps_hom\<close> where 
   \<open>assoc = pair (pair Fst (Snd o Fst)) (Snd o Snd)\<close>
 
 lemma assoc_hom: \<open>maps_hom assoc\<close>
-  unfolding assoc_def
-  by (meson lvalue_Fst lvalue_Snd lvalue_comp lvalue_hom pair_hom)
+  by (auto simp: assoc_def)
 
 lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
   by (auto simp: assoc_def pair_apply Fst_def Snd_def tensor_mult)
 
-definition assoc' :: \<open>('a::domain\<times>('b::domain\<times>'c::domain), ('a\<times>'b)\<times>'c) maps_hom\<close> where 
-  "assoc' = (tensor_maps_hom swap id) \<circ> swap \<circ> assoc \<circ> (tensor_maps_hom swap id) \<circ> swap"
+definition assoc' :: \<open>('a\<times>('b\<times>'c), ('a::domain\<times>'b::domain)\<times>'c::domain) maps_hom\<close> where 
+  \<open>assoc' = pair (Fst o Fst) (pair (Fst o Snd) Snd)\<close>
 
 lemma assoc'_hom: \<open>maps_hom assoc'\<close>
-  by (auto simp: assoc'_def intro!: comp_maps_hom tensor_maps_hom_hom id_maps_hom assoc_hom)
+  by (auto simp: assoc'_def)
 
 lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_maps (tensor_maps a b) c)\<close>
-  unfolding assoc'_def by (simp add: assoc_apply)
+  by (auto simp: assoc'_def pair_apply Fst_def Snd_def tensor_mult)
+
+lemma lvalue_assoc: \<open>lvalue assoc\<close>
+  unfolding assoc_def
+  by force
+
+lemma lvalue_assoc': \<open>lvalue assoc'\<close>
+  unfolding assoc'_def 
+  by force
 
 lemma pair_comp_assoc[simp]:
   assumes [simp]: \<open>maps_hom F\<close> \<open>maps_hom G\<close> \<open>maps_hom H\<close>
