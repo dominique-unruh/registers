@@ -315,7 +315,7 @@ lemma lvalue_swap: \<open>lvalue swap\<close>
 definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a\<times>('b\<times>'c)) maps_hom\<close> where 
   \<open>assoc = pair (pair Fst (Snd o Fst)) (Snd o Snd)\<close>
 
-lemma assoc_hom: \<open>maps_hom assoc\<close>
+lemma assoc_hom[simp]: \<open>maps_hom assoc\<close>
   by (auto simp: assoc_def)
 
 lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
@@ -324,7 +324,7 @@ lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps
 definition assoc' :: \<open>('a\<times>('b\<times>'c), ('a::domain\<times>'b::domain)\<times>'c::domain) maps_hom\<close> where 
   \<open>assoc' = pair (Fst o Fst) (pair (Fst o Snd) Snd)\<close>
 
-lemma assoc'_hom: \<open>maps_hom assoc'\<close>
+lemma assoc'_hom[simp]: \<open>maps_hom assoc'\<close>
   by (auto simp: assoc'_def)
 
 lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_maps (tensor_maps a b) c)\<close>

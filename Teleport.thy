@@ -469,17 +469,50 @@ lemma X_X\<Phi>1: \<open>X a = X\<Phi>1 (a \<otimes> idOp)\<close>
   by (auto simp: pair_apply)
 lemmas to_X\<Phi>1 = X_X\<Phi>1
 
+lemma clinear_comp_NO_MATCH:
+  assumes "NO_MATCH (\<lambda>a. a) f"
+  assumes "NO_MATCH (\<lambda>a. a) g"
+  assumes "clinear f"
+  assumes "clinear g"
+  shows "clinear (\<lambda>x. f (g x))"
+  by (simp add: assms(3) assms(4) clinearI complex_vector.linear_add complex_vector.linear_scale)
+
 lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes> idOp)\<close>
   by (auto simp: pair_apply)
 lemma XAB_X\<Phi>1_AB: \<open>XAB a = (X\<Phi>1;AB) (((\<lambda>x. x \<otimes> idOp) \<otimes>\<^sub>h id) (assoc a))\<close>
-  apply (rule tensor_extensionality[THEN fun_cong, where x=a])
+  apply (rule tensor_extensionality3'[THEN fun_cong, where x=a])
+    apply (simp add: clinear_comp_NO_MATCH)
+
+   apply (rule linear_compose[unfolded o_def]) back
+    apply (rule linear_compose[unfolded o_def]) back
+     apply (simp add: assoc_hom)
+    apply (rule tensor_maps_hom_hom)
+     apply simp
     apply simp
-  subgoal sorry
-  subgoal for a b
-  apply (rule tensor_extensionality[THEN fun_cong, where x=a])
-  subgoal sorry
-  subgoal sorry
-  sorry sorry
+   apply (rule pair_hom)
+    apply (rule pair_hom)
+     apply simp
+    apply (rule linear_compose)
+     apply simp
+    apply simp
+   apply simp
+
+  apply (auto simp: assoc_apply)
+  apply (subst pair_apply, simp, simp)
+  apply (subst pair_apply, simp, simp)
+  apply (subst pair_apply)
+    apply (rule pair_hom, simp)
+    apply (rule linear_compose[unfolded o_def]) back
+     apply simp
+    apply simp
+   apply simp
+  apply (subst pair_apply, simp)
+   apply (rule linear_compose[unfolded o_def]) back
+    apply simp
+   apply simp
+  apply (subst pair_apply, simp, simp)
+  by (simp add: assoc_left(1))
+
 lemmas to_X\<Phi>1_AB = X\<Phi>1_X\<Phi>1_AB XAB_X\<Phi>1_AB
 
 lemma butterfly_times_right: "butterfly \<psi> \<phi> o\<^sub>C\<^sub>L a = butterfly \<psi> (a* *\<^sub>V \<phi>)"
