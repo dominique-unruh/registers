@@ -480,40 +480,21 @@ lemma clinear_comp_NO_MATCH:
 lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes> idOp)\<close>
   by (auto simp: pair_apply)
 lemma XAB_X\<Phi>1_AB: \<open>XAB a = (X\<Phi>1;AB) (((\<lambda>x. x \<otimes> idOp) \<otimes>\<^sub>h id) (assoc a))\<close>
-  apply (rule tensor_extensionality3'[THEN fun_cong, where x=a])
-    apply (simp add: clinear_comp_NO_MATCH)
-
-   apply (rule linear_compose[unfolded o_def]) back
-    apply (rule linear_compose[unfolded o_def]) back
-     apply (simp add: assoc_hom)
-    apply (rule tensor_maps_hom_hom)
-     apply simp
-    apply simp
-   apply (rule pair_hom)
-    apply (rule pair_hom)
-     apply simp
-    apply (rule linear_compose)
-     apply simp
-    apply simp
-   apply simp
-
-  apply (auto simp: assoc_apply)
-  apply (subst pair_apply, simp, simp)
-  apply (subst pair_apply, simp, simp)
-  apply (subst pair_apply)
-    apply (rule pair_hom, simp)
-    apply (rule linear_compose[unfolded o_def]) back
-     apply simp
-    apply simp
-   apply simp
-  apply (subst pair_apply, simp)
-   apply (rule linear_compose[unfolded o_def]) back
-    apply simp
-   apply simp
-  apply (subst pair_apply, simp, simp)
-  by (simp add: assoc_left(1))
+  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] pair_apply
+      pair_comp_assoc[unfolded o_def, THEN fun_cong])
 
 lemmas to_X\<Phi>1_AB = X\<Phi>1_X\<Phi>1_AB XAB_X\<Phi>1_AB
+
+lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes> assoc a)))\<close>
+  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] pair_apply
+      pair_comp_swap[unfolded o_def, THEN fun_cong]
+      pair_comp_assoc'[unfolded o_def, THEN fun_cong]
+      pair_comp_assoc[unfolded o_def, THEN fun_cong])
+
+lemma X\<Phi>2_to_X\<Phi>2_AB: \<open>X\<Phi>2 a = (X\<Phi>2;AB) (a \<otimes> idOp)\<close>
+  by (simp add: pair_apply)
+
+lemmas to_X\<Phi>2_AB = XAB_to_X\<Phi>2_AB X\<Phi>2_to_X\<Phi>2_AB
 
 lemma butterfly_times_right: "butterfly \<psi> \<phi> o\<^sub>C\<^sub>L a = butterfly \<psi> (a* *\<^sub>V \<phi>)"
   unfolding butterfly_def'
@@ -619,16 +600,11 @@ proof -
     by simp
   also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top>\<close>
     by (simp add: applyOpSpace_mono)
+  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes> id_domain) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (id_domain \<otimes> assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
+    by (simp add: EQP_def to_X\<Phi>2_AB)
   also have \<open>\<dots> = EQP \<Phi>2AB \<psi> *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
-  proof -
-    have \<open>X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top> = (X\<Phi>2;AB) (Uswap \<otimes> idOp) *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top>\<close>
-      by (simp add: pair_apply)
-    also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes> idOp) *\<^sub>S (X\<Phi>2;AB) (TODO selfbutter \<psi>) *\<^sub>S \<top>\<close>
-      sorry    
-    also have \<open>\<dots> \<le> (X\<Phi>2;AB) (Uswap \<otimes> idOp) *\<^sub>S EQP XAB \<psi> *\<^sub>S (X\<Phi>2;AB) (Uswap \<otimes> idOp) *\<^sub>S \<top>\<close>
-      sorry
-    show ?thesis sorry
-  qed
+    unfolding swap_sandwich
+    sorry
   also have \<open>\<dots> \<le> EQ \<Phi>2AB \<psi>\<close>
     by (simp add: EQ_def applyOpSpace_mono)
   finally have \<open>O7 *\<^sub>S pre \<le> teleport_post \<psi>\<close>
