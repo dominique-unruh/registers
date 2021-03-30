@@ -110,16 +110,14 @@ lemma mat_of_cblinfun_Uswap[simp, code]: "mat_of_cblinfun Uswap = matrix_Uswap"
   apply (subst cblinfun_of_mat_inverse)
   by (auto simp add: canonical_basis_length_ell2_def)
 
-lemma [simp]: "dim_col matrix_Uswap = 4"
+lemma dim_col_Uswap[simp]: "dim_col matrix_Uswap = 4"
   unfolding matrix_Uswap_def by simp
-lemma [simp]: "dim_row matrix_Uswap = 4"
+lemma dim_row_Uswap[simp]: "dim_row matrix_Uswap = 4"
   unfolding matrix_Uswap_def by simp
-
-(* lemma compatible_compatible0:
-  assumes \<open>lvalue F\<close> and \<open>lvalue G\<close>
-  assumes \<open>compatible0 F G\<close>
-  shows \<open>compatible F G\<close>
-  using assms unfolding compatible0_def compatible_def by simp *)
+lemma Uswap_adjoint[simp]: "adjoint Uswap = Uswap"
+  by eval
+lemma Uswap_involution[simp]: "Uswap o\<^sub>C\<^sub>L Uswap = idOp"
+  by eval
 
 lemma lvalue_left_idOp[intro!]:
   assumes \<open>lvalue F\<close>
@@ -217,6 +215,7 @@ lemma compatible_proj_mult:
   apply (metis comp_domain_assoc lvalue_mult)
   by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
+(* TODO: write using "sandwich" *)
 lemma assoc_ell2_sandwich: \<open>assoc a = assoc_ell2 o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L assoc_ell2'\<close>
   apply (rule tensor_extensionality3'[THEN fun_cong, where x=a])
   apply (simp add: assoc_hom)

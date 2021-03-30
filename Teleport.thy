@@ -291,11 +291,31 @@ lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otim
       canonical_basis_length_ell2_def)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)
 
-lemma swap_sandwich: "swap a = Uswap o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L Uswap"
-  apply (rule fun_cong[where x=a])
+definition "sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L (a*)"
+lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
+  apply (rule clinearI)
+  apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 sandwich_def)
+  by (simp add: sandwich_def)
+
+lemma sandwich_tensor: "sandwich (a \<otimes> b) = sandwich a \<otimes>\<^sub>h sandwich b"
   apply (rule tensor_extensionality)
-  apply auto
-  using comp_2hom maps_2hom_hom_comp1 maps_2hom_left maps_2hom_right apply blast
+  by (auto simp: sandwich_def tensor_maps_hom_hom tensor_mult tensor_op_adjoint)
+
+lemma sandwich_id: "sandwich idOp = idOp"
+  by (metis eq_id_iff idOp.rep_eq idOp_adjoint sandwich_def times_idOp1 times_idOp2)
+
+lemma apply_idOp[simp]: \<open>(*\<^sub>V) idOp = id\<close>
+  by auto
+
+lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes> idOp)"
+  by (simp add: sandwich_tensor sandwich_id)
+
+lemma lvalue_sandwich: \<open>lvalue F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
+  by (smt (verit, del_insts) lvalue_def sandwich_def)
+
+lemma swap_sandwich: "swap = sandwich Uswap"
+  apply (rule tensor_extensionality)
+    apply (auto simp: sandwich_def)
   apply (rule tensor_ell2_extensionality)
   by (simp add: times_applyOp tensor_op_ell2)
 
@@ -480,40 +500,30 @@ lemma clinear_comp_NO_MATCH:
 lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes> idOp)\<close>
   by (auto simp: pair_apply)
 lemma XAB_X\<Phi>1_AB: \<open>XAB a = (X\<Phi>1;AB) (((\<lambda>x. x \<otimes> idOp) \<otimes>\<^sub>h id) (assoc a))\<close>
-  apply (rule tensor_extensionality3'[THEN fun_cong, where x=a])
-    apply (simp add: clinear_comp_NO_MATCH)
-
-   apply (rule linear_compose[unfolded o_def]) back
-    apply (rule linear_compose[unfolded o_def]) back
-     apply (simp add: assoc_hom)
-    apply (rule tensor_maps_hom_hom)
-     apply simp
-    apply simp
-   apply (rule pair_hom)
-    apply (rule pair_hom)
-     apply simp
-    apply (rule linear_compose)
-     apply simp
-    apply simp
-   apply simp
-
-  apply (auto simp: assoc_apply)
-  apply (subst pair_apply, simp, simp)
-  apply (subst pair_apply, simp, simp)
-  apply (subst pair_apply)
-    apply (rule pair_hom, simp)
-    apply (rule linear_compose[unfolded o_def]) back
-     apply simp
-    apply simp
-   apply simp
-  apply (subst pair_apply, simp)
-   apply (rule linear_compose[unfolded o_def]) back
-    apply simp
-   apply simp
-  apply (subst pair_apply, simp, simp)
-  by (simp add: assoc_left(1))
+  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] pair_apply
+      pair_comp_assoc[unfolded o_def, THEN fun_cong])
 
 lemmas to_X\<Phi>1_AB = X\<Phi>1_X\<Phi>1_AB XAB_X\<Phi>1_AB
+
+lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes> assoc a)))\<close>
+  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] pair_apply
+      pair_comp_swap[unfolded o_def, THEN fun_cong]
+      pair_comp_assoc'[unfolded o_def, THEN fun_cong]
+      pair_comp_assoc[unfolded o_def, THEN fun_cong])
+
+lemma X\<Phi>2_to_X\<Phi>2_AB: \<open>X\<Phi>2 a = (X\<Phi>2;AB) (a \<otimes> idOp)\<close>
+  by (simp add: pair_apply)
+
+schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
+  apply (subst pair_comp_assoc'[unfolded o_def, THEN fun_cong])
+     apply simp_all[3]
+  apply (subst pair_apply[where a=idOp])
+    apply simp_all[2]
+  apply (subst pair_comp_assoc[unfolded o_def, THEN fun_cong])
+     apply simp_all[3]
+  by simp
+
+lemmas to_X\<Phi>2_AB = XAB_to_X\<Phi>2_AB X\<Phi>2_to_X\<Phi>2_AB \<Phi>2AB_to_X\<Phi>2_AB
 
 lemma butterfly_times_right: "butterfly \<psi> \<phi> o\<^sub>C\<^sub>L a = butterfly \<psi> (a* *\<^sub>V \<phi>)"
   unfolding butterfly_def'
@@ -601,7 +611,7 @@ proof -
                 del: pair_apply comp_apply)
     apply (rule arg_cong[of _ _ X\<Phi>])
     apply (rule cblinfun_eq_mat_of_cblinfunI)
-    apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_assoc_ell2 mat_of_cblinfun_tensor_op butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket cblinfun_of_mat_id swap_sandwich[abs_def]  mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult tensor_maps_hom_sandwich2 vec_of_onb_enum_tensor_state mat_of_cblinfun_description)
+    apply (simp add: assoc_ell2_sandwich sandwich_def[abs_def] mat_of_cblinfun_assoc_ell2 mat_of_cblinfun_tensor_op butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket cblinfun_of_mat_id swap_sandwich[abs_def]  mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult tensor_maps_hom_sandwich2 vec_of_onb_enum_tensor_state mat_of_cblinfun_description)
     by normalization
 
   have [simp]: "unitary XZ"
@@ -619,16 +629,13 @@ proof -
     by simp
   also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top>\<close>
     by (simp add: applyOpSpace_mono)
+  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes> id_domain) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (id_domain \<otimes> assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
+    by (simp add: EQP_def to_X\<Phi>2_AB)
   also have \<open>\<dots> = EQP \<Phi>2AB \<psi> *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
-  proof -
-    have \<open>X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top> = (X\<Phi>2;AB) (Uswap \<otimes> idOp) *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top>\<close>
-      by (simp add: pair_apply)
-    also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes> idOp) *\<^sub>S (X\<Phi>2;AB) (TODO selfbutter \<psi>) *\<^sub>S \<top>\<close>
-      sorry    
-    also have \<open>\<dots> \<le> (X\<Phi>2;AB) (Uswap \<otimes> idOp) *\<^sub>S EQP XAB \<psi> *\<^sub>S (X\<Phi>2;AB) (Uswap \<otimes> idOp) *\<^sub>S \<top>\<close>
-      sorry
-    show ?thesis sorry
-  qed
+    apply (simp add: swap_sandwich sandwich_grow_left EQP_def to_X\<Phi>2_AB   
+        cblinfun_apply_assoc_subspace[symmetric]
+        lvalue_mult)
+    by (simp add: sandwich_def cblinfun_apply_assoc[symmetric] tensor_mult tensor_op_adjoint)
   also have \<open>\<dots> \<le> EQ \<Phi>2AB \<psi>\<close>
     by (simp add: EQ_def applyOpSpace_mono)
   finally have \<open>O7 *\<^sub>S pre \<le> teleport_post \<psi>\<close>
