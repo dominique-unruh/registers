@@ -1,12 +1,16 @@
 theory Misc
   imports Bounded_Operators.Bounded_Operators_Code "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix
+    "HOL-ex.Sketch_and_Explore"
 begin
 
 unbundle no_vec_syntax
 unbundle no_inner_syntax
 unbundle cblinfun_notation
 unbundle jnf_notation
+
+lemma cspan_ket_finite[simp]: "cspan (range ket :: 'a::finite ell2 set) = UNIV"
+  by (metis ket_ell2_span span_finite_dim finite_class.finite_UNIV finite_imageI) 
 
 lemma cbounded_linear_equal_ket:
   fixes f g :: \<open>'a::finite ell2 \<Rightarrow> _\<close>
@@ -16,16 +20,14 @@ lemma cbounded_linear_equal_ket:
   shows \<open>f = g\<close>
   apply (rule ext)
   apply (rule complex_vector.linear_eq_on_span[where f=f and g=g and B=\<open>range ket\<close>])
-  using assms apply auto
-  by (metis ket_ell2_span span_finite_dim finite_class.finite_UNIV finite_imageI iso_tuple_UNIV_I) 
+  using assms by auto
 
 lemma cbounded_linear_finite_ell2[simp, intro!]:
   fixes f :: \<open>'a::finite ell2 \<Rightarrow> 'b::complex_normed_vector\<close>
   assumes "clinear f"
   shows \<open>cbounded_linear f\<close>
   apply (subst cblinfun_operator_finite_dim[where basis=\<open>ket ` UNIV\<close>])
-  using assms apply (auto intro!: cindependent_ket)
-  by (metis finite_class.finite_UNIV finite_imageI iso_tuple_UNIV_I ket_ell2_span span_finite_dim)
+  using assms by (auto intro!: cindependent_ket)
 
 lemma apply_cblinfun_distr_left: "(A + B) *\<^sub>V x = A *\<^sub>V x + B *\<^sub>V x"
   apply transfer by simp
@@ -285,9 +287,117 @@ lemma butterfly_times_right: "butterfly \<psi> \<phi> o\<^sub>C\<^sub>L a = butt
   unfolding butterfly_def'
   by (simp add: cblinfun_apply_assoc vector_to_cblinfun_applyOp)  
 
-
 lemma butterfly_isProjector:
   \<open>norm x = 1 \<Longrightarrow> isProjector (selfbutter x)\<close>
   by (subst butterfly_proj, simp_all)
+
+lemma apply_idOp[simp]: \<open>(*\<^sub>V) idOp = id\<close>
+  by auto
+
+definition "sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L (a*)"
+
+lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
+  apply (rule clinearI)
+  apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 sandwich_def)
+  by (simp add: sandwich_def)
+
+lemma sandwich_id: "sandwich idOp = idOp"
+  by (metis eq_id_iff idOp.rep_eq idOp_adjoint sandwich_def times_idOp1 times_idOp2)
+
+lemma prod_cases3' [cases type]:
+  obtains (fields) a b c where "y = ((a, b), c)"
+  by (cases y, case_tac a) blast
+
+typedef 'a conjugate_space = "UNIV :: 'a set"
+  morphisms from_conjugate_space to_conjugate_space ..
+setup_lifting type_definition_conjugate_space
+
+instantiation conjugate_space :: (complex_vector) complex_vector begin
+lift_definition scaleC_conjugate_space :: \<open>complex \<Rightarrow> 'a conjugate_space \<Rightarrow> 'a conjugate_space\<close> is \<open>\<lambda>c x. cnj c *\<^sub>C x\<close>.
+lift_definition scaleR_conjugate_space :: \<open>real \<Rightarrow> 'a conjugate_space \<Rightarrow> 'a conjugate_space\<close> is \<open>\<lambda>r x. r *\<^sub>R x\<close>.
+lift_definition plus_conjugate_space :: "'a conjugate_space \<Rightarrow> 'a conjugate_space \<Rightarrow> 'a conjugate_space" is "(+)".
+lift_definition uminus_conjugate_space :: "'a conjugate_space \<Rightarrow> 'a conjugate_space" is \<open>\<lambda>x. -x\<close>.
+lift_definition zero_conjugate_space :: "'a conjugate_space" is 0.
+lift_definition minus_conjugate_space :: "'a conjugate_space \<Rightarrow> 'a conjugate_space \<Rightarrow> 'a conjugate_space" is "(-)".
+instance
+  apply (intro_classes; transfer)
+  by (simp_all add: scaleR_scaleC scaleC_add_right scaleC_left.add)
+end
+
+instantiation conjugate_space :: (complex_normed_vector) complex_normed_vector begin
+lift_definition sgn_conjugate_space :: "'a conjugate_space \<Rightarrow> 'a conjugate_space" is "sgn".
+lift_definition norm_conjugate_space :: "'a conjugate_space \<Rightarrow> real" is norm.
+lift_definition dist_conjugate_space :: "'a conjugate_space \<Rightarrow> 'a conjugate_space \<Rightarrow> real" is dist.
+lift_definition uniformity_conjugate_space :: "('a conjugate_space \<times> 'a conjugate_space) filter" is uniformity.
+lift_definition  open_conjugate_space :: "'a conjugate_space set \<Rightarrow> bool" is "open".
+instance 
+  apply (intro_classes; transfer)
+  by (simp_all add: dist_norm sgn_div_norm open_uniformity uniformity_dist norm_triangle_ineq)
+end
+
+instantiation conjugate_space :: (complex_inner) complex_inner begin
+lift_definition cinner_conjugate_space :: "'a conjugate_space \<Rightarrow> 'a conjugate_space \<Rightarrow> complex" is
+  \<open>\<lambda>x y. cinner y x\<close>.
+instance 
+  apply (intro_classes; transfer)
+  apply (simp_all add: )
+  apply (simp add: cinner_right_distrib)
+  using cinner_ge_zero apply force
+  using norm_eq_sqrt_cinner by blast
+end
+
+instantiation conjugate_space :: (cbanach) cbanach begin
+instance 
+  apply intro_classes
+  unfolding Cauchy_def convergent_def LIMSEQ_def apply transfer
+  using Cauchy_convergent unfolding Cauchy_def convergent_def LIMSEQ_def by metis
+end
+
+instance conjugate_space :: (chilbert_space) chilbert_space..
+
+lemma csemilinear_to_conjugate_space: \<open>csemilinear to_conjugate_space\<close>
+  by (rule csemilinearI; transfer, auto)
+
+lemma csemilinear_from_conjugate_space: \<open>csemilinear from_conjugate_space\<close>
+  by (rule csemilinearI; transfer, auto)
+
+lemma cspan_to_conjugate_space[simp]: "cspan (to_conjugate_space ` X) = to_conjugate_space ` cspan X"
+  unfolding complex_vector.span_def complex_vector.subspace_def hull_def
+  apply transfer
+  apply simp
+  by (metis (no_types, hide_lams) complex_cnj_cnj)
+
+lemma surj_to_conjugate_space[simp]: "surj to_conjugate_space"
+  by (meson surj_def to_conjugate_space_cases)
+
+lemma csemilinear_csemilinear: "csemilinear f \<Longrightarrow> csemilinear g \<Longrightarrow> clinear (g o f)"
+  apply (rule clinearI)
+  apply (simp add: additive.add csemilinear_def)
+  by (simp add: csemilinear.scaleC)
+
+lemma csemilinear_equal_ket:
+  fixes f g :: \<open>'a::finite ell2 \<Rightarrow> _\<close>
+  assumes \<open>csemilinear f\<close>
+  assumes \<open>csemilinear g\<close>
+  assumes \<open>\<And>i. f (ket i) = g (ket i)\<close>
+  shows \<open>f = g\<close>
+proof -
+  have [simp]: \<open>clinear (f \<circ> from_conjugate_space)\<close>
+    apply (rule csemilinear_csemilinear)
+    using assms by (simp_all add: csemilinear_from_conjugate_space)
+  have [simp]: \<open>clinear (g \<circ> from_conjugate_space)\<close>
+    apply (rule csemilinear_csemilinear)
+    using assms by (simp_all add: csemilinear_from_conjugate_space)
+  have [simp]: \<open>cspan (to_conjugate_space ` (range ket :: 'a ell2 set)) = UNIV\<close>
+    by simp
+  have "f o from_conjugate_space = g o from_conjugate_space"
+    apply (rule ext)
+    apply (rule complex_vector.linear_eq_on_span[where f="f o from_conjugate_space" and g="g o from_conjugate_space" and B=\<open>to_conjugate_space ` range ket\<close>])
+       apply (simp, simp)
+    using assms(3) by (auto simp: to_conjugate_space_inverse)
+  then show "f = g"
+    by (smt (verit) UNIV_I from_conjugate_space_inverse surj_def surj_fun_eq to_conjugate_space_inject) 
+qed
+
 
 end

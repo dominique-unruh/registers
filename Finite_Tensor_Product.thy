@@ -313,6 +313,27 @@ lemma assoc_ell2'_tensor: \<open>assoc_ell2' *\<^sub>V tensor_ell2 a (tensor_ell
   apply transfer
   by auto
 
+lemma adjoint_assoc_ell2[simp]: \<open>adjoint assoc_ell2 = assoc_ell2'\<close>
+proof (rule adjoint_D[symmetric])
+  have [simp]: \<open>clinear (cinner (assoc_ell2' *\<^sub>V x))\<close> for x
+    by (metis (no_types, lifting) cblinfun_apply_add cinner_scaleC_right clinearI complex_scaleC_def mult.comm_neutral of_complex_def vector_to_cblinfun_adj_times_vec)
+  have [simp]: \<open>clinear (\<lambda>a. \<langle>x, assoc_ell2 *\<^sub>V a\<rangle>)\<close> for x
+    by (simp add: cblinfun_apply_add cinner_right_distrib clinearI)
+  have [simp]: \<open>csemilinear (\<lambda>a. \<langle>a, y\<rangle>)\<close> for y
+    using bounded_csemilinear_cinner_left bounded_csemilinear_def by blast
+  have [simp]: \<open>csemilinear (\<lambda>a. \<langle>assoc_ell2' *\<^sub>V a, y\<rangle>)\<close> for y
+    by (simp add: cblinfun_apply_add cinner_left_distrib csemilinearI)
+  have \<open>\<langle>assoc_ell2' *\<^sub>V (ket x), ket y\<rangle> = \<langle>ket x, assoc_ell2 *\<^sub>V ket y\<rangle>\<close> for x :: \<open>'a \<times> 'b \<times> 'c\<close> and y
+    apply (cases x, cases y)
+    by (simp flip: tensor_ell2_ket add: assoc_ell2'_tensor assoc_ell2_tensor)
+  then have \<open>\<langle>assoc_ell2' *\<^sub>V (ket x), y\<rangle> = \<langle>ket x, assoc_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>'a \<times> 'b \<times> 'c\<close> and y
+    by (rule cbounded_linear_equal_ket[THEN fun_cong, rotated 2], simp_all)
+  then show \<open>\<langle>assoc_ell2' *\<^sub>V x, y\<rangle> = \<langle>x, assoc_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>('a \<times> 'b \<times> 'c) ell2\<close> and y
+    by (rule csemilinear_equal_ket[THEN fun_cong, rotated 2], simp_all)
+qed
+
+lemma adjoint_assoc_ell2'[simp]: \<open>adjoint assoc_ell2' = assoc_ell2\<close>
+  by (simp flip: adjoint_assoc_ell2)
 
 lemma tensor_ell2_extensionality:
   assumes "(\<And>s t. a *\<^sub>V (s \<otimes>\<^sub>s t) = b *\<^sub>V (s \<otimes>\<^sub>s t))"

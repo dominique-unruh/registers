@@ -127,9 +127,21 @@ lemma compatible_proj_mult:
   apply (metis comp_update_assoc lvalue_mult)
   by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
-(* TODO: write using "sandwich" *)
-lemma assoc_ell2_sandwich: \<open>assoc a = assoc_ell2 o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L assoc_ell2'\<close>
-  apply (rule tensor_extensionality3'[THEN fun_cong, where x=a])
+
+lemma sandwich_tensor: "sandwich (a \<otimes> b) = sandwich a \<otimes>\<^sub>h sandwich b"
+  apply (rule tensor_extensionality)
+  by (auto simp: sandwich_def tensor_update_hom_hom tensor_update_mult tensor_op_adjoint)
+
+
+lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes> idOp)"
+  by (simp add: sandwich_tensor sandwich_id)
+
+lemma lvalue_sandwich: \<open>lvalue F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
+  by (smt (verit, del_insts) lvalue_def sandwich_def)
+
+lemma assoc_ell2_sandwich: \<open>assoc = sandwich assoc_ell2\<close>
+  unfolding sandwich_def
+  apply (rule tensor_extensionality3')
     apply simp
    apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
   apply (rule equal_ket)

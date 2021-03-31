@@ -64,27 +64,6 @@ lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otim
       canonical_basis_length_ell2_def)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)
 
-definition "sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L (a*)"
-lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
-  apply (rule clinearI)
-  apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 sandwich_def)
-  by (simp add: sandwich_def)
-
-lemma sandwich_tensor: "sandwich (a \<otimes> b) = sandwich a \<otimes>\<^sub>h sandwich b"
-  apply (rule tensor_extensionality)
-  by (auto simp: sandwich_def tensor_update_hom_hom tensor_update_mult tensor_op_adjoint)
-
-lemma sandwich_id: "sandwich idOp = idOp"
-  by (metis eq_id_iff idOp.rep_eq idOp_adjoint sandwich_def times_idOp1 times_idOp2)
-
-lemma apply_idOp[simp]: \<open>(*\<^sub>V) idOp = id\<close>
-  by auto
-
-lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes> idOp)"
-  by (simp add: sandwich_tensor sandwich_id)
-
-lemma lvalue_sandwich: \<open>lvalue F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
-  by (smt (verit, del_insts) lvalue_def sandwich_def)
 
 lemma swap_sandwich: "swap = sandwich Uswap"
   apply (rule tensor_extensionality)
@@ -179,7 +158,7 @@ lemma assoc_ell2'_inv: "assoc_ell2 o\<^sub>C\<^sub>L assoc_ell2' = idOp"
   by (simp flip: tensor_ell2_ket add: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor)
 
 lemma assoc_ell2_inv: "assoc_ell2' o\<^sub>C\<^sub>L assoc_ell2 = idOp"
-  apply (rule equal_ket, case_tac x, case_tac a, hypsubst)
+  apply (rule equal_ket, case_tac x, hypsubst)
   by (simp flip: tensor_ell2_ket add: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor)
 
 lemma mat_of_cblinfun_assoc_ell2[simp]: 
