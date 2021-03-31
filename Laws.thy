@@ -2,14 +2,18 @@ theory Laws
   imports Axioms "HOL-Library.Rewrite" Misc
 begin
 
+no_notation Group.mult (infixl "\<otimes>\<index>" 70)
+
+(* TODO more renaming from here *)
+
 (* TODO: Change notation: *\<^sub>u \<otimes>\<^sub>u *)
 notation comp_update (infixl "\<circ>\<^sub>d" 55)
-notation tensor_maps (infixr "\<otimes>" 70)
+notation tensor_update (infixr "\<otimes>" 70)
 
 
 subsection \<open>Elementary facts\<close>
 
-declare tensor_2hom[simp]
+declare tensor_update_is_2hom[simp]
 declare id_update_hom[simp]
 declare id_update_left[simp]
 declare id_update_right[simp]
@@ -30,7 +34,7 @@ lemma update_2hom_F_tensor_G[simp]:
   assumes \<open>update_hom F\<close> and \<open>update_hom G\<close>
   shows \<open>update_2hom (\<lambda>a b. F a \<otimes> G b)\<close>
   apply (rule comp_update_2hom_hom, rule update_2hom_hom_comp2)
-  by (rule tensor_2hom assms)+
+  by (rule tensor_update_is_2hom assms)+
 
 lemma tensor_update_hom_hom: "update_hom F \<Longrightarrow> update_hom G \<Longrightarrow> update_hom (tensor_update_hom F G)"
   unfolding tensor_update_hom_def apply (rule tensor_lift_hom) by simp
@@ -39,13 +43,13 @@ lemma tensor_update_hom_apply[simp]:
   assumes \<open>update_hom F\<close> and \<open>update_hom G\<close>
   shows "tensor_update_hom F G (a \<otimes> b) = F a \<otimes> G b"
   unfolding tensor_update_hom_def 
-  using tensor_existence update_2hom_F_tensor_G[OF assms] 
+  using tensor_lift_correct update_2hom_F_tensor_G[OF assms] 
   by metis
 
 lemma update_2hom_F_tensor[simp]: \<open>update_hom F \<Longrightarrow> update_2hom (\<lambda>a b. F (a \<otimes> b))\<close>
-  using tensor_2hom by (rule comp_update_hom_2hom)
+  using tensor_update_is_2hom by (rule comp_update_hom_2hom)
 
-lemma tensor_extensionality:
+(* lemma tensor_extensionality:
   fixes F G :: \<open>('a::domain\<times>'b::domain, 'c::domain) update_hom\<close>
   assumes [simp]: "update_hom F" "update_hom G"
   assumes "(\<And>a b. F (a \<otimes> b) = G (a \<otimes> b))"
@@ -58,7 +62,7 @@ proof -
   moreover note assms(3)
   ultimately show "F = G"
     by simp
-qed
+qed *)
 
 lemma left_tensor_hom[simp]: "update_hom ((\<otimes>) a :: 'b::domain update \<Rightarrow> _)" 
   for a :: "'a::domain update"
@@ -112,12 +116,12 @@ definition \<open>swap = tensor_lift (\<lambda>a b. b \<otimes> a)\<close>
 
 lemma swap_hom[simp]: "update_hom swap"
   unfolding swap_def apply (rule tensor_lift_hom) 
-  apply (rule update_2hom_sym) by (fact tensor_2hom)
+  apply (rule update_2hom_sym) by (fact tensor_update_is_2hom)
 
 lemma swap_apply[simp]: "swap (a \<otimes> b) = (b \<otimes> a)"
   unfolding swap_def 
-  apply (rule tensor_existence[THEN fun_cong, THEN fun_cong])
-  apply (rule update_2hom_sym) by (fact tensor_2hom)
+  apply (rule tensor_lift_correct[THEN fun_cong, THEN fun_cong])
+  apply (rule update_2hom_sym) by (fact tensor_update_is_2hom)
 
 (* definition assoc' :: \<open>('a::domain\<times>('b::domain\<times>'c::domain), ('a\<times>'b)\<times>'c) update_hom\<close> where 
   "assoc' = (tensor_update_hom swap id) \<circ> swap \<circ> assoc \<circ> (tensor_update_hom swap id) \<circ> swap"
@@ -125,7 +129,7 @@ lemma swap_apply[simp]: "swap (a \<otimes> b) = (b \<otimes> a)"
 lemma assoc'_hom: \<open>update_hom assoc'\<close>
   by (auto simp: assoc'_def intro!: comp_update_hom tensor_update_hom_hom id_update_hom assoc_hom)
 
-lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_maps (tensor_maps a b) c)\<close>
+lemma assoc'_apply: \<open>assoc' (tensor_update a (tensor_update b c)) =  (tensor_update (tensor_update a b) c)\<close>
   unfolding assoc'_def by (simp add: id_update_hom assoc_apply) *)
 
 subsection \<open>Pairs and compatibility\<close>
@@ -177,7 +181,7 @@ lemma pair_apply:
   assumes \<open>update_hom F\<close> and \<open>update_hom G\<close>
   shows \<open>(pair F G) (a \<otimes> b) = (F a) \<circ>\<^sub>d (G b)\<close>
   unfolding pair_def 
-  using tensor_existence update_2hom_F_comp_G[OF assms]
+  using tensor_lift_correct update_2hom_F_comp_G[OF assms]
   by metis
 
 
@@ -191,7 +195,7 @@ lemma pair_lvalue[simp]:
   assumes "compatible F G"
   shows "lvalue (pair F G)"
   apply (rule pair_lvalue_axiom[where F=F and G=G and p=\<open>pair F G\<close>])
-  using assms by (auto simp: pair_apply compatible_def lvalue_hom)
+  using assms by (auto simp: pair_apply compatible_def)
   
 lemma compatible3[simp]:
   assumes [simp]: "compatible x y" and "compatible y z" and "compatible x z"
@@ -229,10 +233,10 @@ lemma compatible3'[simp]:
   using assms by (auto simp: compatible_sym)
 
 lemma compatible_comp_left[simp]: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (x \<circ> z) y"
-  by (simp add: compatible_def lvalue_comp)
+  by (simp add: compatible_def)
 
 lemma compatible_comp_right[simp]: "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible x (y \<circ> z)"
-  by (simp add: compatible_def lvalue_comp)
+  by (simp add: compatible_def)
 
 lemma compatible_comp_inner[simp]: 
   "compatible x y \<Longrightarrow> lvalue z \<Longrightarrow> compatible (z \<circ> x) (z \<circ> y)"
@@ -282,8 +286,8 @@ qed
 
 subsection \<open>Fst and Snd\<close>
 
-definition Fst where \<open>Fst a = tensor_maps a id_update\<close>
-definition Snd where \<open>Snd a = tensor_maps id_update a\<close>
+definition Fst where \<open>Fst a = tensor_update a id_update\<close>
+definition Snd where \<open>Snd a = tensor_update id_update a\<close>
 
 lemma swap_Fst: "swap o Fst = Snd"
   by (auto simp add: Fst_def Snd_def)
@@ -298,17 +302,17 @@ lemma lvalue_Snd[simp]: \<open>lvalue Snd\<close>
 
 lemma compatible_Fst_Snd[simp]: \<open>compatible Fst Snd\<close>
   apply (rule compatibleI, simp, simp)
-  by (simp add: Fst_def Snd_def tensor_mult)
+  by (simp add: Fst_def Snd_def tensor_update_mult)
 
 lemmas compatible_Snd_Fst[simp] = compatible_Fst_Snd[THEN compatible_sym]
 
 lemma pair_Fst_Snd: \<open>pair Fst Snd = id\<close>
   apply (rule tensor_extensionality)
-  by (simp_all add: pair_apply lvalue_hom Fst_def Snd_def tensor_mult)
+  by (simp_all add: pair_apply Fst_def Snd_def tensor_update_mult)
 
 lemma pair_Snd_Fst: \<open>pair Snd Fst = swap\<close>
   apply (rule tensor_extensionality)
-  by (simp_all add: pair_apply lvalue_hom Fst_def Snd_def tensor_mult)
+  by (simp_all add: pair_apply Fst_def Snd_def tensor_update_mult)
 
 lemma lvalue_swap: \<open>lvalue swap\<close>
   by (simp flip: pair_Snd_Fst)
@@ -319,8 +323,8 @@ definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a
 lemma assoc_hom[simp]: \<open>update_hom assoc\<close>
   by (auto simp: assoc_def)
 
-lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
-  by (auto simp: assoc_def pair_apply Fst_def Snd_def tensor_mult)
+lemma assoc_apply: \<open>assoc (tensor_update (tensor_update a b) c) = (tensor_update a (tensor_update b c))\<close>
+  by (auto simp: assoc_def pair_apply Fst_def Snd_def tensor_update_mult)
 
 definition assoc' :: \<open>('a\<times>('b\<times>'c), ('a::domain\<times>'b::domain)\<times>'c::domain) update_hom\<close> where 
   \<open>assoc' = pair (Fst o Fst) (pair (Fst o Snd) Snd)\<close>
@@ -328,8 +332,8 @@ definition assoc' :: \<open>('a\<times>('b\<times>'c), ('a::domain\<times>'b::do
 lemma assoc'_hom[simp]: \<open>update_hom assoc'\<close>
   by (auto simp: assoc'_def)
 
-lemma assoc'_apply: \<open>assoc' (tensor_maps a (tensor_maps b c)) =  (tensor_maps (tensor_maps a b) c)\<close>
-  by (auto simp: assoc'_def pair_apply Fst_def Snd_def tensor_mult)
+lemma assoc'_apply: \<open>assoc' (tensor_update a (tensor_update b c)) =  (tensor_update (tensor_update a b) c)\<close>
+  by (auto simp: assoc'_def pair_apply Fst_def Snd_def tensor_update_mult)
 
 lemma lvalue_assoc: \<open>lvalue assoc\<close>
   unfolding assoc_def
@@ -455,14 +459,14 @@ bundle lvalue_notation begin
 notation tensor_update_hom (infixr "\<otimes>\<^sub>h" 70)
 notation pair ("'(_;_')")
 notation comp_update (infixl "\<circ>\<^sub>d" 55)
-notation tensor_maps (infixr "\<otimes>" 70)
+notation tensor_update (infixr "\<otimes>" 70)
 end
 
 bundle no_lvalue_notation begin
 no_notation tensor_update_hom (infixr "\<otimes>\<^sub>h" 70)
 no_notation pair ("'(_;_')")
 no_notation comp_update (infixl "\<circ>\<^sub>d" 55)
-no_notation tensor_maps (infixr "\<otimes>" 70)
+no_notation tensor_update (infixr "\<otimes>" 70)
 end
 
 end

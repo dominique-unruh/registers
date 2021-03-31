@@ -9,7 +9,7 @@ hide_type (open) Finite_Cartesian_Product.vec
 hide_const (open) Finite_Cartesian_Product.mat
 hide_const (open) Finite_Cartesian_Product.row
 hide_const (open) Finite_Cartesian_Product.column
-no_notation mult (infixl "\<otimes>\<index>" 70)
+no_notation Group.mult (infixl "\<otimes>\<index>" 70)
 no_notation Order.top ("\<top>\<index>")
 unbundle no_vec_syntax
 unbundle no_inner_syntax
@@ -72,7 +72,7 @@ lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
 
 lemma sandwich_tensor: "sandwich (a \<otimes> b) = sandwich a \<otimes>\<^sub>h sandwich b"
   apply (rule tensor_extensionality)
-  by (auto simp: sandwich_def tensor_update_hom_hom tensor_mult tensor_op_adjoint)
+  by (auto simp: sandwich_def tensor_update_hom_hom tensor_update_mult tensor_op_adjoint)
 
 lemma sandwich_id: "sandwich idOp = idOp"
   by (metis eq_id_iff idOp.rep_eq idOp_adjoint sandwich_def times_idOp1 times_idOp2)
@@ -402,7 +402,7 @@ proof -
     apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
         cblinfun_apply_assoc_subspace[symmetric]
         lvalue_mult)
-    by (simp add: sandwich_def cblinfun_apply_assoc[symmetric] tensor_mult tensor_op_adjoint)
+    by (simp add: sandwich_def cblinfun_apply_assoc[symmetric] tensor_update_mult tensor_op_adjoint)
   also have \<open>\<dots> \<le> EQ \<Phi>2AB \<psi>\<close>
     by (simp add: EQ_def applyOpSpace_mono)
   finally have \<open>O7 *\<^sub>S pre \<le> teleport_post \<psi>\<close>

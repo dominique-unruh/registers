@@ -66,7 +66,7 @@ lemma rel_of_update_2hom: \<open>update_2hom F2 \<Longrightarrow> F2 a b = rel_o
 definition rel_prod :: "('a*'b) set => ('c*'d) set => (('a*'c) * ('b*'d)) set" where
   "rel_prod a b = (\<lambda>((a,b),(c,d)). ((a,c),(b,d))) ` (a \<times> b)"
 
-lemma tensor_mult: \<open>rel_prod a b O rel_prod c d = rel_prod (a O c) (b O d)\<close>
+lemma tensor_update_mult: \<open>rel_prod a b O rel_prod c d = rel_prod (a O c) (b O d)\<close>
   apply (auto simp: rel_prod_def relcomp_def relcompp_apply case_prod_beta image_def
       simp flip: Collect_case_prod)
   by force
@@ -108,11 +108,11 @@ lemma comp_update_is_2hom: "update_2hom comp_update"
   by auto
 
 
-abbreviation (input) tensor_maps :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> where
-  \<open>tensor_maps \<equiv> rel_prod\<close>
+abbreviation (input) tensor_update :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> where
+  \<open>tensor_update \<equiv> rel_prod\<close>
 
 
-lemma tensor_2hom: \<open>update_2hom tensor_maps\<close> 
+lemma tensor_update_is_2hom: \<open>update_2hom tensor_update\<close> 
   unfolding update_2hom_def[abs_def]
   apply (rule exI[of _ \<open>{(((ax,ay),(bx,by)), ((ax,bx),(ay,by)))| ax ay bx by. True} :: ((('a \<times> 'a) \<times> 'b \<times> 'b) \<times> ('a \<times> 'b) \<times> 'a \<times> 'b) set\<close>])
   apply (auto simp: rel_prod_def image_def case_prod_beta)
@@ -139,9 +139,9 @@ proof -
     unfolding update_hom_def by auto
 qed
 
-lemma tensor_existence: 
+lemma tensor_lift_correct: 
   assumes \<open>update_2hom F2\<close>
-  shows \<open>(\<lambda>a b. tensor_lift F2 (tensor_maps a b)) = F2\<close>
+  shows \<open>(\<lambda>a b. tensor_lift F2 (tensor_update a b)) = F2\<close>
 proof (intro ext)
   fix a :: \<open>('a\<times>'a) set\<close> and b :: \<open>('b\<times>'b) set\<close>
   define R2 where \<open>R2 = rel_of_update_2hom F2\<close>
@@ -153,13 +153,13 @@ proof (intro ext)
     assume "(x, y) \<in> F2 a b"
     then have xyR2: \<open>(x,y) \<in> R2 `` (a \<times> b)\<close>
       using F2R2 by auto
-    then show \<open>(x, y) \<in> tensor_lift F2 (tensor_maps a b)\<close>
+    then show \<open>(x, y) \<in> tensor_lift F2 (tensor_update a b)\<close>
       unfolding tensor_lift_def R2_def[symmetric]
       apply (auto simp: rel_prod_def case_prod_beta image_def)
       by (meson fst_eqD snd_eqD)
   next
     fix x y :: 'c
-    assume \<open>(x, y) \<in> tensor_lift F2 (tensor_maps a b)\<close>
+    assume \<open>(x, y) \<in> tensor_lift F2 (tensor_update a b)\<close>
     then have \<open>(x, y) \<in> R2 `` (a \<times> b)\<close>
       unfolding tensor_lift_def R2_def[symmetric]
       by (auto simp: rel_prod_def case_prod_beta image_def)
@@ -168,16 +168,16 @@ proof (intro ext)
   qed
 qed
 
-lemma tensor_ext:
+lemma tensor_extensionality:
   assumes \<open>update_hom F\<close>
   assumes \<open>update_hom G\<close>
-  assumes \<open>\<And>a b. F (tensor_maps a b) = G (tensor_maps a b)\<close>
+  assumes \<open>\<And>a b. F (tensor_update a b) = G (tensor_update a b)\<close>
   shows "F = G"
 proof -
   define RF RG where "RF = rel_of_update_hom F" and "RG = rel_of_update_hom G"
   then have RF: "F = Image RF" and RG: "G = Image RG"
     using rel_of_update_hom assms by auto
-  with assms have RFRG: "RF `` tensor_maps a b = RG `` tensor_maps a b" for a b
+  with assms have RFRG: "RF `` tensor_update a b = RG `` tensor_update a b" for a b
     by auto
   have "RF = RG"
   proof (rule set_eqI)
@@ -187,9 +187,9 @@ proof -
       by (metis surj_pair)
     have \<open>v \<in> RF \<longleftrightarrow> (((ax,bx),(ay,by)),c) \<in> RF\<close>
       using v by simp
-    also have \<open>\<dots> \<longleftrightarrow> c \<in> RF `` tensor_maps {(ax,ay)} {(bx,by)}\<close>
+    also have \<open>\<dots> \<longleftrightarrow> c \<in> RF `` tensor_update {(ax,ay)} {(bx,by)}\<close>
       unfolding rel_prod_def by simp
-    also have \<open>\<dots> \<longleftrightarrow> c \<in> RG `` tensor_maps {(ax,ay)} {(bx,by)}\<close>
+    also have \<open>\<dots> \<longleftrightarrow> c \<in> RG `` tensor_update {(ax,ay)} {(bx,by)}\<close>
       by (simp add: RFRG)
     also have \<open>\<dots> \<longleftrightarrow> (((ax,bx),(ay,by)),c) \<in> RG\<close>
       unfolding rel_prod_def by simp
@@ -202,13 +202,13 @@ proof -
     using RF RG by simp
 qed
 
-lemma tensor_uniqueness:
+(* lemma tensor_uniqueness:
   assumes \<open>update_2hom F2\<close>
   assumes \<open>update_hom F\<close>
-  assumes \<open>(\<lambda>a b. F (tensor_maps a b)) = F2\<close>
+  assumes \<open>(\<lambda>a b. F (tensor_update a b)) = F2\<close>
   shows \<open>F = tensor_lift F2\<close>
-  using tensor_ext tensor_existence assms
-  by (metis tensor_lift_hom)
+  using tensor_extensionality tensor_lift_correct assms
+  by (metis tensor_lift_hom) *)
 
 
 (* definition assoc :: \<open>(('a\<times>'b)\<times>'c, 'a\<times>('b\<times>'c)) update_hom\<close> where 
@@ -228,7 +228,7 @@ proof -
 qed
 
 
-lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps a (tensor_maps b c))\<close>
+lemma assoc_apply: \<open>assoc (tensor_update (tensor_update a b) c) = (tensor_update a (tensor_update b c))\<close>
   unfolding assoc_def rel_prod_def
   apply (auto simp: case_prod_beta image_def relcomp_def relcompp_apply)
   by (metis fst_conv snd_conv)+ *)
@@ -236,16 +236,16 @@ lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = (tensor_maps
 definition lvalue :: \<open>('a,'b) update_hom \<Rightarrow> bool\<close> where
   \<open>lvalue F \<longleftrightarrow> update_hom F \<and> (\<forall>a a'. F a O F a' = F (a O a')) \<and> F Id = Id \<and> (\<forall>a. F (a\<inverse>) = (F a)\<inverse>)\<close>
 
-lemma update_hom_tensor_left: \<open>update_hom (\<lambda>a. tensor_maps a id_update)\<close>
+lemma update_hom_tensor_left: \<open>update_hom (\<lambda>a. tensor_update a id_update)\<close>
   unfolding update_hom_def apply (rule exI[of _ \<open>{((a1,a2),((a1,b),(a2,b)))| a1 a2 b. True}\<close>])
   apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
   by (metis fst_conv snd_conv)
-lemma update_hom_tensor_right: \<open>update_hom (\<lambda>a. tensor_maps id_update a)\<close>
+lemma update_hom_tensor_right: \<open>update_hom (\<lambda>a. tensor_update id_update a)\<close>
   unfolding update_hom_def apply (rule exI[of _ \<open>{((a1,a2),((b,a1),(b,a2)))| a1 a2 b. True}\<close>])
   apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
   by (metis fst_conv snd_conv)
 
-lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_maps a id_update)\<close>
+lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_update a id_update)\<close>
   apply (simp add: lvalue_def update_hom_tensor_left)
   apply (auto simp: rel_prod_def case_prod_beta relcomp_def relcompp_apply image_def)
   apply (metis fst_conv pair_in_Id_conv prod.exhaust_sel)
@@ -253,7 +253,7 @@ lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_maps a id_update)\<c
   apply (metis IdI fst_conv snd_conv)
   by (metis IdI converse_iff fst_swap snd_conv swap_simp)
 
-lemma lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_maps id_update a)\<close>
+lemma lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_update id_update a)\<close>
   apply (simp add: lvalue_def update_hom_tensor_right)
   apply (auto simp: rel_prod_def case_prod_beta relcomp_def relcompp_apply image_def)
   apply blast
@@ -281,7 +281,7 @@ lemma pair_lvalue_axiom:
   assumes \<open>lvalue G\<close>
   assumes [simp]: \<open>update_hom p\<close>
   assumes compat: \<open>\<And>a b. comp_update (F a) (G b) = comp_update (G b) (F a)\<close>
-  assumes ptensor: \<open>\<And>a b. p (tensor_maps a b) = comp_update (F a) (G b)\<close>
+  assumes ptensor: \<open>\<And>a b. p (tensor_update a b) = comp_update (F a) (G b)\<close>
   shows \<open>lvalue p\<close>
 proof (unfold lvalue_def, intro conjI allI)
   from assms show \<open>update_hom p\<close> by -
@@ -307,38 +307,38 @@ proof (unfold lvalue_def, intro conjI allI)
   have h6: \<open>update_hom (\<lambda>a. (p a)\<inverse>)\<close>
     apply (rule comp_update_hom[where F=p, unfolded o_def])
     by (simp_all add: converse_hom)
-  have \<open>p (tensor_maps a1 a2) O p (tensor_maps a1' a2') = p ((tensor_maps a1 a2) O (tensor_maps a1' a2'))\<close> for a1 a2 a1' a2'
-    unfolding ptensor tensor_mult
+  have \<open>p (tensor_update a1 a2) O p (tensor_update a1' a2') = p ((tensor_update a1 a2) O (tensor_update a1' a2'))\<close> for a1 a2 a1' a2'
+    unfolding ptensor tensor_update_mult
     by (metis assms(1) assms(2) comp_update_assoc lvalue_mult compat) 
   
-  then have \<open>p (tensor_maps a1 a2) O p a' = p ((tensor_maps a1 a2) O a')\<close> for a1 a2 a'
-    by (rule tensor_ext[OF h3 h4, THEN fun_cong])
+  then have \<open>p (tensor_update a1 a2) O p a' = p ((tensor_update a1 a2) O a')\<close> for a1 a2 a'
+    by (rule tensor_extensionality[OF h3 h4, THEN fun_cong])
   then show \<open>p a O p a' = p (a O a')\<close> for a a'
-    by (rule tensor_ext[OF h1 h2, THEN fun_cong])
+    by (rule tensor_extensionality[OF h1 h2, THEN fun_cong])
 
   show \<open>p Id = Id\<close>
     apply (simp flip: rel_prod_Id add: ptensor)
     by (metis R_O_Id assms(1) assms(2) lvalue_def)
   
-  have \<open>p ((tensor_maps a1 a2)\<inverse>) = (p (tensor_maps a1 a2))\<inverse>\<close> for a1 a2
+  have \<open>p ((tensor_update a1 a2)\<inverse>) = (p (tensor_update a1 a2))\<inverse>\<close> for a1 a2
     apply (simp add: ptensor converse_relcomp rel_prod_converse)
     apply (subst compat)
     by (metis assms(1) assms(2) lvalue_def)
 
   then show \<open>p (a\<inverse>) = (p a)\<inverse>\<close> for a
-    by (rule tensor_ext[OF h5 h6, THEN fun_cong])
+    by (rule tensor_extensionality[OF h5 h6, THEN fun_cong])
 qed
 
 
 
 bundle lvalue_notation begin
 notation comp_update (infixl "\<circ>\<^sub>d" 55)
-notation tensor_maps (infixr "\<otimes>" 70)
+notation tensor_update (infixr "\<otimes>" 70)
 end
 
 bundle no_lvalue_notation begin
 no_notation comp_update (infixl "\<circ>\<^sub>d" 55)
-no_notation tensor_maps (infixr "\<otimes>" 70)
+no_notation tensor_update (infixr "\<otimes>" 70)
 end
 
 end

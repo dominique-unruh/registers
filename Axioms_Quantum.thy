@@ -67,13 +67,13 @@ lemma update_2hom_left: \<open>update_2hom F2 \<Longrightarrow> update_hom (\<la
 lemma comp_update_is_2hom: "update_2hom timesOp"
   by (auto intro!: clinearI simp add: cbilinear_def cblinfun_apply_dist1 cblinfun_apply_dist2)
 
-abbreviation tensor_maps :: \<open>'a::finite update \<Rightarrow> 'b::finite update \<Rightarrow> ('a\<times>'b) update\<close> where
-  \<open>tensor_maps \<equiv> tensor_op\<close>
+abbreviation tensor_update :: \<open>'a::finite update \<Rightarrow> 'b::finite update \<Rightarrow> ('a\<times>'b) update\<close> where
+  \<open>tensor_update \<equiv> tensor_op\<close>
 
-lemma tensor_mult: \<open>comp_update (tensor_maps a c) (tensor_maps b d) = tensor_maps (comp_update a b) (comp_update c d)\<close>
+lemma tensor_update_mult: \<open>comp_update (tensor_update a c) (tensor_update b d) = tensor_update (comp_update a b) (comp_update c d)\<close>
   by (rule comp_tensor_op)
 
-lemma tensor_2hom: \<open>update_2hom tensor_maps\<close>
+lemma tensor_update_is_2hom: \<open>update_2hom tensor_update\<close>
   by (simp add: tensor_op_cbilinear)
 
 (* definition assoc :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite, 'a\<times>('b\<times>'c)) update_hom\<close> where
@@ -83,7 +83,7 @@ lemma assoc_hom: \<open>update_hom assoc\<close>
   unfolding assoc_def
   by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
 
-lemma assoc_apply: \<open>assoc (tensor_maps (tensor_maps a b) c) = tensor_maps a (tensor_maps b c)\<close>
+lemma assoc_apply: \<open>assoc (tensor_update (tensor_update a b) c) = tensor_update a (tensor_update b c)\<close>
   apply (rule equal_ket)
   apply (case_tac x)
   by (simp add: assoc_def times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor flip: tensor_ell2_ket) *)
@@ -112,12 +112,12 @@ lemma lvalue_mult: "lvalue F \<Longrightarrow> comp_update (F a) (F b) = F (comp
   unfolding lvalue_def
   by auto
 
-lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_maps a id_update)\<close>
-  by (simp add: comp_tensor_op lvalue_def update_2hom_left tensor_2hom tensor_op_adjoint)
+lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_update a id_update)\<close>
+  by (simp add: comp_tensor_op lvalue_def update_2hom_left tensor_update_is_2hom tensor_op_adjoint)
 
-lemma lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_maps id_update a)\<close>
-  apply (simp add: comp_tensor_op lvalue_def tensor_2hom tensor_op_adjoint)
-  by (meson cbilinear_def tensor_2hom)
+lemma lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_update id_update a)\<close>
+  apply (simp add: comp_tensor_op lvalue_def tensor_update_is_2hom tensor_op_adjoint)
+  by (meson cbilinear_def tensor_update_is_2hom)
 
 
 lemma pair_lvalue_axiom: 
