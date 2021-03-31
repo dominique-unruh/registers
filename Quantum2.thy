@@ -7,10 +7,10 @@ theory Quantum2
 begin
 
 no_notation meet (infixl "\<sqinter>\<index>" 70)
+no_notation Group.mult (infixl "\<otimes>\<index>" 70)
+no_notation Order.top ("\<top>\<index>")
 unbundle lvalue_notation
 unbundle cblinfun_notation
-
-declare lvalue_hom[simp]
 
 lemma pair_comp_tensor':
   assumes "compatible A B" and \<open>clinear C\<close> and \<open>clinear D\<close>
@@ -130,7 +130,7 @@ lemma compatible_proj_mult:
 (* TODO: write using "sandwich" *)
 lemma assoc_ell2_sandwich: \<open>assoc a = assoc_ell2 o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L assoc_ell2'\<close>
   apply (rule tensor_extensionality3'[THEN fun_cong, where x=a])
-  apply (simp add: assoc_hom)
+    apply simp
    apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
   apply (rule equal_ket)
   apply (case_tac x)
