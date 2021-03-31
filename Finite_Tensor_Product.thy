@@ -1,4 +1,4 @@
-theory Finite_Tensor_Products
+theory Finite_Tensor_Product
   imports Bounded_Operators.Complex_L2 Misc
 begin
 
@@ -312,5 +312,13 @@ lemma assoc_ell2'_tensor: \<open>assoc_ell2' *\<^sub>V tensor_ell2 a (tensor_ell
   unfolding assoc_ell2'.rep_eq
   apply transfer
   by auto
+
+
+lemma tensor_ell2_extensionality:
+  assumes "(\<And>s t. a *\<^sub>V (s \<otimes>\<^sub>s t) = b *\<^sub>V (s \<otimes>\<^sub>s t))"
+  shows "a = b"
+  apply (rule equal_ket, case_tac x, hypsubst_thin)
+  by (simp add: assms flip: tensor_ell2_ket)
+
 
 end
