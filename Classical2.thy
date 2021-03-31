@@ -10,7 +10,7 @@ lemma lvalue_single_valued:
   shows \<open>single_valued (F a)\<close>
 proof -
   have "mono F"
-    by (simp add: lvalueF lvalue_hom maps_hom_mono)
+    by (simp add: lvalueF lvalue_hom update_hom_mono)
   
   from single
   have contains_Id: "a\<inverse> O a \<subseteq> Id"
@@ -36,7 +36,7 @@ lemma lvalue_fulldom:
   shows \<open>Domain (F a) = UNIV\<close>
 proof -
   have "mono F"
-    by (simp add: lvalueF lvalue_hom maps_hom_mono)
+    by (simp add: lvalueF lvalue_hom update_hom_mono)
   
   from adom
   have contains_Id: "a O a\<inverse> \<supseteq> Id"
@@ -65,8 +65,8 @@ lemma lvalue_fullrange:
 
 definition "permutation_lvalue (p::'b\<Rightarrow>'a) a = {(inv p x, inv p y)| x y. (x,y) \<in> a}"
 
-lemma permutation_lvalue_hom[simp]: "maps_hom (permutation_lvalue p)"
-  unfolding maps_hom_def
+lemma permutation_lvalue_hom[simp]: "update_hom (permutation_lvalue p)"
+  unfolding update_hom_def
   apply (rule exI[of _ \<open>{((x,y), (inv p x, inv p y))| x y. True}\<close>])
   by (auto simp: permutation_lvalue_def[abs_def])
 
@@ -75,7 +75,7 @@ lemma permutation_lvalue_lvalue:
   assumes "bij p"
   shows "lvalue (permutation_lvalue p)"
 proof (unfold lvalue_def, intro conjI allI)
-  show \<open>maps_hom (permutation_lvalue p)\<close>
+  show \<open>update_hom (permutation_lvalue p)\<close>
     by simp
   show \<open>permutation_lvalue p Id = Id\<close>
     unfolding permutation_lvalue_def Id_def apply auto
@@ -90,7 +90,7 @@ qed
 
 lemma lvalue_prod1: \<open>lvalue (\<lambda>a. rel_prod a Id)\<close>
   unfolding lvalue_def apply (intro conjI allI)
-  using maps_2hom_left tensor_2hom apply blast
+  using update_2hom_left tensor_2hom apply blast
     apply (simp add: tensor_mult)
    apply simp
   by (simp add: rel_prod_converse)
@@ -98,7 +98,7 @@ lemma lvalue_prod1: \<open>lvalue (\<lambda>a. rel_prod a Id)\<close>
 (* lemma lvalue_prod2: \<open>lvalue (\<lambda>b. rel_prod Id b)\<close> *)
 
 (* 
-definition lvalue_from_splitting :: \<open>('b \<Rightarrow> 'a \<times> 'c) \<Rightarrow> ('a,'b) maps_hom\<close> where
+definition lvalue_from_splitting :: \<open>('b \<Rightarrow> 'a \<times> 'c) \<Rightarrow> ('a,'b) update_hom\<close> where
   "lvalue_from_splitting s = permutation_lvalue s \<circ> (\<lambda>a. rel_prod a Id)"
 
 lemma lvalue_from_splitting_lvalue: 
@@ -109,11 +109,11 @@ lemma lvalue_from_splitting_lvalue:
   apply (rule lvalue_prod1)
   using assms by (rule permutation_lvalue_lvalue) *)
 
-definition lvalue_from_setter :: \<open>('b\<Rightarrow>'a) \<Rightarrow> ('a\<Rightarrow>'b\<Rightarrow>'b) \<Rightarrow> ('a,'b) maps_hom\<close> where
+definition lvalue_from_setter :: \<open>('b\<Rightarrow>'a) \<Rightarrow> ('a\<Rightarrow>'b\<Rightarrow>'b) \<Rightarrow> ('a,'b) update_hom\<close> where
   \<open>lvalue_from_setter g s a = {(s ax b, s ay b) | b ax ay. (ax,ay) \<in> a}\<close>
 
-lemma lvalue_from_setter_hom[simp]: "maps_hom (lvalue_from_setter g s)"
-  unfolding maps_hom_def 
+lemma lvalue_from_setter_hom[simp]: "update_hom (lvalue_from_setter g s)"
+  unfolding update_hom_def 
   apply (rule exI[of _ \<open>{((ax, ay), (s ax b, s ay b))| ax ay b. True}\<close>])
   apply (rule ext)
   by (auto simp: lvalue_from_setter_def[abs_def] Image_def[abs_def])
@@ -129,7 +129,7 @@ lemma lvalue_from_setter_lvalue':
   assumes \<open>\<And>a a' b1 b2. s a b1 = s a b2 \<Longrightarrow> s a' b1 = s a' b2\<close>
   shows "lvalue (lvalue_from_setter g s)"
 proof (unfold lvalue_def, intro conjI allI)
-  show \<open>maps_hom (lvalue_from_setter g s)\<close>
+  show \<open>update_hom (lvalue_from_setter g s)\<close>
     by simp
   show \<open>lvalue_from_setter g s Id = Id\<close>
     unfolding lvalue_from_setter_def
@@ -186,14 +186,14 @@ lemma lvalue_from_setter_compat:
   apply (auto simp add: lvalue_from_setter_def relcomp_def relcompp_apply)
   by metis+
 
-definition FST :: \<open>('a, 'a\<times>'b) maps_hom\<close> where "FST = lvalue_from_setter fst (\<lambda>a (_,b). (a,b))"
+definition FST :: \<open>('a, 'a\<times>'b) update_hom\<close> where "FST = lvalue_from_setter fst (\<lambda>a (_,b). (a,b))"
 lemma valid_FST: "valid_getter_setter fst (\<lambda>a (_,b). (a,b))"
   unfolding valid_getter_setter_def by auto
 lemma lvalue_FST[simp]: "lvalue FST"
   by (metis FST_def lvalue_from_setter_lvalue valid_FST)
 
 
-definition SND :: \<open>('b, 'a\<times>'b) maps_hom\<close> where "SND = lvalue_from_setter snd (\<lambda>b (a,_). (a,b))"
+definition SND :: \<open>('b, 'a\<times>'b) update_hom\<close> where "SND = lvalue_from_setter snd (\<lambda>b (a,_). (a,b))"
 lemma valid_SND: "valid_getter_setter snd (\<lambda>b (a,_). (a,b))"
   unfolding valid_getter_setter_def by auto
 lemma lvalue_SND[simp]: "lvalue SND"

@@ -18,10 +18,10 @@ unbundle no_inner_syntax
 
 
 locale teleport_locale = qhoare "TYPE('mem::finite)" +
-  fixes X :: "(bit,'mem::finite) maps_hom"
-    and \<Phi> :: "(bit*bit,'mem) maps_hom"
-    and A :: "('atype::finite,'mem) maps_hom"
-    and B :: "('btype::finite,'mem) maps_hom"
+  fixes X :: "(bit,'mem::finite) update_hom"
+    and \<Phi> :: "(bit*bit,'mem) update_hom"
+    and A :: "('atype::finite,'mem) update_hom"
+    and B :: "('btype::finite,'mem) update_hom"
   assumes compat[compatible]: "mutually compatible (X,\<Phi>,A,B)"
 begin
 
@@ -72,7 +72,7 @@ lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
 
 lemma sandwich_tensor: "sandwich (a \<otimes> b) = sandwich a \<otimes>\<^sub>h sandwich b"
   apply (rule tensor_extensionality)
-  by (auto simp: sandwich_def tensor_maps_hom_hom tensor_mult tensor_op_adjoint)
+  by (auto simp: sandwich_def tensor_update_hom_hom tensor_mult tensor_op_adjoint)
 
 lemma sandwich_id: "sandwich idOp = idOp"
   by (metis eq_id_iff idOp.rep_eq idOp_adjoint sandwich_def times_idOp1 times_idOp2)
@@ -206,22 +206,22 @@ lemma [simp]: "dim_col (mat_adjoint m) = dim_row m"
 lemma [simp]: "dim_row (mat_adjoint m) = dim_col m"
   unfolding mat_adjoint_def by simp
 
-term tensor_maps_hom
+term tensor_update_hom
 lemma
- tensor_maps_hom_sandwich2: 
+ tensor_update_hom_sandwich2: 
   fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2" and b :: "'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a::finite ell2"
   shows "id \<otimes>\<^sub>h (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a)
              = (\<lambda>x. (tensor_op idOp b) o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L (tensor_op idOp a))"
 proof -
   have [simp]: \<open>clinear (id \<otimes>\<^sub>h (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a))\<close>
-    by (auto intro!:  clinearI tensor_maps_hom_hom simp add: cblinfun_apply_dist1 cblinfun_apply_dist2)
+    by (auto intro!:  clinearI tensor_update_hom_hom simp add: cblinfun_apply_dist1 cblinfun_apply_dist2)
   have [simp]: \<open>clinear (\<lambda>x. tensor_op idOp b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L tensor_op idOp a)\<close>
     by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
   have [simp]: \<open>clinear (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a)\<close>
     by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
   show ?thesis
     apply (rule tensor_extensionality, simp, simp)
-    apply (subst tensor_maps_hom_apply, simp, simp)
+    apply (subst tensor_update_hom_apply, simp, simp)
     by (simp add: comp_tensor_op)
 qed
 
@@ -310,7 +310,7 @@ lemma teleport:
   assumes [simp]: "norm \<psi> = 1"
   shows "hoare (teleport_pre \<psi>) (teleport a b) (teleport_post \<psi>)"
 proof -
-  define XZ :: \<open>bit domain_end\<close> where "XZ = (if a=1 then (if b=1 then pauliZ o\<^sub>C\<^sub>L pauliX else pauliX) else (if b=1 then pauliZ else idOp))"
+  define XZ :: \<open>bit update\<close> where "XZ = (if a=1 then (if b=1 then pauliZ o\<^sub>C\<^sub>L pauliX else pauliX) else (if b=1 then pauliZ else idOp))"
 
   define pre where "pre = EQ XAB \<psi>"
 
@@ -378,7 +378,7 @@ proof -
                 del: comp_apply)
     apply (rule arg_cong[of _ _ X\<Phi>])
     apply (rule cblinfun_eq_mat_of_cblinfunI)
-    apply (simp add: assoc_ell2_sandwich sandwich_def[abs_def] mat_of_cblinfun_tensor_op butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket cblinfun_of_mat_id swap_sandwich[abs_def]  mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult tensor_maps_hom_sandwich2 vec_of_onb_enum_tensor_state mat_of_cblinfun_description)
+    apply (simp add: assoc_ell2_sandwich sandwich_def[abs_def] mat_of_cblinfun_tensor_op butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket cblinfun_of_mat_id swap_sandwich[abs_def]  mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult tensor_update_hom_sandwich2 vec_of_onb_enum_tensor_state mat_of_cblinfun_description)
     by normalization
 
   have [simp]: "unitary XZ"
@@ -396,7 +396,7 @@ proof -
     by simp
   also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top>\<close>
     by (simp add: applyOpSpace_mono)
-  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes> id_domain) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (id_domain \<otimes> assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
+  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes> id_update) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (id_update \<otimes> assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
     by (simp add: to_X\<Phi>2_AB)
   also have \<open>\<dots> = EQP \<Phi>2AB \<psi> *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
     apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
@@ -421,7 +421,7 @@ locale concrete_teleport_vars begin
 type_synonym a_state = "64 word"
 type_synonym b_state = "1000000 word"
 type_synonym mem = "a_state * bit * bit * b_state * bit"
-type_synonym 'a var = \<open>('a,mem) maps_hom\<close>
+type_synonym 'a var = \<open>('a,mem) update_hom\<close>
 
 definition A :: "a_state var" where \<open>A a = a \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
 definition X :: \<open>bit var\<close> where \<open>X a = idOp \<otimes> a \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>

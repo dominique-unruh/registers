@@ -124,7 +124,7 @@ lemma compatible_proj_mult:
   shows "isProjector (R a o\<^sub>C\<^sub>L S b)"
   using assms unfolding isProjector_algebraic compatible_def
   apply auto
-  apply (metis comp_domain_assoc lvalue_mult)
+  apply (metis comp_update_assoc lvalue_mult)
   by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
 (* TODO: write using "sandwich" *)
