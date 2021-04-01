@@ -43,154 +43,16 @@ definition "teleport a b = [
     apply (if b=1 then pauliZ else idOp) \<Phi>2
   ]"
 
-definition "teleport_pre \<psi> = XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00"
-definition "teleport_post \<psi> = \<Phi>2AB =\<^sub>q \<psi>"
+(* definition "teleport_pre \<psi> = XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00" *)
+(* definition "teleport_post \<psi> = \<Phi>2AB =\<^sub>q \<psi>" *)
 
-lemma ell2_eq_vec_of_onb_enumI: 
-  fixes a b :: "_::onb_enum"
-  assumes "vec_of_onb_enum a = vec_of_onb_enum b"
-  shows "a = b"
-  by (metis assms onb_enum_of_vec_inverse)
-
-lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otimes>\<^sub>s s\<close>
-  apply (rule clinear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-  apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
-  apply (simp add: clinear_tensor_ell21)
-  apply (rule clinear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-  apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
-  apply (simp add: clinear_tensor_ell22)
-  apply (rule ell2_eq_vec_of_onb_enumI)
-  apply (simp add: mat_of_cblinfun_description vec_of_onb_enum_ket
-      canonical_basis_length_ell2_def)
-  by (case_tac i; case_tac ia; hypsubst_thin; normalization)
-
-
-lemma swap_sandwich: "swap = sandwich Uswap"
-  apply (rule tensor_extensionality)
-    apply (auto simp: sandwich_def)
-  apply (rule tensor_ell2_extensionality)
-  by (simp add: times_applyOp tensor_op_ell2)
-
-lemma enum_inj:
-  assumes "i < CARD('a)" and "j < CARD('a)"
-  shows "(Enum.enum ! i :: 'a::enum) = Enum.enum ! j \<longleftrightarrow> i = j"
-  using inj_on_nth[OF enum_distinct, where I=\<open>{..<CARD('a)}\<close>]
-  using assms by (auto dest: inj_onD simp flip: card_UNIV_length_enum)
-
-
-lemma mat_of_cblinfun_assoc_ell2'[simp]: 
-  \<open>mat_of_cblinfun (assoc_ell2' :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) = one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
-  (is "mat_of_cblinfun ?assoc = _")
-proof  (rule mat_eq_iff[THEN iffD2], intro conjI allI impI)
-
-  show \<open>dim_row (mat_of_cblinfun ?assoc) =
-    dim_row (1\<^sub>m (CARD('a) * CARD('b) * CARD('c)))\<close>
-    by (simp add: canonical_basis_length_ell2_def)
-  show \<open>dim_col (mat_of_cblinfun ?assoc) =
-    dim_col (1\<^sub>m (CARD('a) * CARD('b) * CARD('c)))\<close>
-    by (simp add: canonical_basis_length_ell2_def)
-
-  fix i j
-  let ?i = "Enum.enum ! i :: (('a\<times>'b)\<times>'c)" and ?j = "Enum.enum ! j :: ('a\<times>('b\<times>'c))"
-
-  assume \<open>i < dim_row (1\<^sub>m (CARD('a) * CARD('b) * CARD('c)))\<close>
-  then have iB[simp]: \<open>i < CARD('a) * CARD('b) * CARD('c)\<close> by simp
-  then have iB'[simp]: \<open>i < CARD('a) * (CARD('b) * CARD('c))\<close> by linarith
-  assume \<open>j < dim_col (1\<^sub>m (CARD('a) * CARD('b) * CARD('c)))\<close>
-  then have jB[simp]: \<open>j < CARD('a) * CARD('b) * CARD('c)\<close> by simp
-  then have jB'[simp]: \<open>j < CARD('a) * (CARD('b) * CARD('c))\<close> by linarith
-
-  define i1 i23 i2 i3
-    where "i1 = fst (tensor_unpack CARD('a) (CARD('b)*CARD('c)) i)"
-      and "i23 = snd (tensor_unpack CARD('a) (CARD('b)*CARD('c)) i)"
-      and "i2 = fst (tensor_unpack CARD('b) CARD('c) i23)"
-      and "i3 = snd (tensor_unpack CARD('b) CARD('c) i23)"
-  define j12 j1 j2 j3
-    where "j12 = fst (tensor_unpack (CARD('a)*CARD('b)) CARD('c) j)"
-      and "j1 = fst (tensor_unpack CARD('a) CARD('b) j12)"
-      and "j2 = snd (tensor_unpack CARD('a) CARD('b) j12)"
-      and "j3 = snd (tensor_unpack (CARD('a)*CARD('b)) CARD('c) j)"
-
-  have [simp]: "j12 < CARD('a)*CARD('b)" "i23 < CARD('b)*CARD('c)"
-    using j12_def jB tensor_unpack_bound1 apply presburger
-    using i23_def iB' tensor_unpack_bound2 by blast
-
-  have j1': \<open>fst (tensor_unpack CARD('a) (CARD('b) * CARD('c)) j) = j1\<close>
-    by (simp add: j1_def j12_def tensor_unpack_fstfst)
-
-  let ?i1 = "Enum.enum ! i1 :: 'a" and ?i2 = "Enum.enum ! i2 :: 'b" and ?i3 = "Enum.enum ! i3 :: 'c"
-  let ?j1 = "Enum.enum ! j1 :: 'a" and ?j2 = "Enum.enum ! j2 :: 'b" and ?j3 = "Enum.enum ! j3 :: 'c"
-
-  have i: \<open>?i = ((?i1,?i2),?i3)\<close>
-    by (auto simp add: enum_prod_nth_tensor_unpack case_prod_beta
-          tensor_unpack_fstfst tensor_unpack_fstsnd tensor_unpack_sndsnd i1_def i2_def i23_def i3_def)
-  have j: \<open>?j = (?j1,(?j2,?j3))\<close> 
-    by (auto simp add: enum_prod_nth_tensor_unpack case_prod_beta
-        tensor_unpack_fstfst tensor_unpack_fstsnd tensor_unpack_sndsnd j1_def j2_def j12_def j3_def)
-  have ijeq: \<open>(?i1,?i2,?i3) = (?j1,?j2,?j3) \<longleftrightarrow> i = j\<close>
-    unfolding i1_def i2_def i3_def j1_def j2_def j3_def apply simp
-    apply (subst enum_inj, simp, simp)
-    apply (subst enum_inj, simp, simp)
-    apply (subst enum_inj, simp, simp)
-    apply (subst tensor_unpack_inj[symmetric, where i=i and j=j and A="CARD('a)" and B="CARD('b)*CARD('c)"], simp, simp)
-    unfolding prod_eq_iff
-    apply (subst tensor_unpack_inj[symmetric, where i=\<open>snd (tensor_unpack CARD('a) (CARD('b) * CARD('c)) i)\<close> and A="CARD('b)" and B="CARD('c)"], simp, simp)
-    by (simp add: i1_def[symmetric] j1_def[symmetric] i2_def[symmetric] j2_def[symmetric] i3_def[symmetric] j3_def[symmetric]
-        i23_def[symmetric] j12_def[symmetric] j1'
-        prod_eq_iff tensor_unpack_fstsnd tensor_unpack_sndsnd)
-
-  have \<open>mat_of_cblinfun ?assoc $$ (i, j) = Rep_ell2 (assoc_ell2' *\<^sub>V ket ?j) ?i\<close>
-    by (subst mat_of_cblinfun_ell2_index, auto)
-  also have \<open>\<dots> = Rep_ell2 ((ket ?j1 \<otimes>\<^sub>s ket ?j2) \<otimes>\<^sub>s ket ?j3) ?i\<close>
-    by (simp add: j assoc_ell2'_tensor flip: tensor_ell2_ket)
-  also have \<open>\<dots> = (if (?i1,?i2,?i3) = (?j1,?j2,?j3) then 1 else 0)\<close>
-    by (auto simp add: ket.rep_eq i)
-  also have \<open>\<dots> = (if i=j then 1 else 0)\<close>
-    using ijeq by simp
-  finally
-  show \<open>mat_of_cblinfun ?assoc $$ (i, j) =
-           1\<^sub>m (CARD('a) * CARD('b) * CARD('c)) $$ (i, j)\<close>
-    by auto
-qed
-
-lemma assoc_ell2'_inv: "assoc_ell2 o\<^sub>C\<^sub>L assoc_ell2' = idOp"
-  apply (rule equal_ket, case_tac x, hypsubst)
-  by (simp flip: tensor_ell2_ket add: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor)
-
-lemma assoc_ell2_inv: "assoc_ell2' o\<^sub>C\<^sub>L assoc_ell2 = idOp"
-  apply (rule equal_ket, case_tac x, hypsubst)
-  by (simp flip: tensor_ell2_ket add: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor)
-
-lemma mat_of_cblinfun_assoc_ell2[simp]: 
-  \<open>mat_of_cblinfun (assoc_ell2 :: ((('a::enum\<times>'b::enum)\<times>'c::enum) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) = one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
-  (is "mat_of_cblinfun ?assoc = _")
-proof -
-  let ?assoc' = "assoc_ell2' :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)"
-  have "one_mat (CARD('a)*CARD('b)*CARD('c)) = mat_of_cblinfun (?assoc o\<^sub>C\<^sub>L ?assoc')"
-    by (simp add: mult.assoc assoc_ell2'_inv cblinfun_of_mat_id canonical_basis_length_ell2_def)
-  also have \<open>\<dots> = mat_of_cblinfun ?assoc * mat_of_cblinfun ?assoc'\<close>
-    using cblinfun_of_mat_timesOp by blast
-  also have \<open>\<dots> = mat_of_cblinfun ?assoc * one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
-    by simp
-  also have \<open>\<dots> = mat_of_cblinfun ?assoc\<close>
-    apply (rule right_mult_one_mat')
-    by (simp add: canonical_basis_length_ell2_def)
-  finally show ?thesis
-    by simp
-qed
-
-
-lemma [simp]: "dim_col (mat_adjoint m) = dim_row m"
-  unfolding mat_adjoint_def by simp
-lemma [simp]: "dim_row (mat_adjoint m) = dim_col m"
-  unfolding mat_adjoint_def by simp
-
+(* TODO move *)
 term tensor_update_hom
 lemma
  tensor_update_hom_sandwich2: 
   fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2" and b :: "'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a::finite ell2"
   shows "id \<otimes>\<^sub>h (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a)
-             = (\<lambda>x. (tensor_op idOp b) o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L (tensor_op idOp a))"
+             = (\<lambda>x. (idOp \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L (idOp \<otimes>\<^sub>o a))"
 proof -
   have [simp]: \<open>clinear (id \<otimes>\<^sub>h (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a))\<close>
     by (auto intro!:  clinearI tensor_update_hom_is_hom 
@@ -205,14 +67,15 @@ proof -
     by (simp add: comp_tensor_op)
 qed
 
-lemma clinear_Fst[simp]: "clinear Fst"
-  unfolding Fst_def by auto
-lemma clinear_Snd[simp]: "clinear Snd"
-  unfolding Fst_def by auto
+(* lemma clinear_Fst[simp]: "clinear Fst"
+  unfolding Fst_def by auto *)
+(* lemma clinear_Snd[simp]: "clinear Snd"
+  apply simp
+  unfolding Fst_def by auto *)
 
-lemma [compatible]: "mutually compatible (Fst, Snd)"
+(* lemma [compatible]: "mutually compatible (Fst, Snd)"
   using [[simproc del: compatibility_warn]]
-  by (auto intro!: compatibleI simp add: Fst_def Snd_def comp_tensor_op)
+  by (auto intro!: compatibleI simp add: Fst_def Snd_def comp_tensor_op) *)
 
 (* TODO: Laws + rename *)
 lemma pair_Fst_Snd[simp]: 
@@ -233,7 +96,7 @@ lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap)
   apply (subst pair_o_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
   apply (subst (2) pair_Fst_Snd[symmetric, of \<Phi>], simp)
   using [[simproc del: compatibility_warn]]
-  apply (subst pair_o_swap', simp)
+  apply (subst pair_o_swap[unfolded o_def], simp)
   apply (subst pair_o_assoc[unfolded o_def, THEN fun_cong], simp, simp, simp)
   by (auto simp: lvalue_pair_apply)
 lemma \<Phi>2_X\<Phi>: \<open>\<Phi>2 a = X\<Phi> (idOp \<otimes>\<^sub>o (idOp \<otimes>\<^sub>o a))\<close>
@@ -287,15 +150,15 @@ lemmas to_X\<Phi>2_AB = XAB_to_X\<Phi>2_AB X\<Phi>2_to_X\<Phi>2_AB \<Phi>2AB_to_
 
 lemma teleport:
   assumes [simp]: "norm \<psi> = 1"
-  shows "hoare (teleport_pre \<psi>) (teleport a b) (teleport_post \<psi>)"
+  shows "hoare (XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) (teleport a b) (\<Phi>2AB =\<^sub>q \<psi>)"
 proof -
   define XZ :: \<open>bit update\<close> where "XZ = (if a=1 then (if b=1 then pauliZ o\<^sub>C\<^sub>L pauliX else pauliX) else (if b=1 then pauliZ else idOp))"
 
-  define pre where "pre = EQ XAB \<psi>"
+  define pre where "pre = XAB =\<^sub>q \<psi>"
 
-  define O1 where "O1 = EQP \<Phi> \<beta>00"
-  have \<open>teleport_pre \<psi> = O1 *\<^sub>S pre\<close>
-    unfolding pre_def O1_def teleport_pre_def EQ_def
+  define O1 where "O1 = \<Phi> (selfbutter \<beta>00)"
+  have \<open>(XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) = O1 *\<^sub>S pre\<close>
+    unfolding pre_def O1_def EQ_def
     apply (subst compatible_proj_intersect[where R=XAB and S=\<Phi>])
        apply (simp_all add: butterfly_isProjector)
     apply (subst swap_lvalues[where R=XAB and S=\<Phi>])
@@ -312,15 +175,15 @@ proof -
     apply (rule hoare_apply) by (simp add: O3_def assoc_left(2))
 
   also
-  define O4 where \<open>O4 = EQP \<Phi>1 (ket a) o\<^sub>C\<^sub>L O3\<close>
+  define O4 where \<open>O4 = \<Phi>1 (selfbutterket a) o\<^sub>C\<^sub>L O3\<close>
   have \<open>hoare (O3 *\<^sub>S pre) [ifthen \<Phi>1 a] (O4 *\<^sub>S pre)\<close>
     apply (rule hoare_ifthen) by (simp add: O4_def assoc_left(2))
 
   also
-  define O5 where \<open>O5 = EQP X (ket b) o\<^sub>C\<^sub>L O4\<close>
+  define O5 where \<open>O5 = X (selfbutterket b) o\<^sub>C\<^sub>L O4\<close>
   have O5: \<open>O5 = X\<Phi>1 (butterfly (ket b \<otimes>\<^sub>s ket a) (CNOT *\<^sub>V (hadamard *\<^sub>V ket b) \<otimes>\<^sub>s ket a)) o\<^sub>C\<^sub>L O1\<close> (is "_ = ?rhs")
   proof -
-    have "O5 = EQP X\<Phi>1 (ket (b,a)) o\<^sub>C\<^sub>L O3"
+    have "O5 = X\<Phi>1 (selfbutterket (b,a)) o\<^sub>C\<^sub>L O3"
       unfolding O5_def O4_def
       apply (subst lift_cblinfun_comp[OF join_EQP, where R1=X and S1=\<Phi>1], simp)
       by simp
@@ -346,7 +209,7 @@ proof -
     apply (rule hoare_apply) 
     by (auto simp add: O7_def assoc_left(2))
 
-  finally have hoare: \<open>hoare (teleport_pre \<psi>) (teleport a b) (O7 *\<^sub>S pre)\<close>
+  finally have hoare: \<open>hoare (XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) (teleport a b) (O7 *\<^sub>S pre)\<close>
     by (auto simp add: teleport_def comp_def)
 
   have O5': "O5 = (1/2) *\<^sub>C \<Phi>2 (XZ*) o\<^sub>C\<^sub>L X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"
@@ -369,23 +232,23 @@ proof -
     unfolding O7 O5'
     by (simp add: cblinfun_apply_assoc[symmetric] lvalue_mult[of \<Phi>2] del: comp_apply)
 
-  have "O7 *\<^sub>S pre = X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<Phi> (butterfly (ket (a, b)) \<beta>00) *\<^sub>S \<top>"
+  have "O7 *\<^sub>S pre = X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<Phi> (butterfly (ket (a, b)) \<beta>00) *\<^sub>S \<top>"
     apply (simp add: O7' pre_def EQ_def cblinfun_apply_assoc_subspace)
     apply (subst lift_cblinfun_comp[OF swap_lvalues[where R=\<Phi> and S=XAB]], simp)
     by (simp add: assoc_left(2))
-  also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top>\<close>
+  also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<top>\<close>
     by (simp add: applyOpSpace_mono)
   also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes>\<^sub>o id_update) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (id_update \<otimes>\<^sub>o assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
     by (simp add: to_X\<Phi>2_AB)
-  also have \<open>\<dots> = EQP \<Phi>2AB \<psi> *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
+  also have \<open>\<dots> = \<Phi>2AB (selfbutter \<psi>) *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
     apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
         cblinfun_apply_assoc_subspace[symmetric]
         lvalue_mult)
     by (simp add: sandwich_def cblinfun_apply_assoc[symmetric] tensor_update_mult tensor_op_adjoint)
-  also have \<open>\<dots> \<le> EQ \<Phi>2AB \<psi>\<close>
+  also have \<open>\<dots> \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
     by (simp add: EQ_def applyOpSpace_mono)
-  finally have \<open>O7 *\<^sub>S pre \<le> teleport_post \<psi>\<close>
-    by (simp add: teleport_post_def)
+  finally have \<open>O7 *\<^sub>S pre \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
+    by simp
 
   with hoare
   show ?thesis

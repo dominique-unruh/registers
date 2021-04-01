@@ -352,14 +352,19 @@ subsection \<open>Compatibility simplification\<close>
 
 (* The simproc compatibility_warn produces helpful warnings for "compatible x y"
    subgoals that are probably unsolvable due to missing declarations of 
-   variable compatibility facts. *)
-simproc_setup "compatibility_warn" ("compatible x y") = \<open>fn m => fn ctxt => fn ct => let
+   variable compatibility facts. Same for "lvalue x" subgoals. *)
+simproc_setup "compatibility_warn" ("compatible x y" | "lvalue x") = \<open>
+let val thy_string = Markup.markup (Theory.get_markup \<^theory>) (Context.theory_name \<^theory>)
+in
+fn m => fn ctxt => fn ct => let
   val (x,y) = case Thm.term_of ct of
-                 Const(\<^const_name>\<open>compatible\<close>,_ ) $ x $ y => (x,y)
+                 Const(\<^const_name>\<open>compatible\<close>,_ ) $ x $ y => (x, SOME y)
+               | Const(\<^const_name>\<open>lvalue\<close>,_ ) $ x => (x, NONE)
   val str : string lazy = Lazy.lazy (fn () => Syntax.string_of_term ctxt (Thm.term_of ct))
-  fun w msg = warning (msg ^ "\n(Disable these warnings with: using [[simproc del: compatibility_warn]])")
-  (* val _ = \<^print> (x,y) *)
-  val _ = case (x,y) of (Free(n,T), Free(n',T')) => 
+  fun w msg = warning (msg ^ "\n(Disable these warnings with: using [[simproc del: "^thy_string^".compatibility_warn]])")
+  (* val _ = \<^print> (m,ctxt,ct) *)
+  val _ = case (x,y) of
+        (Free(n,T), SOME (Free(n',T'))) => 
             if String.isPrefix ":" n orelse String.isPrefix ":" n' then 
                       w ("Simplification subgoal " ^ Lazy.force str ^ " contains a bound variable.\n" ^
                       "Try to add some assumptions that makes this goal solvable by the simplifier")
@@ -371,31 +376,24 @@ simproc_setup "compatibility_warn" ("compatible x y") = \<open>fn m => fn ctxt =
                             " occurred but cannot be solved.\n" ^
                             "Please add assumption/fact  [simp]: \<open>" ^ Lazy.force str ^ 
                             "\<close>  somewhere.")
-          | _ => w ("Simplification subgoal " ^ Lazy.force str ^ 
+(*       | (_, SOME _) => w ("Simplification subgoal " ^ Lazy.force str ^ 
                     "\ncannot be reduced to a compatibility of two variables (such as \<open>compatibility x y\<close>).\n" ^
-                    "Try adding a simplification rule that breaks it down (such as, e.g., " ^ @{fact compatible3} ^ ").")
-  in NONE end\<close>
+                    "Try adding a simplification rule that breaks it down (such as, e.g., " ^ @{fact compatible3} ^ ").") *)
+      | (Free(n,T), NONE) => 
+            if String.isPrefix ":" n then 
+                      w ("Simplification subgoal '" ^ Lazy.force str ^ "' contains a bound variable.\n" ^
+                      "Try to add some assumptions that makes this goal solvable by the simplifier")
+            else w ("Simplification subgoal " ^ Lazy.force str ^ " occurred but cannot be solved.\n" ^
+                    "Please add assumption/fact  [simp]: \<open>" ^ Lazy.force str ^ "\<close>  somewhere.")
+(*       | (_, NONE) => w ("Simplification subgoal " ^ Lazy.force str ^ 
+                    "\ncannot be reduced to a judgment about a single variable (such as \<open>lvalue x\<close>).\n" ^
+                    "Try adding a simplification rule that breaks it down (such as, e.g., " ^ @{fact lvalue_comp} ^ ").") *)
+      | _ => ()
+  in NONE end
+end\<close>
 
 
-(* Abbreviations: "mutually f (x1,x2,x3,\<dots>)" expands to a conjunction
-   of all "f xi xj" with i\<noteq>y.
-
-   "each f (x1,x2,x3,\<dots>)" expands to a conjunction of all "f xi". *)
-
-syntax "_mutually" :: "'a \<Rightarrow> args \<Rightarrow> 'b" ("mutually _ '(_')")
-syntax "_mutually2" :: "'a \<Rightarrow> 'b \<Rightarrow> args \<Rightarrow> args \<Rightarrow> 'c"
-
-translations "mutually f (x)" => "CONST True"
-translations "mutually f (_args x y)" => "f x y \<and> f y x"
-translations "mutually f (_args x (_args x' xs))" => "_mutually2 f x (_args x' xs) (_args x' xs)"
-translations "_mutually2 f x y zs" => "f x y \<and> f y x \<and> _mutually f zs"
-translations "_mutually2 f x (_args y ys) zs" => "f x y \<and> f y x \<and> _mutually2 f x ys zs"
-
-syntax "_each" :: "'a \<Rightarrow> args \<Rightarrow> 'b" ("each _ '(_')")
-translations "each f (x)" => "f x"
-translations "_each f (_args x xs)" => "f x \<and> _each f xs"
-
-(* Declares the attribute [compat]. If applied to a conjunction 
+(* Declares the attribute [compatible]. If applied to a conjunction 
    of "compatible x y" facts, it will add all of them to the simplifier
    (as [simp] does), but additionally add all "lvalue x", "lvalue y" facts. *)
 setup \<open>
@@ -420,7 +418,7 @@ end
 \<close>
 
 
-experiment begin
+(* experiment begin
 lemma 
   assumes [compatible]: "mutually compatible (a,b,c)"
   shows True
@@ -430,7 +428,7 @@ proof -
   have "compatible (a; b) c" by simp
   show ?thesis by simp
 qed
-end
+end *)
 
 
 

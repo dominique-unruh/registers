@@ -117,5 +117,18 @@ lemma Uswap_adjoint[simp]: "adjoint Uswap = Uswap"
 lemma Uswap_involution[simp]: "Uswap o\<^sub>C\<^sub>L Uswap = idOp"
   by eval
 
+lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otimes>\<^sub>s s\<close>
+  apply (rule clinear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])
+  apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
+  apply (simp add: clinear_tensor_ell21)
+  apply (rule clinear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
+  apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
+  apply (simp add: clinear_tensor_ell22)
+  apply (rule ell2_eq_vec_of_onb_enumI)
+  apply (simp add: mat_of_cblinfun_description vec_of_onb_enum_ket
+      canonical_basis_length_ell2_def)
+  by (case_tac i; case_tac ia; hypsubst_thin; normalization)
+
+
 
 end

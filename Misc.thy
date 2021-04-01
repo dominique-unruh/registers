@@ -38,6 +38,7 @@ lemma ket_Kronecker_delta: \<open>\<langle>ket i, ket j\<rangle> = (if i=j then 
 
 (* definition \<open>butter i j = vector_to_cblinfun (ket i) o\<^sub>C\<^sub>L (vector_to_cblinfun (ket j) :: complex \<Rightarrow>\<^sub>C\<^sub>L _)*\<close> *)
 abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
+abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)"
 
 lemma sum_butter[simp]: \<open>(\<Sum>(i::'a::finite)\<in>UNIV. butterket i i) = idOp\<close>
   apply (rule equal_ket)
@@ -283,6 +284,12 @@ lemma cblinfun_eq_mat_of_cblinfunI:
   shows "a = b"
   by (metis assms mat_of_cblinfun_inverse)
 
+lemma ell2_eq_vec_of_onb_enumI:
+  fixes a b :: "_::onb_enum"
+  assumes "vec_of_onb_enum a = vec_of_onb_enum b"
+  shows "a = b"
+  by (metis assms onb_enum_of_vec_inverse)
+
 lemma butterfly_times_right: "butterfly \<psi> \<phi> o\<^sub>C\<^sub>L a = butterfly \<psi> (a* *\<^sub>V \<phi>)"
   unfolding butterfly_def'
   by (simp add: cblinfun_apply_assoc vector_to_cblinfun_applyOp)  
@@ -410,5 +417,39 @@ lemma lift_cblinfun_comp:
   apply (metis assms cblinfun_apply_assoc)
   using assms assoc_left(2) apply blast
   by (metis assms times_applyOp)
+
+
+
+(* Abbreviations: "mutually f (x1,x2,x3,\<dots>)" expands to a conjunction
+   of all "f xi xj" with i\<noteq>y.
+
+   "each f (x1,x2,x3,\<dots>)" expands to a conjunction of all "f xi". *)
+
+syntax "_mutually" :: "'a \<Rightarrow> args \<Rightarrow> 'b" ("mutually _ '(_')")
+syntax "_mutually2" :: "'a \<Rightarrow> 'b \<Rightarrow> args \<Rightarrow> args \<Rightarrow> 'c"
+
+translations "mutually f (x)" => "CONST True"
+translations "mutually f (_args x y)" => "f x y \<and> f y x"
+translations "mutually f (_args x (_args x' xs))" => "_mutually2 f x (_args x' xs) (_args x' xs)"
+translations "_mutually2 f x y zs" => "f x y \<and> f y x \<and> _mutually f zs"
+translations "_mutually2 f x (_args y ys) zs" => "f x y \<and> f y x \<and> _mutually2 f x ys zs"
+
+syntax "_each" :: "'a \<Rightarrow> args \<Rightarrow> 'b" ("each _ '(_')")
+translations "each f (x)" => "f x"
+translations "_each f (_args x xs)" => "f x \<and> _each f xs"
+
+
+lemma enum_inj:
+  assumes "i < CARD('a)" and "j < CARD('a)"
+  shows "(Enum.enum ! i :: 'a::enum) = Enum.enum ! j \<longleftrightarrow> i = j"
+  using inj_on_nth[OF enum_distinct, where I=\<open>{..<CARD('a)}\<close>]
+  using assms by (auto dest: inj_onD simp flip: card_UNIV_length_enum)
+
+
+lemma [simp]: "dim_col (mat_adjoint m) = dim_row m"
+  unfolding mat_adjoint_def by simp
+lemma [simp]: "dim_row (mat_adjoint m) = dim_col m"
+  unfolding mat_adjoint_def by simp
+
 
 end

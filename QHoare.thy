@@ -16,18 +16,19 @@ definition "program S = fold (o\<^sub>C\<^sub>L) S idOp" for S :: \<open>'mem up
 definition hoare :: \<open>'mem ell2 clinear_space \<Rightarrow> ('mem ell2 \<Rightarrow>\<^sub>C\<^sub>L 'mem ell2) list \<Rightarrow> 'mem ell2 clinear_space \<Rightarrow> bool\<close> where
   "hoare C p D \<longleftrightarrow> (\<forall>\<psi>\<in>space_as_set C. program p *\<^sub>V \<psi> \<in> space_as_set D)" for C p D
 
-abbreviation (input) "EQP R \<psi> \<equiv> R (selfbutter \<psi>)" for R :: \<open>('a,'mem) update_hom\<close>
+(* abbreviation (input) "EQP R \<psi> \<equiv> R (selfbutter \<psi>)" for R :: \<open>('a,'mem) update_hom\<close> *)
 definition EQ :: "('a,'mem) update_hom \<Rightarrow> 'a ell2 \<Rightarrow> 'mem ell2 clinear_space" (infix "=\<^sub>q" 75) where
-  "EQ R \<psi> = EQP R \<psi> *\<^sub>S \<top>" for R :: \<open>('a,'mem) update_hom\<close>
+  "EQ R \<psi> = R (selfbutter \<psi>) *\<^sub>S \<top>" for R :: \<open>('a,'mem) update_hom\<close>
 
 (* lemma swap_EQP':
   assumes "compatible R S"
   shows "EQP R \<psi> o\<^sub>C\<^sub>L (EQP S \<phi> o\<^sub>C\<^sub>L C) = EQP S \<phi> o\<^sub>C\<^sub>L (EQP R \<psi> o\<^sub>C\<^sub>L C)"
   by (simp add: assoc_left(1) swap_lvalues[OF assms]) *)
 
+(* TODO rename *)
 lemma join_EQP:
   assumes [compatible]: "compatible R S"
-  shows "EQP R \<psi> o\<^sub>C\<^sub>L EQP S \<phi> = EQP (R; S) (\<psi> \<otimes>\<^sub>s \<phi>)"
+  shows "R (selfbutter \<psi>) o\<^sub>C\<^sub>L S (selfbutter \<phi>) = (R; S) (selfbutter (\<psi> \<otimes>\<^sub>s \<phi>))"
   apply (subst lvalue_pair_apply[symmetric, where F=R and G=S])
   using assms by auto
 
@@ -67,7 +68,7 @@ lemma hoare_apply:
 
 lemma hoare_ifthen: 
   fixes R :: \<open>('a,'mem) update_hom\<close>
-  assumes "EQP R (ket x) *\<^sub>S pre \<le> post"
+  assumes "R (selfbutter (ket x)) *\<^sub>S pre \<le> post"
   shows "hoare pre [ifthen R x] post"
   using assms 
   apply (auto simp: hoare_def program_def ifthen_def butterfly_def')

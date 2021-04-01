@@ -12,19 +12,20 @@ no_notation Order.top ("\<top>\<index>")
 unbundle lvalue_notation
 unbundle cblinfun_notation
 
-lemma pair_o_tensor':
+(* lemma pair_o_tensor':
   assumes "compatible A B" and \<open>clinear C\<close> and \<open>clinear D\<close>
   shows "(A; B) ((C \<otimes>\<^sub>h D) x) = (A o C; B o D) x"
   using pair_o_tensor[OF assms]
-  by (smt (z3) fcomp_comp fcomp_def)
+  by (smt (z3) fcomp_comp fcomp_def) *)
 
-lemma pair_o_swap':
+(* lemma pair_o_swap':
   assumes "compatible A B"
   shows "(A; B) (swap x) = (B; A) x"
   using pair_o_swap[OF assms]
-  by (metis comp_def)
+  by (metis comp_def) *)
 
-lemma lvalue_left_idOp[intro!]:
+(* TODO: to laws, rename *)
+lemma lvalue_left_idOp[simp]:
   assumes \<open>lvalue F\<close>
   shows \<open>lvalue (\<lambda>a. idOp \<otimes>\<^sub>o F a)\<close>
   using assms unfolding lvalue_def 
@@ -34,7 +35,8 @@ lemma lvalue_left_idOp[intro!]:
   apply (metis (no_types, hide_lams) comp_tensor_op times_idOp2)
   by (metis (full_types) idOp_adjoint tensor_op_adjoint)
 
-lemma lvalue_right_idOp[intro!]:
+(* TODO: to laws, rename *)
+lemma lvalue_right_idOp[simp]:
   assumes \<open>lvalue F\<close>
   shows \<open>lvalue (\<lambda>a. F a \<otimes>\<^sub>o idOp)\<close>
   using assms unfolding lvalue_def 
@@ -44,21 +46,25 @@ lemma lvalue_right_idOp[intro!]:
   apply (metis (no_types, hide_lams) comp_tensor_op times_idOp2)
   by (metis (full_types) idOp_adjoint tensor_op_adjoint)
 
+(* TODO: to laws, rename? *)
 lemma lvalue_id'[simp]: \<open>lvalue (\<lambda>x. x)\<close>
   by (metis (mono_tags, lifting) complex_vector.module_hom_ident lvalue_def)
 
+(* TODO: to laws, rename *)
 lemma compatible_left_idOp[intro!]:
   assumes "compatible F G"
   shows "compatible (\<lambda>a. idOp \<otimes>\<^sub>o F a) (\<lambda>a. idOp \<otimes>\<^sub>o G a)"
   using assms unfolding compatible_def apply auto
   by (metis comp_tensor_op)
 
+(* TODO: to laws, rename *)
 lemma compatible_left_idOp1[intro!]:
   assumes "lvalue F" and "lvalue G"
   shows "compatible (\<lambda>a. F a \<otimes>\<^sub>o idOp) (\<lambda>a. idOp \<otimes>\<^sub>o G a)"
   using assms unfolding compatible_def apply auto
   by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2)
 
+(* TODO: to laws, rename *)
 lemma compatible_left_idOp2[intro!]:
   assumes "lvalue F" and "lvalue G"
   shows "compatible (\<lambda>a. idOp \<otimes>\<^sub>o F a) (\<lambda>a. G a \<otimes>\<^sub>o idOp)"
@@ -115,17 +121,16 @@ qed
 lemma compatible_proj_mult:
   assumes "compatible R S" and "isProjector a" and "isProjector b"
   shows "isProjector (R a o\<^sub>C\<^sub>L S b)"
+  using [[simproc del: Laws_Quantum.compatibility_warn]]
   using assms unfolding isProjector_algebraic compatible_def
   apply auto
   apply (metis comp_update_assoc lvalue_mult)
   by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
-
 lemma sandwich_tensor: "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>h sandwich b"
   for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
   apply (rule tensor_extensionality)
   by (auto simp: sandwich_def tensor_update_hom_is_hom tensor_update_mult tensor_op_adjoint)
-
 
 lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes>\<^sub>o idOp)"
   for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
@@ -141,7 +146,25 @@ lemma assoc_ell2_sandwich: \<open>assoc = sandwich assoc_ell2\<close>
    apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
   apply (rule equal_ket)
   apply (case_tac x)
-  by (simp add: assoc_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor flip: tensor_ell2_ket)
+  by (simp add: assoc_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor
+           flip: tensor_ell2_ket)
+
+lemma assoc_ell2'_sandwich: \<open>assoc' = sandwich assoc_ell2'\<close>
+  unfolding sandwich_def
+  apply (rule tensor_extensionality3)
+    apply simp
+   apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
+  apply (rule equal_ket)
+  apply (case_tac x)
+  by (simp add: assoc'_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor 
+           flip: tensor_ell2_ket)
+
+
+lemma swap_sandwich: "swap = sandwich Uswap"
+  apply (rule tensor_extensionality)
+    apply (auto simp: sandwich_def)
+  apply (rule tensor_ell2_extensionality)
+  by (simp add: times_applyOp tensor_op_ell2)
 
 end
 

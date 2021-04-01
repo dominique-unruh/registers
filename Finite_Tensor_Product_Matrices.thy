@@ -142,5 +142,106 @@ lemma mat_of_cblinfun_tensor_op:
   by (simp add: tensor_op_jnf_def case_prod_beta Let_def canonical_basis_length_ell2_def)
 
 
+lemma mat_of_cblinfun_assoc_ell2'[simp]: 
+  \<open>mat_of_cblinfun (assoc_ell2' :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) = one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
+  (is "mat_of_cblinfun ?assoc = _")
+proof  (rule mat_eq_iff[THEN iffD2], intro conjI allI impI)
+
+  show \<open>dim_row (mat_of_cblinfun ?assoc) =
+    dim_row (1\<^sub>m (CARD('a) * CARD('b) * CARD('c)))\<close>
+    by (simp add: canonical_basis_length_ell2_def)
+  show \<open>dim_col (mat_of_cblinfun ?assoc) =
+    dim_col (1\<^sub>m (CARD('a) * CARD('b) * CARD('c)))\<close>
+    by (simp add: canonical_basis_length_ell2_def)
+
+  fix i j
+  let ?i = "Enum.enum ! i :: (('a\<times>'b)\<times>'c)" and ?j = "Enum.enum ! j :: ('a\<times>('b\<times>'c))"
+
+  assume \<open>i < dim_row (1\<^sub>m (CARD('a) * CARD('b) * CARD('c)))\<close>
+  then have iB[simp]: \<open>i < CARD('a) * CARD('b) * CARD('c)\<close> by simp
+  then have iB'[simp]: \<open>i < CARD('a) * (CARD('b) * CARD('c))\<close> by linarith
+  assume \<open>j < dim_col (1\<^sub>m (CARD('a) * CARD('b) * CARD('c)))\<close>
+  then have jB[simp]: \<open>j < CARD('a) * CARD('b) * CARD('c)\<close> by simp
+  then have jB'[simp]: \<open>j < CARD('a) * (CARD('b) * CARD('c))\<close> by linarith
+
+  define i1 i23 i2 i3
+    where "i1 = fst (tensor_unpack CARD('a) (CARD('b)*CARD('c)) i)"
+      and "i23 = snd (tensor_unpack CARD('a) (CARD('b)*CARD('c)) i)"
+      and "i2 = fst (tensor_unpack CARD('b) CARD('c) i23)"
+      and "i3 = snd (tensor_unpack CARD('b) CARD('c) i23)"
+  define j12 j1 j2 j3
+    where "j12 = fst (tensor_unpack (CARD('a)*CARD('b)) CARD('c) j)"
+      and "j1 = fst (tensor_unpack CARD('a) CARD('b) j12)"
+      and "j2 = snd (tensor_unpack CARD('a) CARD('b) j12)"
+      and "j3 = snd (tensor_unpack (CARD('a)*CARD('b)) CARD('c) j)"
+
+  have [simp]: "j12 < CARD('a)*CARD('b)" "i23 < CARD('b)*CARD('c)"
+    using j12_def jB tensor_unpack_bound1 apply presburger
+    using i23_def iB' tensor_unpack_bound2 by blast
+
+  have j1': \<open>fst (tensor_unpack CARD('a) (CARD('b) * CARD('c)) j) = j1\<close>
+    by (simp add: j1_def j12_def tensor_unpack_fstfst)
+
+  let ?i1 = "Enum.enum ! i1 :: 'a" and ?i2 = "Enum.enum ! i2 :: 'b" and ?i3 = "Enum.enum ! i3 :: 'c"
+  let ?j1 = "Enum.enum ! j1 :: 'a" and ?j2 = "Enum.enum ! j2 :: 'b" and ?j3 = "Enum.enum ! j3 :: 'c"
+
+  have i: \<open>?i = ((?i1,?i2),?i3)\<close>
+    by (auto simp add: enum_prod_nth_tensor_unpack case_prod_beta
+          tensor_unpack_fstfst tensor_unpack_fstsnd tensor_unpack_sndsnd i1_def i2_def i23_def i3_def)
+  have j: \<open>?j = (?j1,(?j2,?j3))\<close> 
+    by (auto simp add: enum_prod_nth_tensor_unpack case_prod_beta
+        tensor_unpack_fstfst tensor_unpack_fstsnd tensor_unpack_sndsnd j1_def j2_def j12_def j3_def)
+  have ijeq: \<open>(?i1,?i2,?i3) = (?j1,?j2,?j3) \<longleftrightarrow> i = j\<close>
+    unfolding i1_def i2_def i3_def j1_def j2_def j3_def apply simp
+    apply (subst enum_inj, simp, simp)
+    apply (subst enum_inj, simp, simp)
+    apply (subst enum_inj, simp, simp)
+    apply (subst tensor_unpack_inj[symmetric, where i=i and j=j and A="CARD('a)" and B="CARD('b)*CARD('c)"], simp, simp)
+    unfolding prod_eq_iff
+    apply (subst tensor_unpack_inj[symmetric, where i=\<open>snd (tensor_unpack CARD('a) (CARD('b) * CARD('c)) i)\<close> and A="CARD('b)" and B="CARD('c)"], simp, simp)
+    by (simp add: i1_def[symmetric] j1_def[symmetric] i2_def[symmetric] j2_def[symmetric] i3_def[symmetric] j3_def[symmetric]
+        i23_def[symmetric] j12_def[symmetric] j1'
+        prod_eq_iff tensor_unpack_fstsnd tensor_unpack_sndsnd)
+
+  have \<open>mat_of_cblinfun ?assoc $$ (i, j) = Rep_ell2 (assoc_ell2' *\<^sub>V ket ?j) ?i\<close>
+    by (subst mat_of_cblinfun_ell2_index, auto)
+  also have \<open>\<dots> = Rep_ell2 ((ket ?j1 \<otimes>\<^sub>s ket ?j2) \<otimes>\<^sub>s ket ?j3) ?i\<close>
+    by (simp add: j assoc_ell2'_tensor flip: tensor_ell2_ket)
+  also have \<open>\<dots> = (if (?i1,?i2,?i3) = (?j1,?j2,?j3) then 1 else 0)\<close>
+    by (auto simp add: ket.rep_eq i)
+  also have \<open>\<dots> = (if i=j then 1 else 0)\<close>
+    using ijeq by simp
+  finally
+  show \<open>mat_of_cblinfun ?assoc $$ (i, j) =
+           1\<^sub>m (CARD('a) * CARD('b) * CARD('c)) $$ (i, j)\<close>
+    by auto
+qed
+
+lemma assoc_ell2'_inv: "assoc_ell2 o\<^sub>C\<^sub>L assoc_ell2' = idOp"
+  apply (rule equal_ket, case_tac x, hypsubst)
+  by (simp flip: tensor_ell2_ket add: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor)
+
+lemma assoc_ell2_inv: "assoc_ell2' o\<^sub>C\<^sub>L assoc_ell2 = idOp"
+  apply (rule equal_ket, case_tac x, hypsubst)
+  by (simp flip: tensor_ell2_ket add: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor)
+
+lemma mat_of_cblinfun_assoc_ell2[simp]: 
+  \<open>mat_of_cblinfun (assoc_ell2 :: ((('a::enum\<times>'b::enum)\<times>'c::enum) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) = one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
+  (is "mat_of_cblinfun ?assoc = _")
+proof -
+  let ?assoc' = "assoc_ell2' :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)"
+  have "one_mat (CARD('a)*CARD('b)*CARD('c)) = mat_of_cblinfun (?assoc o\<^sub>C\<^sub>L ?assoc')"
+    by (simp add: mult.assoc assoc_ell2'_inv cblinfun_of_mat_id canonical_basis_length_ell2_def)
+  also have \<open>\<dots> = mat_of_cblinfun ?assoc * mat_of_cblinfun ?assoc'\<close>
+    using cblinfun_of_mat_timesOp by blast
+  also have \<open>\<dots> = mat_of_cblinfun ?assoc * one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
+    by simp
+  also have \<open>\<dots> = mat_of_cblinfun ?assoc\<close>
+    apply (rule right_mult_one_mat')
+    by (simp add: canonical_basis_length_ell2_def)
+  finally show ?thesis
+    by simp
+qed
+
 
 end
