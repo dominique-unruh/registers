@@ -27,12 +27,12 @@ begin
 
 abbreviation "\<Phi>1 \<equiv> \<Phi> \<circ> Fst"
 abbreviation "\<Phi>2 \<equiv> \<Phi> \<circ> Snd"
-abbreviation "X\<Phi>2 \<equiv> pair X \<Phi>2"
-abbreviation "X\<Phi>1 \<equiv> pair X \<Phi>1"
-abbreviation "X\<Phi> \<equiv> pair X \<Phi>"
-abbreviation "XAB \<equiv> pair (pair X A) B"
-abbreviation "AB \<equiv> pair A B"
-abbreviation "\<Phi>2AB \<equiv> pair (pair (\<Phi> o Snd) A) B"
+abbreviation "X\<Phi>2 \<equiv> (X;\<Phi>2)"
+abbreviation "X\<Phi>1 \<equiv> (X;\<Phi>1)"
+abbreviation "X\<Phi> \<equiv> (X;\<Phi>)"
+abbreviation "XAB \<equiv> ((X;A); B)"
+abbreviation "AB \<equiv> (A;B)"
+abbreviation "\<Phi>2AB \<equiv> ((\<Phi> o Snd; A); B)"
 
 definition "teleport a b = [
     apply CNOT X\<Phi>1,
@@ -217,7 +217,7 @@ lemma [compatible]: "mutually compatible (Fst, Snd)"
 (* TODO: Laws + rename *)
 lemma pair_Fst_Snd[simp]: 
   assumes \<open>lvalue F\<close>
-  shows \<open>pair (F o Fst) (F o Snd) = F\<close>
+  shows \<open>(F o Fst; F o Snd) = F\<close>
   apply (rule tensor_extensionality)
   using [[simproc del: compatibility_warn]]
   using assms by (auto simp: lvalue_pair_apply Fst_def Snd_def lvalue_mult comp_tensor_op)
@@ -227,14 +227,14 @@ lemma pair_Fst_Snd[simp]:
 lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (idOp \<otimes>\<^sub>o a)\<close>
   by (auto simp: lvalue_pair_apply)
 lemma X\<Phi>1_X\<Phi>: \<open>X\<Phi>1 a = X\<Phi> (assoc (a \<otimes>\<^sub>o idOp))\<close>
-  apply (subst pair_comp_assoc[unfolded o_def, of X \<Phi>1 \<Phi>2, simplified, THEN fun_cong])
+  apply (subst pair_o_assoc[unfolded o_def, of X \<Phi>1 \<Phi>2, simplified, THEN fun_cong])
   by (auto simp: lvalue_pair_apply)
 lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap) (assoc (a \<otimes>\<^sub>o idOp)))\<close>
-  apply (subst pair_comp_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
+  apply (subst pair_o_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
   apply (subst (2) pair_Fst_Snd[symmetric, of \<Phi>], simp)
   using [[simproc del: compatibility_warn]]
-  apply (subst pair_comp_swap', simp)
-  apply (subst pair_comp_assoc[unfolded o_def, THEN fun_cong], simp, simp, simp)
+  apply (subst pair_o_swap', simp)
+  apply (subst pair_o_assoc[unfolded o_def, THEN fun_cong], simp, simp, simp)
   by (auto simp: lvalue_pair_apply)
 lemma \<Phi>2_X\<Phi>: \<open>\<Phi>2 a = X\<Phi> (idOp \<otimes>\<^sub>o (idOp \<otimes>\<^sub>o a))\<close>
   by (auto simp: Snd_def lvalue_pair_apply)
@@ -255,26 +255,26 @@ lemmas to_X\<Phi>1 = X_X\<Phi>1
 lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes>\<^sub>o idOp)\<close>
   by (auto simp: lvalue_pair_apply)
 lemma XAB_X\<Phi>1_AB: \<open>XAB a = (X\<Phi>1;AB) (((\<lambda>x. x \<otimes>\<^sub>o idOp) \<otimes>\<^sub>h id) (assoc a))\<close>
-  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
-      pair_comp_assoc[unfolded o_def, THEN fun_cong])
+  by (simp add: pair_o_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
+      pair_o_assoc[unfolded o_def, THEN fun_cong])
 
 lemmas to_X\<Phi>1_AB = X\<Phi>1_X\<Phi>1_AB XAB_X\<Phi>1_AB
 
 lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes>\<^sub>o assoc a)))\<close>
-  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
-      pair_comp_swap[unfolded o_def, THEN fun_cong]
-      pair_comp_assoc'[unfolded o_def, THEN fun_cong]
-      pair_comp_assoc[unfolded o_def, THEN fun_cong])
+  by (simp add: pair_o_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
+      pair_o_swap[unfolded o_def, THEN fun_cong]
+      pair_o_assoc'[unfolded o_def, THEN fun_cong]
+      pair_o_assoc[unfolded o_def, THEN fun_cong])
 
 lemma X\<Phi>2_to_X\<Phi>2_AB: \<open>X\<Phi>2 a = (X\<Phi>2;AB) (a \<otimes>\<^sub>o idOp)\<close>
   by (simp add: lvalue_pair_apply)
 
 schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
-  apply (subst pair_comp_assoc'[unfolded o_def, THEN fun_cong])
+  apply (subst pair_o_assoc'[unfolded o_def, THEN fun_cong])
      apply simp_all[3]
   apply (subst lvalue_pair_apply[where a=idOp])
     apply simp_all[2]
-  apply (subst pair_comp_assoc[unfolded o_def, THEN fun_cong])
+  apply (subst pair_o_assoc[unfolded o_def, THEN fun_cong])
      apply simp_all[3]
   by simp
 
@@ -413,7 +413,7 @@ end
 interpretation teleport_concrete:
   concrete_teleport_vars +
   teleport_locale concrete_teleport_vars.X
-                  \<open>pair concrete_teleport_vars.\<Phi>1 concrete_teleport_vars.\<Phi>2\<close>
+                  \<open>(concrete_teleport_vars.\<Phi>1; concrete_teleport_vars.\<Phi>2)\<close>
                   concrete_teleport_vars.A
                   concrete_teleport_vars.B
   apply standard

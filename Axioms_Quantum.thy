@@ -79,7 +79,7 @@ lemma tensor_update_is_2hom: \<open>update_2hom tensor_update\<close>
 (* definition assoc :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite, 'a\<times>('b\<times>'c)) update_hom\<close> where
   \<open>assoc a = assoc_ell2 o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L assoc_ell2'\<close>
 
-lemma assoc_hom: \<open>update_hom assoc\<close>
+lemma assoc_is_hom: \<open>update_hom assoc\<close>
   unfolding assoc_def
   by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
 

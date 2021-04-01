@@ -12,16 +12,16 @@ no_notation Order.top ("\<top>\<index>")
 unbundle lvalue_notation
 unbundle cblinfun_notation
 
-lemma pair_comp_tensor':
+lemma pair_o_tensor':
   assumes "compatible A B" and \<open>clinear C\<close> and \<open>clinear D\<close>
-  shows "(pair A B) ((C \<otimes>\<^sub>h D) x) = (pair (A o C) (B o D)) x"
-  using pair_comp_tensor[OF assms]
+  shows "(A; B) ((C \<otimes>\<^sub>h D) x) = (A o C; B o D) x"
+  using pair_o_tensor[OF assms]
   by (smt (z3) fcomp_comp fcomp_def)
 
-lemma pair_comp_swap':
+lemma pair_o_swap':
   assumes "compatible A B"
-  shows "(pair A B) (swap x) = pair B A x"
-  using pair_comp_swap[OF assms]
+  shows "(A; B) (swap x) = (B; A) x"
+  using pair_o_swap[OF assms]
   by (metis comp_def)
 
 lemma lvalue_left_idOp[intro!]:

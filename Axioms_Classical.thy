@@ -214,7 +214,7 @@ qed
 (* definition assoc :: \<open>(('a\<times>'b)\<times>'c, 'a\<times>('b\<times>'c)) update_hom\<close> where 
   \<open>assoc r = {((a,(b,c)), ((a,b),c))| a b c. True} O r O {(((a,b),c), (a,(b,c)))| a b c. True}\<close>
 
-lemma assoc_hom: \<open>update_hom assoc\<close>
+lemma assoc_is_hom: \<open>update_hom assoc\<close>
 proof -
   let ?assoc = \<open>assoc :: (('a\<times>'b)\<times>'c, 'a\<times>('b\<times>'c)) update_hom\<close>
   term \<open>rel_of_update_hom ?assoc\<close>
