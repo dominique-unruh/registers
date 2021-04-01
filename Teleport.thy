@@ -1,7 +1,10 @@
 theory Teleport
-  imports QHoare
-    Real_Impl.Real_Impl "HOL-Library.Code_Target_Numeral"
+  imports 
+    QHoare
+    Real_Impl.Real_Impl
+    "HOL-Library.Code_Target_Numeral"
     Finite_Tensor_Product_Matrices
+    "HOL-Library.Word"
 begin
 
 hide_const (open) Finite_Cartesian_Product.vec
@@ -271,6 +274,5 @@ interpretation teleport_concrete:
 
 thm teleport
 thm teleport_def
-
 
 end

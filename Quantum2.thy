@@ -1,5 +1,6 @@
 theory Quantum2
-  imports Laws_Quantum "HOL-ex.Bit_Lists" "HOL-Library.Z2"
+  imports
+    Laws_Quantum
     Bounded_Operators.Bounded_Operators_Code
     Real_Impl.Real_Impl
     "HOL-Library.Code_Target_Numeral"
