@@ -28,7 +28,7 @@ definition EQ :: "('a,'mem) update_hom \<Rightarrow> 'a ell2 \<Rightarrow> 'mem 
 lemma join_EQP:
   assumes [compatible]: "compatible R S"
   shows "EQP R \<psi> o\<^sub>C\<^sub>L EQP S \<phi> = EQP (pair R S) (\<psi> \<otimes>\<^sub>s \<phi>)"
-  apply (subst pair_apply[symmetric, where F=R and G=S])
+  apply (subst lvalue_pair_apply[symmetric, where F=R and G=S])
   using assms by auto
 
 (* lemma join_EQP':

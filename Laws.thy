@@ -99,8 +99,6 @@ subsection \<open>Swap and assoc\<close>
 
 definition \<open>swap = tensor_lift (\<lambda>a b. b \<otimes>\<^sub>u a)\<close>
 
-(* TODO more renaming from here *)
-
 lemma swap_is_hom[simp]: "update_hom swap"
   unfolding swap_def apply (rule tensor_lift_hom) 
   apply (rule update_2hom_sym) by (fact tensor_update_is_2hom)
@@ -129,8 +127,12 @@ lemma swap_lvalues:
 lemma compatible_sym: "compatible x y \<Longrightarrow> compatible y x"
   by (simp add: compatible_def)
 
-definition pair :: \<open>('a::domain,'c::domain) update_hom \<Rightarrow> ('b::domain,'c) update_hom \<Rightarrow> ('a\<times>'b, 'c) update_hom\<close> where
-  \<open>pair F G = tensor_lift (\<lambda>a b. F a *\<^sub>u G b)\<close>
+definition lvalue_pair :: \<open>('a::domain,'c::domain) update_hom \<Rightarrow> ('b::domain,'c) update_hom
+         \<Rightarrow> ('a\<times>'b, 'c) update_hom\<close> ("'(_;_')") where
+  \<open>(F; G) = tensor_lift (\<lambda>a b. F a *\<^sub>u G b)\<close>
+
+
+(* TODO more renaming from here *)
 
 lemma update_hom_F_comp_G1:
   assumes \<open>update_hom G\<close>
@@ -150,62 +152,62 @@ lemma update_2hom_F_comp_G[simp]:
   apply (rule update_2hom_o_hom_left_is_hom, rule update_2hom_o_hom_right_is_hom)
   by (rule comp_update_is_2hom assms)+
 
-lemma pair_hom[simp]:
+lemma lvalue_pair_is_hom[simp]:
   assumes "update_hom F" and "update_hom G"
-  shows "update_hom (pair F G)"
-  unfolding pair_def apply (rule tensor_lift_hom) using assms by simp
+  shows "update_hom (F; G)"
+  unfolding lvalue_pair_def apply (rule tensor_lift_hom) using assms by simp
 
-lemma pair_apply:
+lemma lvalue_pair_apply:
   assumes \<open>update_hom F\<close> and \<open>update_hom G\<close>
-  shows \<open>(pair F G) (a \<otimes>\<^sub>u b) = (F a) *\<^sub>u (G b)\<close>
-  unfolding pair_def 
+  shows \<open>(F; G) (a \<otimes>\<^sub>u b) = (F a) *\<^sub>u (G b)\<close>
+  unfolding lvalue_pair_def 
   using tensor_lift_correct update_2hom_F_comp_G[OF assms]
   by metis
 
 
-lemma pair_apply':
+lemma lvalue_pair_apply':
   assumes \<open>compatible F G\<close>
-  shows \<open>(pair F G) (a \<otimes>\<^sub>u b) = (G b) *\<^sub>u (F a)\<close>
-  apply (subst pair_apply)
+  shows \<open>(F; G) (a \<otimes>\<^sub>u b) = (G b) *\<^sub>u (F a)\<close>
+  apply (subst lvalue_pair_apply)
   using assms by (auto simp: compatible_def intro: lvalue_hom)
 
 lemma pair_lvalue[simp]:
   assumes "compatible F G"
-  shows "lvalue (pair F G)"
-  apply (rule pair_lvalue_axiom[where F=F and G=G and p=\<open>pair F G\<close>])
-  using assms by (auto simp: pair_apply compatible_def)
-  
+  shows "lvalue (F; G)"
+  apply (rule pair_lvalue_axiom[where F=F and G=G and p=\<open>(F; G)\<close>])
+  using assms by (auto simp: lvalue_pair_apply compatible_def)
+
+(* TODO: Use capital letters FGH not xyz *)
 lemma compatible3[simp]:
   assumes [simp]: "compatible x y" and "compatible y z" and "compatible x z"
-  shows "compatible (pair x y) z"
+  shows "compatible (x; y) z"
 proof (rule compatibleI)
   have [simp]: \<open>lvalue x\<close> \<open>lvalue y\<close> \<open>lvalue z\<close>
     using assms compatible_def by auto
   then have [simp]: \<open>update_hom x\<close> \<open>update_hom y\<close> \<open>update_hom z\<close>
     using lvalue_hom by blast+
-  have "(pair (pair x y) z) ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h) = (pair z (pair x y)) (h \<otimes>\<^sub>u (f \<otimes>\<^sub>u g))" for f g h
-    using assms apply (simp add: pair_apply compatible_def comp_update_assoc)
+  have "((x; y); z) ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h) = (z; (x; y)) (h \<otimes>\<^sub>u (f \<otimes>\<^sub>u g))" for f g h
+    using assms apply (simp add: lvalue_pair_apply compatible_def comp_update_assoc)
     by (metis comp_update_assoc)
-  then have "(pair (pair x y) z \<circ> swap \<circ> (\<otimes>\<^sub>u) h) (f \<otimes>\<^sub>u g)
-           = (pair z (pair x y) \<circ> (\<otimes>\<^sub>u) h) (f \<otimes>\<^sub>u g)" for f g h
+  then have "(((x; y); z) \<circ> swap \<circ> (\<otimes>\<^sub>u) h) (f \<otimes>\<^sub>u g)
+           = ((z; (x; y)) \<circ> (\<otimes>\<^sub>u) h) (f \<otimes>\<^sub>u g)" for f g h
     by auto
-  then have *: "(pair (pair x y) z \<circ> swap \<circ> (\<otimes>\<^sub>u) h)
-           = (pair z (pair x y) \<circ> (\<otimes>\<^sub>u) h)" for h
+  then have *: "((x; y); z) \<circ> swap \<circ> (\<otimes>\<^sub>u) h = (z; (x; y)) \<circ> (\<otimes>\<^sub>u) h" for h
     apply (rule tensor_extensionality[rotated -1])
-    by (intro comp_update_hom pair_hom; simp)+
-  have "(pair (pair x y) z) (fg \<otimes>\<^sub>u h)
-           = (pair z (pair x y)) (h \<otimes>\<^sub>u fg)" for fg h
+    by (intro comp_update_hom lvalue_pair_is_hom; simp)+
+  have "((x; y); z) (fg \<otimes>\<^sub>u h) = (z; (x; y)) (h \<otimes>\<^sub>u fg)" for fg h
     using *
     using comp_eq_dest_lhs by fastforce
-  then show "(pair x y fg) *\<^sub>u (z h) = (z h) *\<^sub>u (pair x y fg)" for fg h
-    unfolding compatible_def by (simp add: pair_apply)
-  show "lvalue z" and  "lvalue (pair x y)"
+  then show "(x; y) fg *\<^sub>u (z h) = (z h) *\<^sub>u (x; y) fg" for fg h
+    unfolding compatible_def by (simp add: lvalue_pair_apply)
+  show "lvalue z" and  "lvalue (x; y)"
     by simp_all
 qed
 
+(* TODO: Use capital letters FGH not xyz *)
 lemma compatible3'[simp]:
   assumes "compatible x y" and "compatible y z" and "compatible x z"
-  shows "compatible x (pair y z)"
+  shows "compatible x (y; z)"
   apply (rule compatible_sym)
   apply (rule compatible3)
   using assms by (auto simp: compatible_sym)
@@ -227,39 +229,39 @@ lemma compatible_lvalue2: \<open>compatible x y \<Longrightarrow> lvalue y\<clos
 
 lemma pair_comp_tensor:
   assumes "compatible A B" and [simp]: \<open>update_hom C\<close> and [simp]: \<open>update_hom D\<close>
-  shows "(pair A B) o (tensor_update_hom C D) = pair (A o C) (B o D)"
+  shows "(A; B) o (C \<otimes>\<^sub>h D) = (A o C; B o D)"
 proof (rule tensor_extensionality)
   have [simp]: \<open>update_hom A\<close>
     by (metis assms(1) compatible_lvalue1 lvalue_hom)
   have [simp]: \<open>update_hom B\<close>
     by (metis (mono_tags, lifting) assms(1) compatible_lvalue2 lvalue_hom)
-  show \<open>update_hom (pair A B \<circ> tensor_update_hom C D)\<close>
+  show \<open>update_hom ((A; B) \<circ> (C \<otimes>\<^sub>h D))\<close>
     by (metis assms(1) assms(2) assms(3) comp_update_hom compatible_lvalue1 compatible_lvalue2 
-              lvalue_hom pair_hom tensor_update_hom_is_hom)
-  show \<open>update_hom (pair (A \<circ> C) (B \<circ> D))\<close>
-    by (metis (no_types, lifting) assms(1) assms(2) assms(3) comp_update_hom compatible_lvalue1 compatible_lvalue2 lvalue_hom pair_hom)
+              lvalue_hom lvalue_pair_is_hom tensor_update_hom_is_hom)
+  show \<open>update_hom (A \<circ> C; B \<circ> D)\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) assms(3) comp_update_hom compatible_lvalue1 compatible_lvalue2 lvalue_hom lvalue_pair_is_hom)
 
-  show \<open>(pair A B \<circ> tensor_update_hom C D) (a \<otimes>\<^sub>u b) = pair (A \<circ> C) (B \<circ> D) (a \<otimes>\<^sub>u b)\<close> for a b
-    by (simp add: pair_apply comp_update_hom)
+  show \<open>((A; B) \<circ> (C \<otimes>\<^sub>h D)) (a \<otimes>\<^sub>u b) = (A \<circ> C; B \<circ> D) (a \<otimes>\<^sub>u b)\<close> for a b
+    by (simp add: lvalue_pair_apply comp_update_hom)
 qed
 
 lemma pair_comp_swap[simp]:
   assumes "compatible A B"
-  shows "(pair A B) o swap = pair B A"
+  shows "(A; B) o swap = (B; A)"
 proof (rule tensor_extensionality)
   have [simp]: "update_hom A" "update_hom B"
     apply (metis (no_types, hide_lams) assms compatible_lvalue1 lvalue_hom)
     by (metis (full_types) assms compatible_lvalue2 lvalue_hom)
-  then show \<open>update_hom (pair A B \<circ> swap)\<close>
-    by (metis (no_types, hide_lams) comp_update_hom pair_hom swap_is_hom)
-  show \<open>update_hom (pair B A)\<close>
+  then show \<open>update_hom ((A; B) \<circ> swap)\<close>
+    by (metis (no_types, hide_lams) comp_update_hom lvalue_pair_is_hom swap_is_hom)
+  show \<open>update_hom (B; A)\<close>
     by (metis (no_types, lifting) assms compatible_sym lvalue_hom pair_lvalue)
-  show \<open>(pair A B \<circ> swap) (a \<otimes>\<^sub>u b) = pair B A (a \<otimes>\<^sub>u b)\<close> for a b
+  show \<open>((A; B) \<circ> swap) (a \<otimes>\<^sub>u b) = (B; A) (a \<otimes>\<^sub>u b)\<close> for a b
     (* Without the "only:", we would not need the "apply subst",
        but that proof fails when instantiated in Classical.thy *)
     apply (simp only: o_def swap_apply)
-    apply (subst pair_apply, simp, simp)
-    apply (subst pair_apply, simp, simp)
+    apply (subst lvalue_pair_apply, simp, simp)
+    apply (subst lvalue_pair_apply, simp, simp)
     by (metis (no_types, lifting) assms compatible_def)
 qed
 
@@ -285,13 +287,13 @@ lemma compatible_Fst_Snd[simp]: \<open>compatible Fst Snd\<close>
 
 lemmas compatible_Snd_Fst[simp] = compatible_Fst_Snd[THEN compatible_sym]
 
-lemma pair_Fst_Snd: \<open>pair Fst Snd = id\<close>
+lemma pair_Fst_Snd: \<open>(Fst; Snd) = id\<close>
   apply (rule tensor_extensionality)
-  by (simp_all add: pair_apply Fst_def Snd_def tensor_update_mult)
+  by (simp_all add: lvalue_pair_apply Fst_def Snd_def tensor_update_mult)
 
-lemma pair_Snd_Fst: \<open>pair Snd Fst = swap\<close>
+lemma pair_Snd_Fst: \<open>(Snd; Fst) = swap\<close>
   apply (rule tensor_extensionality)
-  by (simp_all add: pair_apply Fst_def Snd_def tensor_update_mult)
+  by (simp_all add: lvalue_pair_apply Fst_def Snd_def tensor_update_mult)
 
 lemma lvalue_swap: \<open>lvalue swap\<close>
   by (simp flip: pair_Snd_Fst)
@@ -299,22 +301,22 @@ lemma lvalue_swap: \<open>lvalue swap\<close>
 section \<open>Associativity of the tensor product\<close>
 
 definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a\<times>('b\<times>'c)) update_hom\<close> where 
-  \<open>assoc = pair (pair Fst (Snd o Fst)) (Snd o Snd)\<close>
+  \<open>assoc = ((Fst; Snd o Fst); Snd o Snd)\<close>
 
 lemma assoc_hom[simp]: \<open>update_hom assoc\<close>
   by (auto simp: assoc_def)
 
 lemma assoc_apply: \<open>assoc (tensor_update (tensor_update a b) c) = (tensor_update a (tensor_update b c))\<close>
-  by (auto simp: assoc_def pair_apply Fst_def Snd_def tensor_update_mult)
+  by (auto simp: assoc_def lvalue_pair_apply Fst_def Snd_def tensor_update_mult)
 
 definition assoc' :: \<open>('a\<times>('b\<times>'c), ('a::domain\<times>'b::domain)\<times>'c::domain) update_hom\<close> where 
-  \<open>assoc' = pair (Fst o Fst) (pair (Fst o Snd) Snd)\<close>
+  \<open>assoc' = (Fst o Fst; (Fst o Snd; Snd))\<close>
 
 lemma assoc'_hom[simp]: \<open>update_hom assoc'\<close>
   by (auto simp: assoc'_def)
 
 lemma assoc'_apply: \<open>assoc' (tensor_update a (tensor_update b c)) =  (tensor_update (tensor_update a b) c)\<close>
-  by (auto simp: assoc'_def pair_apply Fst_def Snd_def tensor_update_mult)
+  by (auto simp: assoc'_def lvalue_pair_apply Fst_def Snd_def tensor_update_mult)
 
 lemma lvalue_assoc: \<open>lvalue assoc\<close>
   unfolding assoc_def
@@ -326,26 +328,26 @@ lemma lvalue_assoc': \<open>lvalue assoc'\<close>
 
 lemma pair_comp_assoc[simp]:
   assumes [simp]: \<open>update_hom F\<close> \<open>update_hom G\<close> \<open>update_hom H\<close>
-  shows \<open>pair F (pair G H) \<circ> assoc = pair (pair F G) H\<close>
+  shows \<open>(F; (G; H)) \<circ> assoc = ((F; G); H)\<close>
 proof (rule tensor_extensionality3')
-  show \<open>update_hom (pair F (pair G H) \<circ> assoc)\<close>
-    by (metis assms(1) assms(2) assms(3) assoc_hom comp_update_hom pair_hom)
-  show \<open>update_hom (pair (pair F G) H)\<close>
-    by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
-  show \<open>(pair F (pair G H) \<circ> assoc) ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h) = pair (pair F G) H ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h)\<close> for f g h
-    by (simp add: pair_apply assoc_apply comp_update_assoc)
+  show \<open>update_hom ((F; (G; H)) \<circ> assoc)\<close>
+    by (metis assms(1) assms(2) assms(3) assoc_hom comp_update_hom lvalue_pair_is_hom)
+  show \<open>update_hom ((F; G); H)\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) assms(3) lvalue_pair_is_hom)
+  show \<open>((F; (G; H)) \<circ> assoc) ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h) = ((F; G); H) ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h)\<close> for f g h
+    by (simp add: lvalue_pair_apply assoc_apply comp_update_assoc)
 qed
 
 lemma pair_comp_assoc'[simp]:
   assumes [simp]: \<open>update_hom F\<close> \<open>update_hom G\<close> \<open>update_hom H\<close>
-  shows \<open>pair (pair F G) H \<circ> assoc' = pair F (pair G H)\<close>
+  shows \<open>((F; G); H) \<circ> assoc' = (F; (G; H))\<close>
 proof (rule tensor_extensionality3)
-  show \<open>update_hom (pair (pair F G) H \<circ> assoc')\<close>
-    by (metis (no_types, hide_lams) assms(1) assms(2) assms(3) assoc'_hom comp_update_hom pair_hom)
-  show \<open>update_hom (pair F (pair G H))\<close>
-    by (metis (no_types, lifting) assms(1) assms(2) assms(3) pair_hom)
-  show \<open>(pair (pair F G) H \<circ> assoc') (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h) = pair F (pair G H) (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h)\<close> for f g h
-    by (simp add: pair_apply assoc'_apply comp_update_assoc)
+  show \<open>update_hom (((F; G); H) \<circ> assoc')\<close>
+    by (metis (no_types, hide_lams) assms(1) assms(2) assms(3) assoc'_hom comp_update_hom lvalue_pair_is_hom)
+  show \<open>update_hom (F; (G; H))\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) assms(3) lvalue_pair_is_hom)
+  show \<open>(((F; G); H) \<circ> assoc') (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h) = (F; (G; H)) (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h)\<close> for f g h
+    by (simp add: lvalue_pair_apply assoc'_apply comp_update_assoc)
 qed
 
 subsection \<open>Compatibility simplification\<close>
@@ -427,7 +429,7 @@ lemma
 proof -
   have "lvalue b" by simp
   have "compatible b c" by simp
-  have "compatible (pair a b) c" by simp
+  have "compatible (a; b) c" by simp
   show ?thesis by simp
 qed
 end
@@ -441,12 +443,12 @@ no_notation tensor_update (infixr "\<otimes>\<^sub>u" 70)
 
 bundle lvalue_notation begin
 notation tensor_update_hom (infixr "\<otimes>\<^sub>h" 70)
-notation pair ("'(_;_')")
+notation lvalue_pair ("'(_;_')")
 end
 
 bundle no_lvalue_notation begin
 no_notation tensor_update_hom (infixr "\<otimes>\<^sub>h" 70)
-no_notation pair ("'(_;_')")
+no_notation lvalue_pair ("'(_;_')")
 end
 
 end

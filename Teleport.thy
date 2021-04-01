@@ -220,28 +220,28 @@ lemma pair_Fst_Snd[simp]:
   shows \<open>pair (F o Fst) (F o Snd) = F\<close>
   apply (rule tensor_extensionality)
   using [[simproc del: compatibility_warn]]
-  using assms by (auto simp: pair_apply Fst_def Snd_def lvalue_mult comp_tensor_op)
+  using assms by (auto simp: lvalue_pair_apply Fst_def Snd_def lvalue_mult comp_tensor_op)
 
 (* TODO: get rid of "Simplification subgoal compatible (F \<circ> Fst) F" warning *)
 
 lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (idOp \<otimes>\<^sub>o a)\<close>
-  by (auto simp: pair_apply)
+  by (auto simp: lvalue_pair_apply)
 lemma X\<Phi>1_X\<Phi>: \<open>X\<Phi>1 a = X\<Phi> (assoc (a \<otimes>\<^sub>o idOp))\<close>
   apply (subst pair_comp_assoc[unfolded o_def, of X \<Phi>1 \<Phi>2, simplified, THEN fun_cong])
-  by (auto simp: pair_apply)
+  by (auto simp: lvalue_pair_apply)
 lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap) (assoc (a \<otimes>\<^sub>o idOp)))\<close>
   apply (subst pair_comp_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
   apply (subst (2) pair_Fst_Snd[symmetric, of \<Phi>], simp)
   using [[simproc del: compatibility_warn]]
   apply (subst pair_comp_swap', simp)
   apply (subst pair_comp_assoc[unfolded o_def, THEN fun_cong], simp, simp, simp)
-  by (auto simp: pair_apply)
+  by (auto simp: lvalue_pair_apply)
 lemma \<Phi>2_X\<Phi>: \<open>\<Phi>2 a = X\<Phi> (idOp \<otimes>\<^sub>o (idOp \<otimes>\<^sub>o a))\<close>
-  by (auto simp: Snd_def pair_apply)
+  by (auto simp: Snd_def lvalue_pair_apply)
 lemmas to_X\<Phi> = \<Phi>_X\<Phi> X\<Phi>1_X\<Phi> X\<Phi>2_X\<Phi> \<Phi>2_X\<Phi>
 
 lemma X_X\<Phi>1: \<open>X a = X\<Phi>1 (a \<otimes>\<^sub>o idOp)\<close>
-  by (auto simp: pair_apply)
+  by (auto simp: lvalue_pair_apply)
 lemmas to_X\<Phi>1 = X_X\<Phi>1
 
 (* lemma clinear_comp_NO_MATCH:
@@ -253,26 +253,26 @@ lemmas to_X\<Phi>1 = X_X\<Phi>1
   by (simp add: assms(3) assms(4) clinearI complex_vector.linear_add complex_vector.linear_scale) *)
 
 lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes>\<^sub>o idOp)\<close>
-  by (auto simp: pair_apply)
+  by (auto simp: lvalue_pair_apply)
 lemma XAB_X\<Phi>1_AB: \<open>XAB a = (X\<Phi>1;AB) (((\<lambda>x. x \<otimes>\<^sub>o idOp) \<otimes>\<^sub>h id) (assoc a))\<close>
-  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] pair_apply
+  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
       pair_comp_assoc[unfolded o_def, THEN fun_cong])
 
 lemmas to_X\<Phi>1_AB = X\<Phi>1_X\<Phi>1_AB XAB_X\<Phi>1_AB
 
 lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes>\<^sub>o assoc a)))\<close>
-  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] pair_apply
+  by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
       pair_comp_swap[unfolded o_def, THEN fun_cong]
       pair_comp_assoc'[unfolded o_def, THEN fun_cong]
       pair_comp_assoc[unfolded o_def, THEN fun_cong])
 
 lemma X\<Phi>2_to_X\<Phi>2_AB: \<open>X\<Phi>2 a = (X\<Phi>2;AB) (a \<otimes>\<^sub>o idOp)\<close>
-  by (simp add: pair_apply)
+  by (simp add: lvalue_pair_apply)
 
 schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
   apply (subst pair_comp_assoc'[unfolded o_def, THEN fun_cong])
      apply simp_all[3]
-  apply (subst pair_apply[where a=idOp])
+  apply (subst lvalue_pair_apply[where a=idOp])
     apply simp_all[2]
   apply (subst pair_comp_assoc[unfolded o_def, THEN fun_cong])
      apply simp_all[3]
