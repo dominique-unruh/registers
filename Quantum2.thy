@@ -53,13 +53,13 @@ lemma lvalue_id[simp]: \<open>lvalue (\<lambda>x. x)\<close>
   using assms unfolding compatible_def apply auto
   by (metis comp_tensor_op) *)
 
-(* lemma compatible_tensor_id_update_left1[simp]:
+(* lemma compatible_tensor_id_update_rl[simp]:
   assumes "lvalue F" and "lvalue G"
   shows "compatible (\<lambda>a. F a \<otimes>\<^sub>o idOp) (\<lambda>a. idOp \<otimes>\<^sub>o G a)"
   using assms unfolding compatible_def apply auto
   by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2) *)
 
-(* lemma compatible_tensor_id_update_left2[simp]:
+(* lemma compatible_tensor_id_update_lr[simp]:
   assumes "lvalue F" and "lvalue G"
   shows "compatible (\<lambda>a. idOp \<otimes>\<^sub>o F a) (\<lambda>a. G a \<otimes>\<^sub>o idOp)"
   using assms unfolding compatible_def apply auto
@@ -104,9 +104,7 @@ proof (rule antisym)
     from R S have \<open>\<psi> = (R a o\<^sub>C\<^sub>L S b) *\<^sub>V \<psi>\<close>
       by (simp add: times_applyOp)
     also have \<open>\<dots> \<in> space_as_set ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)\<close>
-      (* TODO: There should a theorem for this in the bounded operator library. *)
-      apply transfer
-      by (meson closure_subset range_eqI subsetD)
+      by simp
     finally show \<open>\<psi> \<in> space_as_set ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)\<close>
       by -
   qed
@@ -159,6 +157,12 @@ lemma swap_sandwich: "swap = sandwich Uswap"
     apply (auto simp: sandwich_def)
   apply (rule tensor_ell2_extensionality)
   by (simp add: times_applyOp tensor_op_ell2)
+
+lemma id_tensor_sandwich: 
+  fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2"
+  shows "id \<otimes>\<^sub>h sandwich a = sandwich (idOp \<otimes>\<^sub>o a)"
+  apply (rule tensor_extensionality) 
+  by (simp_all add: tensor_update_hom_is_hom comp_tensor_op sandwich_def tensor_op_adjoint)
 
 end
 

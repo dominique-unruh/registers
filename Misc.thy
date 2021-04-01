@@ -4,6 +4,7 @@ theory Misc
     "HOL-ex.Sketch_and_Explore"
 begin
 
+no_notation Order.top ("\<top>\<index>")
 unbundle no_vec_syntax
 unbundle no_inner_syntax
 unbundle cblinfun_notation
@@ -35,8 +36,6 @@ lemma apply_cblinfun_distr_left: "(A + B) *\<^sub>V x = A *\<^sub>V x + B *\<^su
 lemma ket_Kronecker_delta: \<open>\<langle>ket i, ket j\<rangle> = (if i=j then 1 else 0)\<close>
   by (simp add: ket_Kronecker_delta_eq ket_Kronecker_delta_neq)
 
-
-(* definition \<open>butter i j = vector_to_cblinfun (ket i) o\<^sub>C\<^sub>L (vector_to_cblinfun (ket j) :: complex \<Rightarrow>\<^sub>C\<^sub>L _)*\<close> *)
 abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
 abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)"
 
@@ -303,6 +302,11 @@ lemma apply_idOp[simp]: \<open>(*\<^sub>V) idOp = id\<close>
 
 definition "sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L (a*)"
 
+lemma mat_of_cblinfun_sandwich: 
+  fixes a :: "(_::onb_enum, _::onb_enum) cblinfun"
+  shows \<open>mat_of_cblinfun (sandwich a b) = (let a' = mat_of_cblinfun a in a' * mat_of_cblinfun b * mat_adjoint a')\<close>
+  by (simp add: cblinfun_of_mat_timesOp sandwich_def Let_def mat_of_cblinfun_adjoint')
+
 lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
   apply (rule clinearI)
   apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 sandwich_def)
@@ -451,5 +455,7 @@ lemma [simp]: "dim_col (mat_adjoint m) = dim_row m"
 lemma [simp]: "dim_row (mat_adjoint m) = dim_col m"
   unfolding mat_adjoint_def by simp
 
+lemma cblinfun_apply_in_image[simp]: "A *\<^sub>V \<psi> \<in> space_as_set (A *\<^sub>S \<top>)"
+  by (metis applyOpSpace.rep_eq closure_subset in_mono range_eqI top_clinear_space.rep_eq)
 
 end

@@ -289,15 +289,13 @@ lemma compatible_tensor_id_update_right[simp]:
   using assms apply (rule compatible_comp_inner[unfolded o_def])
   by (simp add: lvalue_tensor_left)
 
-(* TODO: rename *)
-lemma compatible_tensor_id_update_left1[simp]:
+lemma compatible_tensor_id_update_rl[simp]:
   assumes "lvalue F" and "lvalue G"
   shows "compatible (\<lambda>a. F a \<otimes>\<^sub>u id_update) (\<lambda>a. id_update \<otimes>\<^sub>u G a)"
   apply (rule compatibleI)
   using assms by (auto simp: tensor_update_mult)
   
-(* TODO: rename *)
-lemma compatible_tensor_id_update_left2[simp]:
+lemma compatible_tensor_id_update_lr[simp]:
   assumes "lvalue F" and "lvalue G"
   shows "compatible (\<lambda>a. id_update \<otimes>\<^sub>u F a) (\<lambda>a. G a \<otimes>\<^sub>u id_update)"
   apply (rule compatibleI)

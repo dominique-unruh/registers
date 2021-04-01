@@ -46,26 +46,6 @@ definition "teleport a b = [
 (* definition "teleport_pre \<psi> = XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00" *)
 (* definition "teleport_post \<psi> = \<Phi>2AB =\<^sub>q \<psi>" *)
 
-(* TODO move *)
-lemma
- tensor_update_hom_sandwich2: 
-  fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2" and b :: "'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a::finite ell2"
-  shows "id \<otimes>\<^sub>h (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a)
-             = (\<lambda>x. (idOp \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L (idOp \<otimes>\<^sub>o a))"
-proof -
-  have [simp]: \<open>clinear (id \<otimes>\<^sub>h (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a))\<close>
-    by (auto intro!:  clinearI tensor_update_hom_is_hom 
-             simp add: cblinfun_apply_dist1 cblinfun_apply_dist2)
-  have [simp]: \<open>clinear (\<lambda>x. tensor_op idOp b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L tensor_op idOp a)\<close>
-    by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
-  have [simp]: \<open>clinear (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a)\<close>
-    by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
-  show ?thesis
-    apply (rule tensor_extensionality, simp, simp)
-    apply (subst tensor_update_hom_apply, simp, simp)
-    by (simp add: comp_tensor_op)
-qed
-
 (* lemma clinear_Fst[simp]: "clinear Fst"
   unfolding Fst_def by auto *)
 (* lemma clinear_Snd[simp]: "clinear Snd"
@@ -216,7 +196,12 @@ proof -
                 del: comp_apply)
     apply (rule arg_cong[of _ _ X\<Phi>])
     apply (rule cblinfun_eq_mat_of_cblinfunI)
-    apply (simp add: assoc_ell2_sandwich sandwich_def[abs_def] mat_of_cblinfun_tensor_op butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket cblinfun_of_mat_id swap_sandwich[abs_def]  mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult tensor_update_hom_sandwich2 vec_of_onb_enum_tensor_state mat_of_cblinfun_description)
+    apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_tensor_op
+                     butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded 
+                     canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket 
+                     cblinfun_of_mat_id swap_sandwich[abs_def] mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult
+                     id_tensor_sandwich vec_of_onb_enum_tensor_state mat_of_cblinfun_description
+                     mat_of_cblinfun_sandwich)
     by normalization
 
   have [simp]: "unitary XZ"
