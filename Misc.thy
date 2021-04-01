@@ -12,7 +12,7 @@ unbundle jnf_notation
 lemma cspan_ket_finite[simp]: "cspan (range ket :: 'a::finite ell2 set) = UNIV"
   by (metis ket_ell2_span span_finite_dim finite_class.finite_UNIV finite_imageI) 
 
-lemma cbounded_linear_equal_ket:
+lemma clinear_equal_ket:
   fixes f g :: \<open>'a::finite ell2 \<Rightarrow> _\<close>
   assumes \<open>clinear f\<close>
   assumes \<open>clinear g\<close>
@@ -399,5 +399,16 @@ proof -
     by (smt (verit) UNIV_I from_conjugate_space_inverse surj_def surj_fun_eq to_conjugate_space_inject) 
 qed
 
+
+lemma lift_cblinfun_comp:
+  assumes \<open>a o\<^sub>C\<^sub>L b = c\<close>
+  shows \<open>a o\<^sub>C\<^sub>L b = c\<close>
+    and \<open>a o\<^sub>C\<^sub>L (b o\<^sub>C\<^sub>L d) = c o\<^sub>C\<^sub>L d\<close>
+    and \<open>a *\<^sub>S (b *\<^sub>S S) = c *\<^sub>S S\<close>
+    and \<open>a *\<^sub>V (b *\<^sub>V x) = c *\<^sub>V x\<close>
+  apply (fact assms)
+  apply (metis assms cblinfun_apply_assoc)
+  using assms assoc_left(2) apply blast
+  by (metis assms times_applyOp)
 
 end

@@ -90,7 +90,7 @@ qed
 
 lemma lvalue_prod1: \<open>lvalue (\<lambda>a. rel_prod a Id)\<close>
   unfolding lvalue_def apply (intro conjI allI)
-  using update_2hom_left tensor_update_is_2hom apply blast
+  using update_2hom_left_is_hom tensor_update_is_2hom apply blast
     apply (simp add: tensor_update_mult)
    apply simp
   by (simp add: rel_prod_converse)

@@ -16,7 +16,7 @@ no_notation m_inv ("inv\<index> _" [81] 80)
 type_synonym 'a state = \<open>'a ell2\<close>
 type_synonym 'a update = \<open>('a state, 'a state) cblinfun\<close>
 
-abbreviation comp_update :: "'a update \<Rightarrow> 'a update \<Rightarrow> 'a update" where
+abbreviation (input) comp_update :: "'a update \<Rightarrow> 'a update \<Rightarrow> 'a update" where
   "comp_update \<equiv> timesOp"
 
 abbreviation id_update :: "'a update" where
@@ -48,19 +48,19 @@ abbreviation (input) update_2hom :: "('a, 'b, 'c) update_2hom \<Rightarrow> bool
 (* lemma update_2hom_bilinear: "update_2hom F \<longleftrightarrow> cbilinear F"
   by (meson cbilinear_def update_2hom_def update_hom_def) *)
 
-lemma comp_update_hom_2hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. G (F2 a b))\<close>
+lemma update_hom_o_2hom_is_2hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. G (F2 a b))\<close>
   apply (auto simp: cbilinear_def intro!: clinearI)
   apply (smt (z3) clinear_additive_D)
   apply (metis complex_vector.linear_scale)
   apply (simp add: clinear_additive_D)
   by (simp add: complex_vector.linear_scale)
-lemma comp_update_2hom_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. F2 (G a) b)\<close>
+lemma update_2hom_o_hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. F2 (G a) b)\<close>
   apply (auto simp: cbilinear_def intro!: clinearI)
   apply (smt (z3) clinear_additive_D)
   by (metis complex_vector.linear_scale)
 lemma update_2hom_sym: \<open>update_2hom F2 \<Longrightarrow> update_2hom (\<lambda>a b. F2 b a)\<close> 
   by (auto simp: cbilinear_def)
-lemma update_2hom_left: \<open>update_2hom F2 \<Longrightarrow> update_hom (\<lambda>a. F2 a b)\<close>
+lemma update_2hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom (\<lambda>a. F2 a b)\<close>
   by (auto simp: cbilinear_def)
 
 
@@ -96,6 +96,8 @@ definition lvalue :: \<open>('a, 'b) update_hom \<Rightarrow> bool\<close> where
    \<and> (\<forall>a b. F(a o\<^sub>C\<^sub>L b) = F a o\<^sub>C\<^sub>L F b)
    \<and> (\<forall>a. F (a*) = (F a)*)"
 
+lemma lvalue_of_id: \<open>lvalue F \<Longrightarrow> F id_update = id_update\<close>
+  by (simp add: lvalue_def)
 
 lemma lvalue_hom: "lvalue F \<Longrightarrow> update_hom F"
   for F :: "('a,'b) update_hom" and G :: "('b,'c) update_hom"
@@ -113,7 +115,7 @@ lemma lvalue_mult: "lvalue F \<Longrightarrow> comp_update (F a) (F b) = F (comp
   by auto
 
 lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_update a id_update)\<close>
-  by (simp add: comp_tensor_op lvalue_def update_2hom_left tensor_update_is_2hom tensor_op_adjoint)
+  by (simp add: comp_tensor_op lvalue_def update_2hom_left_is_hom tensor_update_is_2hom tensor_op_adjoint)
 
 lemma lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_update id_update a)\<close>
   apply (simp add: comp_tensor_op lvalue_def tensor_update_is_2hom tensor_op_adjoint)

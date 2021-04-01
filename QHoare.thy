@@ -31,11 +31,10 @@ lemma join_EQP:
   apply (subst pair_apply[symmetric, where F=R and G=S])
   using assms by auto
 
-(* TODO: remove *)
-lemma join_EQP':
+(* lemma join_EQP':
   assumes "compatible R S"
   shows "EQP R \<psi> o\<^sub>C\<^sub>L (EQP S \<phi> o\<^sub>C\<^sub>L C) = EQP (pair R S) (\<psi> \<otimes>\<^sub>s \<phi>) o\<^sub>C\<^sub>L C"
-  by (simp add: assms assoc_left(1) join_EQP)
+  by (simp add: assms assoc_left(1) join_EQP) *)
 
 lemma program_skip[simp]: "program [] = idOp"
   by (simp add: qhoare.program_def)

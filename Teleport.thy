@@ -53,10 +53,10 @@ lemma ell2_eq_vec_of_onb_enumI:
   by (metis assms onb_enum_of_vec_inverse)
 
 lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otimes>\<^sub>s s\<close>
-  apply (rule cbounded_linear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])
+  apply (rule clinear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])
   apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
   apply (simp add: clinear_tensor_ell21)
-  apply (rule cbounded_linear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
+  apply (rule clinear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
   apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
   apply (simp add: clinear_tensor_ell22)
   apply (rule ell2_eq_vec_of_onb_enumI)
@@ -193,7 +193,8 @@ lemma
              = (\<lambda>x. (tensor_op idOp b) o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L (tensor_op idOp a))"
 proof -
   have [simp]: \<open>clinear (id \<otimes>\<^sub>h (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a))\<close>
-    by (auto intro!:  clinearI tensor_update_hom_hom simp add: cblinfun_apply_dist1 cblinfun_apply_dist2)
+    by (auto intro!:  clinearI tensor_update_hom_is_hom 
+             simp add: cblinfun_apply_dist1 cblinfun_apply_dist2)
   have [simp]: \<open>clinear (\<lambda>x. tensor_op idOp b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L tensor_op idOp a)\<close>
     by (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
   have [simp]: \<open>clinear (\<lambda>x. b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L a)\<close>
@@ -223,23 +224,23 @@ lemma pair_Fst_Snd[simp]:
 
 (* TODO: get rid of "Simplification subgoal compatible (F \<circ> Fst) F" warning *)
 
-lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (idOp \<otimes> a)\<close>
+lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (idOp \<otimes>\<^sub>o a)\<close>
   by (auto simp: pair_apply)
-lemma X\<Phi>1_X\<Phi>: \<open>X\<Phi>1 a = X\<Phi> (assoc (a \<otimes> idOp))\<close>
+lemma X\<Phi>1_X\<Phi>: \<open>X\<Phi>1 a = X\<Phi> (assoc (a \<otimes>\<^sub>o idOp))\<close>
   apply (subst pair_comp_assoc[unfolded o_def, of X \<Phi>1 \<Phi>2, simplified, THEN fun_cong])
   by (auto simp: pair_apply)
-lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap) (assoc (a \<otimes> idOp)))\<close>
+lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap) (assoc (a \<otimes>\<^sub>o idOp)))\<close>
   apply (subst pair_comp_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
   apply (subst (2) pair_Fst_Snd[symmetric, of \<Phi>], simp)
   using [[simproc del: compatibility_warn]]
   apply (subst pair_comp_swap', simp)
   apply (subst pair_comp_assoc[unfolded o_def, THEN fun_cong], simp, simp, simp)
   by (auto simp: pair_apply)
-lemma \<Phi>2_X\<Phi>: \<open>\<Phi>2 a = X\<Phi> (idOp \<otimes> (idOp \<otimes> a))\<close>
+lemma \<Phi>2_X\<Phi>: \<open>\<Phi>2 a = X\<Phi> (idOp \<otimes>\<^sub>o (idOp \<otimes>\<^sub>o a))\<close>
   by (auto simp: Snd_def pair_apply)
 lemmas to_X\<Phi> = \<Phi>_X\<Phi> X\<Phi>1_X\<Phi> X\<Phi>2_X\<Phi> \<Phi>2_X\<Phi>
 
-lemma X_X\<Phi>1: \<open>X a = X\<Phi>1 (a \<otimes> idOp)\<close>
+lemma X_X\<Phi>1: \<open>X a = X\<Phi>1 (a \<otimes>\<^sub>o idOp)\<close>
   by (auto simp: pair_apply)
 lemmas to_X\<Phi>1 = X_X\<Phi>1
 
@@ -251,21 +252,21 @@ lemmas to_X\<Phi>1 = X_X\<Phi>1
   shows "clinear (\<lambda>x. f (g x))"
   by (simp add: assms(3) assms(4) clinearI complex_vector.linear_add complex_vector.linear_scale) *)
 
-lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes> idOp)\<close>
+lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes>\<^sub>o idOp)\<close>
   by (auto simp: pair_apply)
-lemma XAB_X\<Phi>1_AB: \<open>XAB a = (X\<Phi>1;AB) (((\<lambda>x. x \<otimes> idOp) \<otimes>\<^sub>h id) (assoc a))\<close>
+lemma XAB_X\<Phi>1_AB: \<open>XAB a = (X\<Phi>1;AB) (((\<lambda>x. x \<otimes>\<^sub>o idOp) \<otimes>\<^sub>h id) (assoc a))\<close>
   by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] pair_apply
       pair_comp_assoc[unfolded o_def, THEN fun_cong])
 
 lemmas to_X\<Phi>1_AB = X\<Phi>1_X\<Phi>1_AB XAB_X\<Phi>1_AB
 
-lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes> assoc a)))\<close>
+lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes>\<^sub>o assoc a)))\<close>
   by (simp add: pair_comp_tensor[unfolded o_def, THEN fun_cong] pair_apply
       pair_comp_swap[unfolded o_def, THEN fun_cong]
       pair_comp_assoc'[unfolded o_def, THEN fun_cong]
       pair_comp_assoc[unfolded o_def, THEN fun_cong])
 
-lemma X\<Phi>2_to_X\<Phi>2_AB: \<open>X\<Phi>2 a = (X\<Phi>2;AB) (a \<otimes> idOp)\<close>
+lemma X\<Phi>2_to_X\<Phi>2_AB: \<open>X\<Phi>2 a = (X\<Phi>2;AB) (a \<otimes>\<^sub>o idOp)\<close>
   by (simp add: pair_apply)
 
 schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
@@ -279,11 +280,10 @@ schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
 
 lemmas to_X\<Phi>2_AB = XAB_to_X\<Phi>2_AB X\<Phi>2_to_X\<Phi>2_AB \<Phi>2AB_to_X\<Phi>2_AB
 
-(* TODO remove (use some generic transformation lemma instead) *)
-lemma swap_lvalues_applySpace:
+(* lemma swap_lvalues_applySpace:
   assumes "compatible R S"
   shows "R a *\<^sub>S S b *\<^sub>S M = S b *\<^sub>S R a *\<^sub>S M"
-  by (metis assms assoc_left(2) swap_lvalues)
+  by (metis assms assoc_left(2) swap_lvalues) *)
 
 lemma teleport:
   assumes [simp]: "norm \<psi> = 1"
@@ -318,16 +318,16 @@ proof -
 
   also
   define O5 where \<open>O5 = EQP X (ket b) o\<^sub>C\<^sub>L O4\<close>
-  have O5: \<open>O5 = X\<Phi>1 (butterfly (ket b \<otimes>\<^sub>s ket a) (CNOT *\<^sub>V (hadamard *\<^sub>V ket b) \<otimes>\<^sub>s ket a)) \<circ>\<^sub>d O1\<close> (is "_ = ?rhs")
+  have O5: \<open>O5 = X\<Phi>1 (butterfly (ket b \<otimes>\<^sub>s ket a) (CNOT *\<^sub>V (hadamard *\<^sub>V ket b) \<otimes>\<^sub>s ket a)) o\<^sub>C\<^sub>L O1\<close> (is "_ = ?rhs")
   proof -
     have "O5 = EQP X\<Phi>1 (ket (b,a)) o\<^sub>C\<^sub>L O3"
       unfolding O5_def O4_def
-      apply (subst join_EQP', simp)
+      apply (subst lift_cblinfun_comp[OF join_EQP, where R1=X and S1=\<Phi>1], simp)
       by simp
     also have \<open>\<dots> = ?rhs\<close>
       unfolding O3_def O2_def
-      using [[simp_trace_new]]
-      by (simp add: butterfly_times_right to_X\<Phi>1 times_applyOp tensor_op_adjoint tensor_op_ell2 flip: tensor_ell2_ket)
+      by (simp add: butterfly_times_right to_X\<Phi>1 times_applyOp tensor_op_adjoint tensor_op_ell2 
+                    lift_cblinfun_comp[OF lvalue_mult] flip: tensor_ell2_ket)
     finally show ?thesis by -
   qed
   have \<open>hoare (O4 *\<^sub>S pre) [ifthen X b] (O5 *\<^sub>S pre)\<close>
@@ -341,7 +341,7 @@ proof -
   also
   define O7 where \<open>O7 = \<Phi>2 (if b = 1 then pauliZ else idOp) o\<^sub>C\<^sub>L O6\<close>
   have O7: \<open>O7 = \<Phi>2 XZ o\<^sub>C\<^sub>L O5\<close>
-    by (auto simp add: O6_def O7_def XZ_def lvalue_mult)
+    by (auto simp add: O6_def O7_def XZ_def lvalue_mult lift_cblinfun_comp[OF lvalue_mult])
   have \<open>hoare (O6 *\<^sub>S pre) [apply (if b=1 then pauliZ else idOp) (\<Phi> \<circ> Snd)] (O7 *\<^sub>S pre)\<close>
     apply (rule hoare_apply) 
     by (auto simp add: O7_def assoc_left(2))
@@ -371,11 +371,11 @@ proof -
 
   have "O7 *\<^sub>S pre = X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<Phi> (butterfly (ket (a, b)) \<beta>00) *\<^sub>S \<top>"
     apply (simp add: O7' pre_def EQ_def cblinfun_apply_assoc_subspace)
-    apply (subst swap_lvalues_applySpace[where R=\<Phi> and S=XAB], simp)
-    by simp
+    apply (subst lift_cblinfun_comp[OF swap_lvalues[where R=\<Phi> and S=XAB]], simp)
+    by (simp add: assoc_left(2))
   also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S EQP XAB \<psi> *\<^sub>S \<top>\<close>
     by (simp add: applyOpSpace_mono)
-  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes> id_update) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (id_update \<otimes> assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
+  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes>\<^sub>o id_update) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (id_update \<otimes>\<^sub>o assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
     by (simp add: to_X\<Phi>2_AB)
   also have \<open>\<dots> = EQP \<Phi>2AB \<psi> *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
     apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
@@ -402,11 +402,11 @@ type_synonym b_state = "1000000 word"
 type_synonym mem = "a_state * bit * bit * b_state * bit"
 type_synonym 'a var = \<open>('a,mem) update_hom\<close>
 
-definition A :: "a_state var" where \<open>A a = a \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
-definition X :: \<open>bit var\<close> where \<open>X a = idOp \<otimes> a \<otimes> idOp \<otimes> idOp \<otimes> idOp\<close>
-definition \<Phi>1 :: \<open>bit var\<close> where \<open>\<Phi>1 a = idOp \<otimes> idOp \<otimes> a \<otimes> idOp \<otimes> idOp\<close>
-definition B :: \<open>b_state var\<close> where \<open>B a = idOp \<otimes> idOp \<otimes> idOp \<otimes> a \<otimes> idOp\<close>
-definition \<Phi>2 :: \<open>bit var\<close> where \<open>\<Phi>2 a = idOp \<otimes> idOp \<otimes> idOp \<otimes> idOp \<otimes> a\<close>
+definition A :: "a_state var" where \<open>A a = a \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp\<close>
+definition X :: \<open>bit var\<close> where \<open>X a = idOp \<otimes>\<^sub>o a \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp\<close>
+definition \<Phi>1 :: \<open>bit var\<close> where \<open>\<Phi>1 a = idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o a \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp\<close>
+definition B :: \<open>b_state var\<close> where \<open>B a = idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o a \<otimes>\<^sub>o idOp\<close>
+definition \<Phi>2 :: \<open>bit var\<close> where \<open>\<Phi>2 a = idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o a\<close>
 end
 
 

@@ -24,29 +24,22 @@ lemma pair_comp_swap':
   using pair_comp_swap[OF assms]
   by (metis comp_def)
 
-(* TODO Laws *)
-lemma lvalue_of_id[simp]: \<open>lvalue R \<Longrightarrow> R idOp = idOp\<close>
-  by (auto simp: lvalue_def)
-
-lemma lvalue_comp'1[simp]: \<open>lvalue R \<Longrightarrow> R A o\<^sub>C\<^sub>L (R B o\<^sub>C\<^sub>L C) = R (A o\<^sub>C\<^sub>L B) o\<^sub>C\<^sub>L C\<close>
-  by (metis (no_types, lifting) assoc_left(1) lvalue_mult)
-
 lemma lvalue_left_idOp[intro!]:
   assumes \<open>lvalue F\<close>
-  shows \<open>lvalue (\<lambda>a. idOp \<otimes> F a)\<close>
+  shows \<open>lvalue (\<lambda>a. idOp \<otimes>\<^sub>o F a)\<close>
   using assms unfolding lvalue_def 
   apply auto
-  using left_tensor_hom[of idOp] linear_compose[of F \<open>\<lambda>x. idOp \<otimes> x\<close>, unfolded o_def] o_def
+  using update_hom_tensor_left_is_hom[of idOp] linear_compose[of F \<open>\<lambda>x. idOp \<otimes>\<^sub>o x\<close>, unfolded o_def] o_def
   apply (smt (z3))
   apply (metis (no_types, hide_lams) comp_tensor_op times_idOp2)
   by (metis (full_types) idOp_adjoint tensor_op_adjoint)
 
 lemma lvalue_right_idOp[intro!]:
   assumes \<open>lvalue F\<close>
-  shows \<open>lvalue (\<lambda>a. F a \<otimes> idOp)\<close>
+  shows \<open>lvalue (\<lambda>a. F a \<otimes>\<^sub>o idOp)\<close>
   using assms unfolding lvalue_def 
   apply auto
-  using right_tensor_hom[of idOp] linear_compose[of F \<open>\<lambda>x. x \<otimes> idOp\<close>, unfolded o_def] o_def
+  using update_hom_tensor_right_is_hom[of idOp] linear_compose[of F \<open>\<lambda>x. x \<otimes>\<^sub>o idOp\<close>, unfolded o_def] o_def
   apply (smt (z3))
   apply (metis (no_types, hide_lams) comp_tensor_op times_idOp2)
   by (metis (full_types) idOp_adjoint tensor_op_adjoint)
@@ -56,19 +49,19 @@ lemma lvalue_id'[simp]: \<open>lvalue (\<lambda>x. x)\<close>
 
 lemma compatible_left_idOp[intro!]:
   assumes "compatible F G"
-  shows "compatible (\<lambda>a. idOp \<otimes> F a) (\<lambda>a. idOp \<otimes> G a)"
+  shows "compatible (\<lambda>a. idOp \<otimes>\<^sub>o F a) (\<lambda>a. idOp \<otimes>\<^sub>o G a)"
   using assms unfolding compatible_def apply auto
   by (metis comp_tensor_op)
 
 lemma compatible_left_idOp1[intro!]:
   assumes "lvalue F" and "lvalue G"
-  shows "compatible (\<lambda>a. F a \<otimes> idOp) (\<lambda>a. idOp \<otimes> G a)"
+  shows "compatible (\<lambda>a. F a \<otimes>\<^sub>o idOp) (\<lambda>a. idOp \<otimes>\<^sub>o G a)"
   using assms unfolding compatible_def apply auto
   by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2)
 
 lemma compatible_left_idOp2[intro!]:
   assumes "lvalue F" and "lvalue G"
-  shows "compatible (\<lambda>a. idOp \<otimes> F a) (\<lambda>a. G a \<otimes> idOp)"
+  shows "compatible (\<lambda>a. idOp \<otimes>\<^sub>o F a) (\<lambda>a. G a \<otimes>\<^sub>o idOp)"
   using assms unfolding compatible_def apply auto
   by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2)
 
@@ -128,13 +121,15 @@ lemma compatible_proj_mult:
   by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
 
-lemma sandwich_tensor: "sandwich (a \<otimes> b) = sandwich a \<otimes>\<^sub>h sandwich b"
+lemma sandwich_tensor: "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>h sandwich b"
+  for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
   apply (rule tensor_extensionality)
-  by (auto simp: sandwich_def tensor_update_hom_hom tensor_update_mult tensor_op_adjoint)
+  by (auto simp: sandwich_def tensor_update_hom_is_hom tensor_update_mult tensor_op_adjoint)
 
 
-lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes> idOp)"
-  by (simp add: sandwich_tensor sandwich_id)
+lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes>\<^sub>o idOp)"
+  for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
+    by (simp add: sandwich_tensor sandwich_id)
 
 lemma lvalue_sandwich: \<open>lvalue F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
   by (smt (verit, del_insts) lvalue_def sandwich_def)

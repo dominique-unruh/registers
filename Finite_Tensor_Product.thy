@@ -42,7 +42,7 @@ lemma tensor_ell2_ket[simp]: "tensor_ell2 (ket i) (ket j) = ket (i,j)"
 
 
 definition tensor_op :: \<open>('a ell2, 'b::finite ell2) cblinfun \<Rightarrow> ('c ell2, 'd::finite ell2) cblinfun
-      \<Rightarrow> (('a\<times>'c) ell2, ('b\<times>'d) ell2) cblinfun\<close> where
+      \<Rightarrow> (('a\<times>'c) ell2, ('b\<times>'d) ell2) cblinfun\<close> (infixr "\<otimes>\<^sub>o" 70) where
   \<open>tensor_op M N = (SOME P. \<forall>a c. P *\<^sub>V (ket (a,c))
       = tensor_ell2 (M *\<^sub>V ket a) (N *\<^sub>V ket c))\<close>
 
@@ -94,10 +94,10 @@ proof -
     by (simp add: tensor_op_ket)
   have eq_ket: \<open>tensor_op A B *\<^sub>V tensor_ell2 \<psi> (ket b) = tensor_ell2 (A *\<^sub>V \<psi>) (B *\<^sub>V ket b)\<close> for b
     apply (rule fun_cong[where x=\<psi>])
-    using 1 2 eq_ket_ket by (rule cbounded_linear_equal_ket)
+    using 1 2 eq_ket_ket by (rule clinear_equal_ket)
   show ?thesis 
     apply (rule fun_cong[where x=\<phi>])
-    using 3 4 eq_ket by (rule cbounded_linear_equal_ket)
+    using 3 4 eq_ket by (rule clinear_equal_ket)
 qed
 
 lemma comp_tensor_op: "(tensor_op a b) o\<^sub>C\<^sub>L (tensor_op c d) = tensor_op (a o\<^sub>C\<^sub>L c) (b o\<^sub>C\<^sub>L d)"
@@ -286,13 +286,13 @@ lift_definition assoc_ell2' :: \<open>('a::finite\<times>('b::finite\<times>'c::
   by auto
 
 lemma assoc_ell2_tensor: \<open>assoc_ell2 *\<^sub>V tensor_ell2 (tensor_ell2 a b) c = tensor_ell2 a (tensor_ell2 b c)\<close>
-  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=a])
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=a])
     apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
    apply (simp add: clinear_tensor_ell22)
-  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=b])
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=b])
     apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add1 tensor_ell2_add2 tensor_ell2_scaleC1 tensor_ell2_scaleC2)
    apply (simp add: clinearI tensor_ell2_add1 tensor_ell2_add2 tensor_ell2_scaleC1 tensor_ell2_scaleC2)
-  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=c])
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=c])
     apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
    apply (simp add: clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
   unfolding assoc_ell2.rep_eq
@@ -300,13 +300,13 @@ lemma assoc_ell2_tensor: \<open>assoc_ell2 *\<^sub>V tensor_ell2 (tensor_ell2 a 
   by auto
 
 lemma assoc_ell2'_tensor: \<open>assoc_ell2' *\<^sub>V tensor_ell2 a (tensor_ell2 b c) = tensor_ell2 (tensor_ell2 a b) c\<close>
-  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=a])
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=a])
     apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
    apply (simp add: clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
-  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=b])
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=b])
     apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add1 tensor_ell2_add2 tensor_ell2_scaleC1 tensor_ell2_scaleC2)
    apply (simp add: clinearI tensor_ell2_add1 tensor_ell2_add2 tensor_ell2_scaleC1 tensor_ell2_scaleC2)
-  apply (rule cbounded_linear_equal_ket[THEN fun_cong, where x=c])
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=c])
     apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
    apply (simp add: clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
   unfolding assoc_ell2'.rep_eq
@@ -327,7 +327,7 @@ proof (rule adjoint_D[symmetric])
     apply (cases x, cases y)
     by (simp flip: tensor_ell2_ket add: assoc_ell2'_tensor assoc_ell2_tensor)
   then have \<open>\<langle>assoc_ell2' *\<^sub>V (ket x), y\<rangle> = \<langle>ket x, assoc_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>'a \<times> 'b \<times> 'c\<close> and y
-    by (rule cbounded_linear_equal_ket[THEN fun_cong, rotated 2], simp_all)
+    by (rule clinear_equal_ket[THEN fun_cong, rotated 2], simp_all)
   then show \<open>\<langle>assoc_ell2' *\<^sub>V x, y\<rangle> = \<langle>x, assoc_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>('a \<times> 'b \<times> 'c) ell2\<close> and y
     by (rule csemilinear_equal_ket[THEN fun_cong, rotated 2], simp_all)
 qed

@@ -23,13 +23,13 @@ for F :: \<open>('a::domain, 'b::domain) update_hom\<close> and G :: \<open>('b,
 type_synonym ('a,'b,'c) update_2hom = \<open>'a update \<Rightarrow> 'b update \<Rightarrow> 'c update\<close>
 
 axiomatization update_2hom :: "('a::domain, 'b::domain, 'c::domain) update_2hom \<Rightarrow> bool"
-axiomatization where comp_update_hom_2hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. G (F2 a b))\<close>
+axiomatization where update_hom_o_2hom_is_2hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. G (F2 a b))\<close>
   for F2 :: \<open>('a::domain, 'b::domain, 'c::domain) update_2hom\<close> and G :: \<open>('c, 'd::domain) update_hom\<close>
-axiomatization where comp_update_2hom_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. F2 (G a) b)\<close>
+axiomatization where update_2hom_o_hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. F2 (G a) b)\<close>
   for F2 :: \<open>('a::domain, 'b::domain, 'c::domain) update_2hom\<close> and G :: \<open>('d::domain, 'a) update_hom\<close>
 axiomatization where update_2hom_sym: \<open>update_2hom F2 \<Longrightarrow> update_2hom (\<lambda>a b. F2 b a)\<close>
   for F2 :: \<open>('a::domain, 'b::domain, 'c::domain) update_2hom\<close>
-axiomatization where update_2hom_left: \<open>update_2hom F2 \<Longrightarrow> update_hom (\<lambda>a. F2 a b)\<close>
+axiomatization where update_2hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom (\<lambda>a. F2 a b)\<close>
   for F2 :: \<open>('a::domain, 'b::domain, 'c::domain) update_2hom\<close>
 
 axiomatization where comp_update_is_2hom: "update_2hom comp_update"
@@ -51,8 +51,10 @@ axiomatization lvalue :: \<open>('a,'b) update_hom \<Rightarrow> bool\<close>
 axiomatization where
   lvalue_hom: "lvalue F \<Longrightarrow> update_hom F" and
   lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue (G \<circ> F)"  and
-  lvalue_mult: "lvalue F \<Longrightarrow> comp_update (F a) (F b) = F (comp_update a b)"
-  for F :: "('a::domain,'b::domain) update_hom" and G :: "('b,'c::domain) update_hom" 
+  lvalue_mult: "lvalue F \<Longrightarrow> comp_update (F a) (F b) = F (comp_update a b)" and
+   (* TODO mention in PDF *)
+  lvalue_of_id: \<open>lvalue F \<Longrightarrow> F id_update = id_update\<close>
+for F :: "('a::domain,'b::domain) update_hom" and G :: "('b,'c::domain) update_hom" 
 
 axiomatization where lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_update a id_update)\<close>
 axiomatization where lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_update id_update a)\<close>

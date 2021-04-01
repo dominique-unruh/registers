@@ -79,11 +79,11 @@ lemma rel_prod_converse: \<open>(rel_prod a b)\<inverse> = rel_prod (a\<inverse>
 lemma rel_prod_Id[simp]: "rel_prod Id Id = Id"
   by (auto simp: rel_prod_def Id_def case_prod_beta image_def)
 
-lemma comp_update_hom_2hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. G (F2 a b))\<close>
+lemma update_hom_o_2hom_is_2hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. G (F2 a b))\<close>
   unfolding update_2hom_def update_hom_def apply auto 
   apply (rule_tac x=\<open>R2 O R\<close> in exI)
   by auto
-lemma comp_update_2hom_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. F2 (G a) b)\<close>
+lemma update_2hom_o_hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. F2 (G a) b)\<close>
   unfolding update_2hom_def update_hom_def apply auto 
   apply (rule_tac x=\<open>rel_prod R Id O R2\<close> in exI)
   apply (auto simp: rel_prod_def case_prod_beta)
@@ -95,7 +95,7 @@ lemma update_2hom_sym: \<open>update_2hom F2 \<Longrightarrow> update_2hom (\<la
   apply (auto simp: case_prod_beta Image_def)
   apply fastforce by blast
 
-lemma update_2hom_left: \<open>update_2hom F2 \<Longrightarrow> update_hom (\<lambda>a. F2 a b)\<close>
+lemma update_2hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom (\<lambda>a. F2 a b)\<close>
   using [[show_types]]
   unfolding update_2hom_def update_hom_def apply auto 
   apply (rule_tac x=\<open>{(a',c')| a' b' c'. ((a',b'),c') \<in> R2 \<and> b' \<in> b}\<close> in exI)
@@ -236,6 +236,9 @@ lemma assoc_apply: \<open>assoc (tensor_update (tensor_update a b) c) = (tensor_
 definition lvalue :: \<open>('a,'b) update_hom \<Rightarrow> bool\<close> where
   \<open>lvalue F \<longleftrightarrow> update_hom F \<and> (\<forall>a a'. F a O F a' = F (a O a')) \<and> F Id = Id \<and> (\<forall>a. F (a\<inverse>) = (F a)\<inverse>)\<close>
 
+lemma lvalue_of_id: \<open>lvalue F \<Longrightarrow> F id_update = id_update\<close>
+  by (simp add: lvalue_def)
+
 lemma update_hom_tensor_left: \<open>update_hom (\<lambda>a. tensor_update a id_update)\<close>
   unfolding update_hom_def apply (rule exI[of _ \<open>{((a1,a2),((a1,b),(a2,b)))| a1 a2 b. True}\<close>])
   apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
@@ -286,20 +289,20 @@ lemma pair_lvalue_axiom:
 proof (unfold lvalue_def, intro conjI allI)
   from assms show \<open>update_hom p\<close> by -
   have h1: \<open>update_hom (\<lambda>a. p a O p a')\<close> for a'
-    apply (rule update_2hom_left)
-    apply (rule comp_update_2hom_hom)
+    apply (rule update_2hom_left_is_hom)
+    apply (rule update_2hom_o_hom_left_is_hom)
     using comp_update_is_2hom update_2hom_sym by auto
   have h2: \<open>update_hom (\<lambda>a. p (a O a'))\<close> for a'
-    apply (rule update_2hom_left)
-    apply (rule comp_update_hom_2hom[where G=p])
+    apply (rule update_2hom_left_is_hom)
+    apply (rule update_hom_o_2hom_is_2hom[where G=p])
     using comp_update_is_2hom update_2hom_sym by auto
   have h3: \<open>update_hom (\<lambda>a'. p a O p a')\<close> for a
-    apply (rule update_2hom_left)
-    apply (rule comp_update_2hom_hom)
+    apply (rule update_2hom_left_is_hom)
+    apply (rule update_2hom_o_hom_left_is_hom)
     using comp_update_is_2hom update_2hom_sym by auto
   have h4: \<open>update_hom (\<lambda>a'. p (a O a'))\<close> for a
-    apply (rule update_2hom_left)
-    apply (rule comp_update_hom_2hom[where G=p])
+    apply (rule update_2hom_left_is_hom)
+    apply (rule update_hom_o_2hom_is_2hom[where G=p])
     using comp_update_is_2hom update_2hom_sym by auto
   have h5: \<open>update_hom (\<lambda>a. p (a\<inverse>))\<close>
     apply (rule comp_update_hom[where G=p, unfolded o_def])
@@ -328,17 +331,5 @@ proof (unfold lvalue_def, intro conjI allI)
   then show \<open>p (a\<inverse>) = (p a)\<inverse>\<close> for a
     by (rule tensor_extensionality[OF h5 h6, THEN fun_cong])
 qed
-
-
-
-bundle lvalue_notation begin
-notation comp_update (infixl "\<circ>\<^sub>d" 55)
-notation tensor_update (infixr "\<otimes>" 70)
-end
-
-bundle no_lvalue_notation begin
-no_notation comp_update (infixl "\<circ>\<^sub>d" 55)
-no_notation tensor_update (infixr "\<otimes>" 70)
-end
 
 end
