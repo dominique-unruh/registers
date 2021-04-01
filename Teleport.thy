@@ -47,7 +47,6 @@ definition "teleport a b = [
 (* definition "teleport_post \<psi> = \<Phi>2AB =\<^sub>q \<psi>" *)
 
 (* TODO move *)
-term tensor_update_hom
 lemma
  tensor_update_hom_sandwich2: 
   fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2" and b :: "'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a::finite ell2"
@@ -77,15 +76,12 @@ qed
   using [[simproc del: compatibility_warn]]
   by (auto intro!: compatibleI simp add: Fst_def Snd_def comp_tensor_op) *)
 
-(* TODO: Laws + rename *)
-lemma pair_Fst_Snd[simp]: 
+(* lemma pair_Fst_Snd[simp]: 
   assumes \<open>lvalue F\<close>
   shows \<open>(F o Fst; F o Snd) = F\<close>
   apply (rule tensor_extensionality)
   using [[simproc del: compatibility_warn]]
-  using assms by (auto simp: lvalue_pair_apply Fst_def Snd_def lvalue_mult comp_tensor_op)
-
-(* TODO: get rid of "Simplification subgoal compatible (F \<circ> Fst) F" warning *)
+  using assms by (auto simp: lvalue_pair_apply Fst_def Snd_def lvalue_mult comp_tensor_op) *)
 
 lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (idOp \<otimes>\<^sub>o a)\<close>
   by (auto simp: lvalue_pair_apply)
@@ -94,7 +90,7 @@ lemma X\<Phi>1_X\<Phi>: \<open>X\<Phi>1 a = X\<Phi> (assoc (a \<otimes>\<^sub>o 
   by (auto simp: lvalue_pair_apply)
 lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap) (assoc (a \<otimes>\<^sub>o idOp)))\<close>
   apply (subst pair_o_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
-  apply (subst (2) pair_Fst_Snd[symmetric, of \<Phi>], simp)
+  apply (subst (2) lvalue_Fst_lvalue_Snd[symmetric, of \<Phi>], simp)
   using [[simproc del: compatibility_warn]]
   apply (subst pair_o_swap[unfolded o_def], simp)
   apply (subst pair_o_assoc[unfolded o_def, THEN fun_cong], simp, simp, simp)

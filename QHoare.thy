@@ -25,7 +25,6 @@ definition EQ :: "('a,'mem) update_hom \<Rightarrow> 'a ell2 \<Rightarrow> 'mem 
   shows "EQP R \<psi> o\<^sub>C\<^sub>L (EQP S \<phi> o\<^sub>C\<^sub>L C) = EQP S \<phi> o\<^sub>C\<^sub>L (EQP R \<psi> o\<^sub>C\<^sub>L C)"
   by (simp add: assoc_left(1) swap_lvalues[OF assms]) *)
 
-(* TODO rename *)
 lemma join_EQP:
   assumes [compatible]: "compatible R S"
   shows "R (selfbutter \<psi>) o\<^sub>C\<^sub>L S (selfbutter \<phi>) = (R; S) (selfbutter (\<psi> \<otimes>\<^sub>s \<phi>))"

@@ -52,7 +52,6 @@ axiomatization where
   lvalue_hom: "lvalue F \<Longrightarrow> update_hom F" and
   lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue (G \<circ> F)"  and
   lvalue_mult: "lvalue F \<Longrightarrow> comp_update (F a) (F b) = F (comp_update a b)" and
-   (* TODO mention in PDF *)
   lvalue_of_id: \<open>lvalue F \<Longrightarrow> F id_update = id_update\<close>
 for F :: "('a::domain,'b::domain) update_hom" and G :: "('b,'c::domain) update_hom" 
 
