@@ -6,12 +6,17 @@ class domain
 instance prod :: (domain,domain) domain
   by intro_classes
 
-typedecl 'a update
-axiomatization comp_update :: "'a::domain update \<Rightarrow> 'a update \<Rightarrow> 'a update" where
-  comp_update_assoc: "comp_update (comp_update a b) c = comp_update a (comp_update b c)"
+typedecl ('a,'b) update_nonsquare (* Do not use except in Laws, needed for LawsAdj *)
+type_synonym 'a update = "('a,'a) update_nonsquare"
+
+(* Unless AxiomsAdj is used, this can use update instead of update_nonsquare *)
+axiomatization comp_update :: "('b::domain, 'c::domain) update_nonsquare \<Rightarrow> ('a::domain, 'b::domain) update_nonsquare \<Rightarrow> ('a,'c) update_nonsquare"
+
+axiomatization where comp_update_assoc: "comp_update (comp_update a b) c = comp_update a (comp_update b c)"
+
 axiomatization id_update :: "'a::domain update" where
   id_update_left: "comp_update id_update a = a" and
-  id_update_right: "comp_update a id_update = a"
+  id_update_right: "comp_update b id_update = b"
 
 type_synonym ('a,'b) update_hom = \<open>'a update \<Rightarrow> 'b update\<close>
 axiomatization update_hom :: \<open>('a::domain,'b::domain) update_hom \<Rightarrow> bool\<close>

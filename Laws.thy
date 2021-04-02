@@ -157,6 +157,16 @@ lemma hom_comp_update_hom_is_2hom[simp]:
   apply (rule update_2hom_o_hom_left_is_hom, rule update_2hom_o_hom_right_is_hom)
   by (rule comp_update_is_2hom assms)+
 
+lemma hom_comp_update_is_hom[simp]:
+  assumes \<open>update_hom F\<close>
+  shows \<open>update_hom (\<lambda>a. F a *\<^sub>u b)\<close>
+  using assms comp_update_is_2hom update_2hom_left_is_hom update_2hom_o_hom_left_is_hom by blast
+
+lemma update_comp_hom_is_hom[simp]:
+  assumes \<open>update_hom F\<close>
+  shows \<open>update_hom (\<lambda>b. a *\<^sub>u F b)\<close>
+  using assms comp_update_is_2hom update_2hom_o_hom_right_is_hom update_2hom_right_is_hom by blast
+
 lemma lvalue_pair_is_hom[simp]:
   assumes "update_hom F" and "update_hom G"
   shows "update_hom (F; G)"

@@ -299,20 +299,18 @@ lemma butterfly_isProjector:
 lemma apply_idOp[simp]: \<open>(*\<^sub>V) idOp = id\<close>
   by auto
 
-definition "sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L (a*)"
+(* definition "sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L (a* )" *)
 
-lemma mat_of_cblinfun_sandwich: 
-  fixes a :: "(_::onb_enum, _::onb_enum) cblinfun"
-  shows \<open>mat_of_cblinfun (sandwich a b) = (let a' = mat_of_cblinfun a in a' * mat_of_cblinfun b * mat_adjoint a')\<close>
-  by (simp add: cblinfun_of_mat_timesOp sandwich_def Let_def mat_of_cblinfun_adjoint')
 
+(* (* TODO: remove *)
 lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
   apply (rule clinearI)
   apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 sandwich_def)
   by (simp add: sandwich_def)
 
+(* TODO: remove *)
 lemma sandwich_id: "sandwich idOp = idOp"
-  by (metis eq_id_iff idOp.rep_eq idOp_adjoint sandwich_def times_idOp1 times_idOp2)
+  by (metis eq_id_iff idOp.rep_eq idOp_adjoint sandwich_def times_idOp1 times_idOp2) *)
 
 lemma prod_cases3' [cases type]:
   obtains (fields) a b c where "y = ((a, b), c)"

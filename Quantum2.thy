@@ -1,6 +1,6 @@
 theory Quantum2
   imports
-    Laws_Quantum
+    LawsAdj_Quantum
     Bounded_Operators.Bounded_Operators_Code
     Real_Impl.Real_Impl
     "HOL-Library.Code_Target_Numeral"
@@ -117,6 +117,11 @@ lemma id_tensor_sandwich:
   shows "id \<otimes>\<^sub>h sandwich a = sandwich (idOp \<otimes>\<^sub>o a)"
   apply (rule tensor_extensionality) 
   by (simp_all add: tensor_update_hom_is_hom comp_tensor_op sandwich_def tensor_op_adjoint)
+
+lemma mat_of_cblinfun_sandwich: 
+  fixes a :: "(_::onb_enum, _::onb_enum) cblinfun"
+  shows \<open>mat_of_cblinfun (sandwich a b) = (let a' = mat_of_cblinfun a in a' * mat_of_cblinfun b * mat_adjoint a')\<close>
+  by (simp add: cblinfun_of_mat_timesOp sandwich_def Let_def mat_of_cblinfun_adjoint')
 
 end
 

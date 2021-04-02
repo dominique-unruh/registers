@@ -9,7 +9,10 @@
     update_hom \<rightarrow> clinear
     update_2hom \<rightarrow> cbilinear
     tensor_update \<rightarrow> tensor_op
-    
+
+    upd_adjoint \<rightarrow> adjoint
+    unitary_update \<rightarrow> unitary
+
     # Lemmas
     id_update_left \<rightarrow> times_idOp2
     id_update_right \<rightarrow> times_idOp1
