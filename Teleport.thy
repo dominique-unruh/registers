@@ -21,10 +21,10 @@ unbundle no_inner_syntax
 
 
 locale teleport_locale = qhoare "TYPE('mem::finite)" +
-  fixes X :: "(bit,'mem::finite) update_hom"
-    and \<Phi> :: "(bit*bit,'mem) update_hom"
-    and A :: "('atype::finite,'mem) update_hom"
-    and B :: "('btype::finite,'mem) update_hom"
+  fixes X :: "bit update \<Rightarrow> 'mem::finite update"
+    and \<Phi> :: "(bit*bit) update \<Rightarrow> 'mem update"
+    and A :: "'atype::finite update \<Rightarrow> 'mem update"
+    and B :: "'btype::finite update \<Rightarrow> 'mem update"
   assumes compat[compatible]: "mutually compatible (X,\<Phi>,A,B)"
 begin
 
@@ -46,25 +46,6 @@ definition "teleport a b = [
     apply (if b=1 then pauliZ else idOp) \<Phi>2
   ]"
 
-(* definition "teleport_pre \<psi> = XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00" *)
-(* definition "teleport_post \<psi> = \<Phi>2AB =\<^sub>q \<psi>" *)
-
-(* lemma clinear_Fst[simp]: "clinear Fst"
-  unfolding Fst_def by auto *)
-(* lemma clinear_Snd[simp]: "clinear Snd"
-  apply simp
-  unfolding Fst_def by auto *)
-
-(* lemma [compatible]: "mutually compatible (Fst, Snd)"
-  using [[simproc del: compatibility_warn]]
-  by (auto intro!: compatibleI simp add: Fst_def Snd_def comp_tensor_op) *)
-
-(* lemma pair_Fst_Snd[simp]: 
-  assumes \<open>lvalue F\<close>
-  shows \<open>(F o Fst; F o Snd) = F\<close>
-  apply (rule tensor_extensionality)
-  using [[simproc del: compatibility_warn]]
-  using assms by (auto simp: lvalue_pair_apply Fst_def Snd_def lvalue_mult comp_tensor_op) *)
 
 lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (idOp \<otimes>\<^sub>o a)\<close>
   by (auto simp: lvalue_pair_apply)
@@ -86,13 +67,6 @@ lemma X_X\<Phi>1: \<open>X a = X\<Phi>1 (a \<otimes>\<^sub>o idOp)\<close>
   by (auto simp: lvalue_pair_apply)
 lemmas to_X\<Phi>1 = X_X\<Phi>1
 
-(* lemma clinear_comp_NO_MATCH:
-  assumes "NO_MATCH (\<lambda>a. a) f"
-  assumes "NO_MATCH (\<lambda>a. a) g"
-  assumes "clinear f"
-  assumes "clinear g"
-  shows "clinear (\<lambda>x. f (g x))"
-  by (simp add: assms(3) assms(4) clinearI complex_vector.linear_add complex_vector.linear_scale) *)
 
 lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes>\<^sub>o idOp)\<close>
   by (auto simp: lvalue_pair_apply)
@@ -247,13 +221,14 @@ locale concrete_teleport_vars begin
 type_synonym a_state = "64 word"
 type_synonym b_state = "1000000 word"
 type_synonym mem = "a_state * bit * bit * b_state * bit"
-type_synonym 'a var = \<open>('a,mem) update_hom\<close>
+type_synonym 'a var = \<open>'a update \<Rightarrow> mem update\<close>
 
 definition A :: "a_state var" where \<open>A a = a \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp\<close>
 definition X :: \<open>bit var\<close> where \<open>X a = idOp \<otimes>\<^sub>o a \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp\<close>
 definition \<Phi>1 :: \<open>bit var\<close> where \<open>\<Phi>1 a = idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o a \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp\<close>
 definition B :: \<open>b_state var\<close> where \<open>B a = idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o a \<otimes>\<^sub>o idOp\<close>
 definition \<Phi>2 :: \<open>bit var\<close> where \<open>\<Phi>2 a = idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o idOp \<otimes>\<^sub>o a\<close>
+
 end
 
 

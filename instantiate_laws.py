@@ -93,6 +93,8 @@ def read_instantiation_header(file: str) -> Optional[Tuple[str, Dict[str, str]]]
     for line in lines:
         if line.strip() == "":
             continue
+        if re.match(r"^\s*#", line):
+            continue
         m = re.match(r"^\s*(\S+)\s+\\<rightarrow>\s+(\S+)\s*$", line)
         if m is None:
             print(f"*** Invalid AXIOM INSTANTIATION line in {file}: {line}")
