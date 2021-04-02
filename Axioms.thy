@@ -39,7 +39,12 @@ axiomatization tensor_lift :: \<open>('a::domain, 'b::domain, 'c::domain) update
     and tensor_update :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> 
     where tensor_update_is_2hom: \<open>update_2hom tensor_update\<close>
       and tensor_lift_hom: "update_2hom F2 \<Longrightarrow> update_hom (tensor_lift F2)"
-      and tensor_lift_correct:  \<open>update_2hom F2 \<Longrightarrow> (\<lambda>a b. tensor_lift F2 (tensor_update a b)) = F2\<close>
+
+      and tensor_lift_correct_conditional:
+        \<open>update_hom H \<Longrightarrow> update_hom L \<Longrightarrow>
+          (\<And>a b. comp_update (H a) (L b) = comp_update (L b) (H a)) \<Longrightarrow>
+         (\<lambda>a b. tensor_lift (\<lambda>a b. comp_update (H a) (L b)) (tensor_update a b)) = (\<lambda>a b. comp_update (H a) (L b))\<close>
+
       and tensor_extensionality: "update_hom F \<Longrightarrow> update_hom G \<Longrightarrow> (\<And>a b. F (tensor_update a b) = G (tensor_update a b)) \<Longrightarrow> F = G"
     for F2 :: \<open>('a::domain, 'b::domain, 'c::domain) update_2hom\<close>
       and F G :: \<open>('a\<times>'b, 'c) update_hom\<close>

@@ -16,6 +16,9 @@ unbundle cblinfun_notation
 lemma lvalue_id[simp]: \<open>lvalue (\<lambda>x. x)\<close>
   by (metis (mono_tags, lifting) complex_vector.module_hom_ident lvalue_def)
 
+lemma lvalue_id'[simp]: \<open>lvalue id\<close>
+  unfolding id_def by simp
+
 lemma lvalue_projector:
   assumes "lvalue F"
   assumes "isProjector a"
@@ -110,7 +113,7 @@ lemma swap_sandwich: "swap = sandwich Uswap"
   apply (rule tensor_extensionality)
     apply (auto simp: sandwich_def)
   apply (rule tensor_ell2_extensionality)
-  by (simp add: times_applyOp tensor_op_ell2)
+  by (simp add: swap_apply times_applyOp tensor_op_ell2)
 
 lemma id_tensor_sandwich: 
   fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2"

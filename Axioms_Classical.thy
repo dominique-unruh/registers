@@ -166,6 +166,16 @@ proof (intro ext)
   qed
 qed
 
+lemma tensor_lift_correct_conditional:
+  \<open>update_hom H \<Longrightarrow> update_hom L \<Longrightarrow>
+          (\<And>a b. comp_update (H a) (L b) = comp_update (L b) (H a)) \<Longrightarrow>
+         (\<lambda>a b. tensor_lift (\<lambda>a b. comp_update (H a) (L b)) (tensor_update a b)) = (\<lambda>a b. comp_update (H a) (L b))\<close>
+  apply (rule tensor_lift_correct)
+  apply (rule update_2hom_o_hom_left_is_hom)
+  apply (rule update_2hom_sym)
+  apply (rule update_2hom_o_hom_left_is_hom)
+  using comp_update_is_2hom update_2hom_sym by auto
+
 lemma tensor_extensionality:
   assumes \<open>update_hom F\<close>
   assumes \<open>update_hom G\<close>

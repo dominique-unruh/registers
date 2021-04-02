@@ -133,4 +133,16 @@ proof (unfold lvalue_def, intro conjI allI)
     by (metis adjoint_twice)
 qed
 
+
+lemma tensor_lift_correct_conditional:
+  \<open>clinear H \<Longrightarrow> clinear L \<Longrightarrow>
+          (\<And>a b. timesOp (H a) (L b) = timesOp (L b) (H a)) \<Longrightarrow>
+         (\<lambda>a b. tensor_lift (\<lambda>a b. timesOp (H a) (L b)) (tensor_op a b)) = (\<lambda>a b. timesOp (H a) (L b))\<close>
+  apply (rule tensor_lift_correct)
+  apply (rule update_2hom_o_hom_left_is_hom)
+  apply (rule update_2hom_sym)
+  apply (rule update_2hom_o_hom_left_is_hom)
+  using cbilinear_timesOp update_2hom_sym apply blast
+  by auto
+
 end

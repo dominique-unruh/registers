@@ -55,7 +55,7 @@ lemma X\<Phi>1_X\<Phi>: \<open>X\<Phi>1 a = X\<Phi> (assoc (a \<otimes>\<^sub>o 
 lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap) (assoc (a \<otimes>\<^sub>o idOp)))\<close>
   apply (subst pair_o_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
   apply (subst (2) lvalue_Fst_lvalue_Snd[symmetric, of \<Phi>], simp)
-  using [[simproc del: compatibility_warn]]
+  (* using [[simproc del: compatibility_warn]] *)
   apply (subst pair_o_swap[unfolded o_def], simp)
   apply (subst pair_o_assoc[unfolded o_def, THEN fun_cong], simp, simp, simp)
   by (auto simp: lvalue_pair_apply)
