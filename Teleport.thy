@@ -222,13 +222,13 @@ proof -
     by (simp add: assoc_left(2))
   also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<top>\<close>
     by (simp add: applyOpSpace_mono)
-  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes>\<^sub>o id_update) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (id_update \<otimes>\<^sub>o assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
+  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes>\<^sub>o idOp) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes>\<^sub>o assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
     by (simp add: to_X\<Phi>2_AB)
   also have \<open>\<dots> = \<Phi>2AB (selfbutter \<psi>) *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
     apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
         cblinfun_apply_assoc_subspace[symmetric]
         lvalue_mult)
-    by (simp add: sandwich_def cblinfun_apply_assoc[symmetric] tensor_update_mult tensor_op_adjoint)
+    by (simp add: sandwich_def cblinfun_apply_assoc[symmetric] comp_tensor_op tensor_op_adjoint)
   also have \<open>\<dots> \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
     by (simp add: EQ_def applyOpSpace_mono)
   finally have \<open>O7 *\<^sub>S pre \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>

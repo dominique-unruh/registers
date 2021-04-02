@@ -8,7 +8,6 @@ text \<open>This notation is only used inside this file\<close>
 notation comp_update (infixl "*\<^sub>u" 55)
 notation tensor_update (infixr "\<otimes>\<^sub>u" 70)
 
-
 subsection \<open>Elementary facts\<close>
 
 declare tensor_update_is_2hom[simp]
@@ -45,22 +44,28 @@ definition tensor_update_hom  (infixr "\<otimes>\<^sub>h" 70) where
   "tensor_update_hom F G = tensor_lift (\<lambda>a b. F a \<otimes>\<^sub>u G b)" 
 
 lemma tensor_update_hom_hom_is_2hom[simp]:
+  fixes F :: "'a::domain update \<Rightarrow> 'b::domain update" and G :: "'c::domain update \<Rightarrow> 'd::domain update"
   assumes \<open>update_hom F\<close> and \<open>update_hom G\<close>
   shows \<open>update_2hom (\<lambda>a b. F a \<otimes>\<^sub>u G b)\<close>
   apply (rule update_2hom_o_hom_left_is_hom, rule update_2hom_o_hom_right_is_hom)
   by (rule tensor_update_is_2hom assms)+
 
-lemma tensor_update_hom_is_hom: "update_hom F \<Longrightarrow> update_hom G \<Longrightarrow> update_hom (F \<otimes>\<^sub>h G)"
+lemma tensor_update_hom_is_hom: 
+  fixes F :: "'a::domain update \<Rightarrow> 'b::domain update" and G :: "'c::domain update \<Rightarrow> 'd::domain update"
+  shows "update_hom F \<Longrightarrow> update_hom G \<Longrightarrow> update_hom (F \<otimes>\<^sub>h G)"
   unfolding tensor_update_hom_def apply (rule tensor_lift_hom) by simp
 
 lemma tensor_update_hom_apply[simp]:
+  fixes F :: "'a::domain update \<Rightarrow> 'b::domain update" and G :: "'c::domain update \<Rightarrow> 'd::domain update"
   assumes \<open>update_hom F\<close> and \<open>update_hom G\<close>
   shows "(F \<otimes>\<^sub>h G) (a \<otimes>\<^sub>u b) = F a \<otimes>\<^sub>u G b"
   unfolding tensor_update_hom_def 
   using tensor_lift_correct tensor_update_hom_hom_is_2hom[OF assms] 
   by metis
 
-lemma update_hom_tensor_is_2hom[simp]: \<open>update_hom F \<Longrightarrow> update_2hom (\<lambda>a b. F (a \<otimes>\<^sub>u b))\<close>
+lemma update_hom_tensor_is_2hom[simp]: 
+  fixes F :: "('a::domain \<times> 'b::domain) update \<Rightarrow> 'c::domain update"
+  shows \<open>update_hom F \<Longrightarrow> update_2hom (\<lambda>a b. F (a \<otimes>\<^sub>u b))\<close>
   using tensor_update_is_2hom by (rule update_hom_o_2hom_is_2hom)
 
 lemma update_hom_tensor_left_is_hom[simp]: "update_hom ((\<otimes>\<^sub>u) a :: 'b::domain update \<Rightarrow> _)" 
@@ -73,7 +78,7 @@ lemma update_hom_tensor_right_is_hom[simp]: "update_hom (\<lambda>a::'a::domain 
   by (simp add: update_2hom_left_is_hom)
 
 lemma tensor_extensionality3: 
-  fixes F G :: \<open>('a::domain\<times>'b::domain\<times>'c::domain, 'd::domain) update_hom\<close>
+  fixes F G :: \<open>('a::domain\<times>'b::domain\<times>'c::domain) update \<Rightarrow> 'd::domain update\<close>
   assumes [simp]: \<open>update_hom F\<close> \<open>update_hom G\<close>
   assumes "\<And>f g h. F (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h) = G (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h)"
   shows "F = G"
@@ -91,7 +96,7 @@ proof -
 qed
 
 lemma tensor_extensionality3':
-  fixes F G :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'd::domain) update_hom\<close>
+  fixes F G :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain) update \<Rightarrow> 'd::domain update\<close>
   assumes [simp]: \<open>update_hom F\<close> \<open>update_hom G\<close>
   assumes "\<And>f g h. F ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h) = G ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h)"
   shows "F = G"
@@ -124,7 +129,8 @@ lemma swap_apply[simp]: "swap (a \<otimes>\<^sub>u b) = (b \<otimes>\<^sub>u a)"
 
 subsection \<open>Pairs and compatibility\<close>
 
-definition compatible :: \<open>('a::domain,'c::domain) update_hom \<Rightarrow> ('b::domain,'c) update_hom \<Rightarrow> bool\<close> where
+definition compatible :: \<open>('a::domain update \<Rightarrow> 'c::domain update)
+                       \<Rightarrow> ('b::domain update \<Rightarrow> 'c update) \<Rightarrow> bool\<close> where
   \<open>compatible F G \<longleftrightarrow> lvalue F \<and> lvalue G \<and> (\<forall>a b. F a *\<^sub>u G b = G b *\<^sub>u F a)\<close>
 
 lemma compatibleI:
@@ -141,8 +147,8 @@ lemma swap_lvalues:
 lemma compatible_sym: "compatible x y \<Longrightarrow> compatible y x"
   by (simp add: compatible_def)
 
-definition lvalue_pair :: \<open>('a::domain,'c::domain) update_hom \<Rightarrow> ('b::domain,'c) update_hom
-         \<Rightarrow> ('a\<times>'b, 'c) update_hom\<close> ("'(_;_')") where
+definition lvalue_pair :: \<open>('a::domain update \<Rightarrow> 'c::domain update) \<Rightarrow> ('b::domain update \<Rightarrow> 'c update)
+         \<Rightarrow> (('a\<times>'b) update \<Rightarrow> 'c update)\<close> ("'(_;_')") where
   \<open>(F; G) = tensor_lift (\<lambda>a b. F a *\<^sub>u G b)\<close>
 
 
@@ -276,14 +282,14 @@ proof (rule tensor_extensionality)
 qed
 
 lemma compatible_tensor_id_update_left[simp]:
-  fixes F :: "('a::domain,'c::domain) update_hom" and G :: "('b::domain,'c::domain) update_hom"
+  fixes F :: "'a::domain update \<Rightarrow> 'c::domain update" and G :: "'b::domain update \<Rightarrow> 'c::domain update"
   assumes "compatible F G"
   shows "compatible (\<lambda>a. id_update \<otimes>\<^sub>u F a) (\<lambda>a. id_update \<otimes>\<^sub>u G a)"
   using assms apply (rule compatible_comp_inner[unfolded o_def])
   by (simp add: lvalue_tensor_right)
   
 lemma compatible_tensor_id_update_right[simp]:
-  fixes F :: "('a::domain,'c::domain) update_hom" and G :: "('b::domain,'c::domain) update_hom"
+  fixes F :: "'a::domain update \<Rightarrow> 'c::domain update" and G :: "'b::domain update \<Rightarrow> 'c::domain update"
   assumes "compatible F G"
   shows "compatible (\<lambda>a. F a \<otimes>\<^sub>u id_update) (\<lambda>a. G a \<otimes>\<^sub>u id_update)"
   using assms apply (rule compatible_comp_inner[unfolded o_def])
@@ -348,7 +354,7 @@ lemma lvalue_Snd_lvalue_Fst[simp]:
 
 section \<open>Associativity of the tensor product\<close>
 
-definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain, 'a\<times>('b\<times>'c)) update_hom\<close> where 
+definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain) update \<Rightarrow> ('a\<times>('b\<times>'c)) update\<close> where 
   \<open>assoc = ((Fst; Snd o Fst); Snd o Snd)\<close>
 
 lemma assoc_is_hom[simp]: \<open>update_hom assoc\<close>
@@ -357,7 +363,7 @@ lemma assoc_is_hom[simp]: \<open>update_hom assoc\<close>
 lemma assoc_apply: \<open>assoc ((a \<otimes>\<^sub>u b) \<otimes>\<^sub>u c) = (a \<otimes>\<^sub>u (b \<otimes>\<^sub>u c))\<close>
   by (auto simp: assoc_def lvalue_pair_apply Fst_def Snd_def tensor_update_mult)
 
-definition assoc' :: \<open>('a\<times>('b\<times>'c), ('a::domain\<times>'b::domain)\<times>'c::domain) update_hom\<close> where 
+definition assoc' :: \<open>('a\<times>('b\<times>'c)) update \<Rightarrow> (('a::domain\<times>'b::domain)\<times>'c::domain) update\<close> where 
   \<open>assoc' = (Fst o Fst; (Fst o Snd; Snd))\<close>
 
 lemma assoc'_is_hom[simp]: \<open>update_hom assoc'\<close>

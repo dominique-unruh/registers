@@ -458,4 +458,8 @@ lemma [simp]: "dim_row (mat_adjoint m) = dim_col m"
 lemma cblinfun_apply_in_image[simp]: "A *\<^sub>V \<psi> \<in> space_as_set (A *\<^sub>S \<top>)"
   by (metis applyOpSpace.rep_eq closure_subset in_mono range_eqI top_clinear_space.rep_eq)
 
+lemma cbilinear_timesOp[simp]: "cbilinear timesOp"
+  by (auto intro!: clinearI simp add: cbilinear_def cblinfun_apply_dist1 cblinfun_apply_dist2)
+
+
 end

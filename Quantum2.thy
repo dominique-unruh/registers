@@ -117,13 +117,13 @@ lemma compatible_proj_mult:
   using [[simproc del: Laws_Quantum.compatibility_warn]]
   using assms unfolding isProjector_algebraic compatible_def
   apply auto
-  apply (metis comp_update_assoc lvalue_mult)
+  apply (metis (no_types, lifting) cblinfun_apply_assoc lvalue_mult)
   by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
 lemma sandwich_tensor: "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>h sandwich b"
   for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
   apply (rule tensor_extensionality)
-  by (auto simp: sandwich_def tensor_update_hom_is_hom tensor_update_mult tensor_op_adjoint)
+  by (auto simp: sandwich_def tensor_update_hom_is_hom comp_tensor_op tensor_op_adjoint)
 
 lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes>\<^sub>o idOp)"
   for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
@@ -131,6 +131,10 @@ lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otime
 
 lemma lvalue_sandwich: \<open>lvalue F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
   by (smt (verit, del_insts) lvalue_def sandwich_def)
+
+lemma unitary_sandwich_lvalue: \<open>unitary a \<Longrightarrow> lvalue (sandwich a)\<close>
+  unfolding lvalue_def sandwich_def
+  by (smt (z3) adjoint_twice assoc_left(1) cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI op_scalar_op scalar_op_op times_adjoint times_idOp2 unitary_def)
 
 lemma assoc_ell2_sandwich: \<open>assoc = sandwich assoc_ell2\<close>
   unfolding sandwich_def
@@ -151,7 +155,6 @@ lemma assoc_ell2'_sandwich: \<open>assoc' = sandwich assoc_ell2'\<close>
   apply (case_tac x)
   by (simp add: assoc'_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor 
            flip: tensor_ell2_ket)
-
 
 lemma swap_sandwich: "swap = sandwich Uswap"
   apply (rule tensor_extensionality)

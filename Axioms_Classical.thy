@@ -96,13 +96,11 @@ lemma update_2hom_sym: \<open>update_2hom F2 \<Longrightarrow> update_2hom (\<la
   apply fastforce by blast
 
 lemma update_2hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> update_hom (\<lambda>a. F2 a b)\<close>
-  using [[show_types]]
   unfolding update_2hom_def update_hom_def apply auto 
   apply (rule_tac x=\<open>{(a',c')| a' b' c'. ((a',b'),c') \<in> R2 \<and> b' \<in> b}\<close> in exI)
   by fastforce
 
 lemma comp_update_is_2hom: "update_2hom comp_update"
-  using [[show_types]]
   unfolding update_2hom_def
   apply (rule_tac x=\<open>{((a',b'),c')| a' b' c'. fst a' = snd b' \<and> fst c' = fst b' \<and> snd c' = snd a'}\<close> in exI)
   by auto
