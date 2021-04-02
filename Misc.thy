@@ -97,7 +97,6 @@ proof (rule independent_if_scalars_zero)
   assume \<open>g \<in> {butterket i j |i j. True}\<close>
   then obtain i j where g: \<open>g = butterket i j\<close>
     by auto
-  (* define bra :: "'b \<Rightarrow> (_,complex) cblinfun" where "bra i = vector_to_cblinfun (ket i)*" for i *)
 
   have *: "bra i *\<^sub>V f g *\<^sub>C g *\<^sub>V ket j = 0"
     if \<open>g\<in>{butterket i j |i j. True} - {butterket i j}\<close> for g 

@@ -13,58 +13,8 @@ no_notation Order.top ("\<top>\<index>")
 unbundle lvalue_notation
 unbundle cblinfun_notation
 
-(* lemma pair_o_tensor':
-  assumes "compatible A B" and \<open>clinear C\<close> and \<open>clinear D\<close>
-  shows "(A; B) ((C \<otimes>\<^sub>h D) x) = (A o C; B o D) x"
-  using pair_o_tensor[OF assms]
-  by (smt (z3) fcomp_comp fcomp_def) *)
-
-(* lemma pair_o_swap':
-  assumes "compatible A B"
-  shows "(A; B) (swap x) = (B; A) x"
-  using pair_o_swap[OF assms]
-  by (metis comp_def) *)
-
-(* lemma id_update_tensor_lvalue[simp]:
-  assumes \<open>lvalue F\<close>
-  shows \<open>lvalue (\<lambda>a. idOp \<otimes>\<^sub>o F a)\<close>
-  using assms unfolding lvalue_def 
-  apply auto
-  using update_hom_tensor_left_is_hom[of idOp] linear_compose[of F \<open>\<lambda>x. idOp \<otimes>\<^sub>o x\<close>, unfolded o_def] o_def
-  apply (smt (z3))
-  apply (metis (no_types, hide_lams) comp_tensor_op times_idOp2)
-  by (metis (full_types) idOp_adjoint tensor_op_adjoint) *)
-
-(* lemma lvalue_tensor_id_update[simp]:
-  assumes \<open>lvalue F\<close>
-  shows \<open>lvalue (\<lambda>a. F a \<otimes>\<^sub>o idOp)\<close>
-  using assms unfolding lvalue_def 
-  apply auto
-  using update_hom_tensor_right_is_hom[of idOp] linear_compose[of F \<open>\<lambda>x. x \<otimes>\<^sub>o idOp\<close>, unfolded o_def] o_def
-  apply (smt (z3))
-  apply (metis (no_types, hide_lams) comp_tensor_op times_idOp2)
-  by (metis (full_types) idOp_adjoint tensor_op_adjoint) *)
-
 lemma lvalue_id[simp]: \<open>lvalue (\<lambda>x. x)\<close>
   by (metis (mono_tags, lifting) complex_vector.module_hom_ident lvalue_def)
-
-(* lemma compatible_tensor_id_update_left[simp]:
-  assumes "compatible F G"
-  shows "compatible (\<lambda>a. idOp \<otimes>\<^sub>o F a) (\<lambda>a. idOp \<otimes>\<^sub>o G a)"
-  using assms unfolding compatible_def apply auto
-  by (metis comp_tensor_op) *)
-
-(* lemma compatible_tensor_id_update_rl[simp]:
-  assumes "lvalue F" and "lvalue G"
-  shows "compatible (\<lambda>a. F a \<otimes>\<^sub>o idOp) (\<lambda>a. idOp \<otimes>\<^sub>o G a)"
-  using assms unfolding compatible_def apply auto
-  by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2) *)
-
-(* lemma compatible_tensor_id_update_lr[simp]:
-  assumes "lvalue F" and "lvalue G"
-  shows "compatible (\<lambda>a. idOp \<otimes>\<^sub>o F a) (\<lambda>a. G a \<otimes>\<^sub>o idOp)"
-  using assms unfolding compatible_def apply auto
-  by (metis (no_types, hide_lams) comp_tensor_op times_idOp1 times_idOp2) *)
 
 lemma lvalue_projector:
   assumes "lvalue F"

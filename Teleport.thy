@@ -96,11 +96,6 @@ schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
 
 lemmas to_X\<Phi>2_AB = XAB_to_X\<Phi>2_AB X\<Phi>2_to_X\<Phi>2_AB \<Phi>2AB_to_X\<Phi>2_AB
 
-(* lemma swap_lvalues_applySpace:
-  assumes "compatible R S"
-  shows "R a *\<^sub>S S b *\<^sub>S M = S b *\<^sub>S R a *\<^sub>S M"
-  by (metis assms assoc_left(2) swap_lvalues) *)
-
 lemma teleport:
   assumes [simp]: "norm \<psi> = 1"
   shows "hoare (XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) (teleport a b) (\<Phi>2AB =\<^sub>q \<psi>)"
@@ -138,7 +133,7 @@ proof -
   proof -
     have "O5 = X\<Phi>1 (selfbutterket (b,a)) o\<^sub>C\<^sub>L O3"
       unfolding O5_def O4_def
-      apply (subst lift_cblinfun_comp[OF join_EQP, where R1=X and S1=\<Phi>1], simp)
+      apply (subst lift_cblinfun_comp[OF compatible_selfbutter_join, where R1=X and S1=\<Phi>1], simp)
       by simp
     also have \<open>\<dots> = ?rhs\<close>
       unfolding O3_def O2_def

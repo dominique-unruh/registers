@@ -33,8 +33,6 @@ unbundle cblinfun_notation
 no_notation m_inv ("inv\<index> _" [81] 80)
 
 type_synonym 'a update = \<open>('a ell2, 'a ell2) cblinfun\<close>
-(* type_synonym ('a,'b) update_hom = \<open>'a update \<Rightarrow> 'b update\<close> *)
-(* type_synonym ('a,'b,'c) update_2hom = \<open>'a update \<Rightarrow> 'b update \<Rightarrow> 'c update\<close> *)
 
 lemma update_hom_o_2hom_is_2hom: \<open>cbilinear F2 \<Longrightarrow> clinear G \<Longrightarrow> cbilinear (\<lambda>a b. G (F2 a b))\<close>
   apply (auto simp: cbilinear_def intro!: clinearI)

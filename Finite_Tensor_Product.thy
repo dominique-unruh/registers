@@ -257,14 +257,6 @@ proof -
     unfolding F2'_def by auto
 qed
 
-(* lemma tensor_uniqueness: 
-  fixes F2 :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2
-            \<Rightarrow> 'c::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2
-            \<Rightarrow> 'e::complex_normed_vector"
-  shows \<open>cbilinear F2 \<Longrightarrow> clinear F \<Longrightarrow> (\<lambda>a b. F (tensor_op a b)) = F2 \<Longrightarrow> F = tensor_lift F2\<close>
-  using tensor_extensionality tensor_lift_hom tensor_lift_correct by metis *)
-
-
 lift_definition assoc_ell20 :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite) ell2 \<Rightarrow> ('a\<times>('b\<times>'c)) ell2\<close> is
   \<open>\<lambda>f (a,(b,c)). f ((a,b),c)\<close>
   by auto

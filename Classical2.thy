@@ -95,19 +95,6 @@ lemma lvalue_prod1: \<open>lvalue (\<lambda>a. rel_prod a Id)\<close>
    apply simp
   by (simp add: rel_prod_converse)
 
-(* lemma lvalue_prod2: \<open>lvalue (\<lambda>b. rel_prod Id b)\<close> *)
-
-(* 
-definition lvalue_from_splitting :: \<open>('b \<Rightarrow> 'a \<times> 'c) \<Rightarrow> ('a,'b) update_hom\<close> where
-  "lvalue_from_splitting s = permutation_lvalue s \<circ> (\<lambda>a. rel_prod a Id)"
-
-lemma lvalue_from_splitting_lvalue: 
-  assumes "bij s"
-  shows \<open>lvalue (lvalue_from_splitting s)\<close>
-  unfolding lvalue_from_splitting_def
-  apply (rule lvalue_comp)
-  apply (rule lvalue_prod1)
-  using assms by (rule permutation_lvalue_lvalue) *)
 
 definition lvalue_from_setter :: \<open>('b\<Rightarrow>'a) \<Rightarrow> ('a\<Rightarrow>'b\<Rightarrow>'b) \<Rightarrow> ('a,'b) update_hom\<close> where
   \<open>lvalue_from_setter g s a = {(s ax b, s ay b) | b ax ay. (ax,ay) \<in> a}\<close>

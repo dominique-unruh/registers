@@ -151,19 +151,6 @@ definition lvalue_pair :: \<open>('a::domain update \<Rightarrow> 'c::domain upd
          \<Rightarrow> (('a\<times>'b) update \<Rightarrow> 'c update)\<close> ("'(_;_')") where
   \<open>(F; G) = tensor_lift (\<lambda>a b. F a *\<^sub>u G b)\<close>
 
-
-(* lemma update_hom_F_comp_G1:
-  assumes \<open>update_hom G\<close>
-  shows \<open>update_hom (\<lambda>b. a *\<^sub>u G b)\<close>
-  using assms apply (rule comp_update_hom[of G \<open>\<lambda>b. a *\<^sub>u b\<close>, unfolded comp_def])
-  apply (rule update_2hom_right_is_hom) using comp_update_is_2hom by auto *)
-
-(* lemma update_hom_F_comp_G2:
-  assumes \<open>update_hom F\<close>
-  shows \<open>update_hom (\<lambda>a. F a *\<^sub>u G b)\<close> 
-  using assms apply (rule comp_update_hom[of F \<open>\<lambda>a. a *\<^sub>u G b\<close>, unfolded comp_def])
-  apply (rule update_2hom_left_is_hom) using comp_update_is_2hom by auto *)
-
 lemma hom_comp_update_hom_is_2hom[simp]:
   assumes \<open>update_hom F\<close> and \<open>update_hom G\<close>
   shows \<open>update_2hom (\<lambda>a b. F a *\<^sub>u G b)\<close>
@@ -472,19 +459,6 @@ Attrib.setup \<^binding>\<open>compatible\<close>
   "Add 'compatible x y' style rules to simplifier. (Also adds 'lvalue x', 'lvalue y')"
 end
 \<close>
-
-
-(* experiment begin
-lemma 
-  assumes [compatible]: "mutually compatible (a,b,c)"
-  shows True
-proof -
-  have "lvalue b" by simp
-  have "compatible b c" by simp
-  have "compatible (a; b) c" by simp
-  show ?thesis by simp
-qed
-end *)
 
 
 

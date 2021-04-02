@@ -200,37 +200,6 @@ proof -
     using RF RG by simp
 qed
 
-(* lemma tensor_uniqueness:
-  assumes \<open>update_2hom F2\<close>
-  assumes \<open>update_hom F\<close>
-  assumes \<open>(\<lambda>a b. F (tensor_update a b)) = F2\<close>
-  shows \<open>F = tensor_lift F2\<close>
-  using tensor_extensionality tensor_lift_correct assms
-  by (metis tensor_lift_hom) *)
-
-
-(* definition assoc :: \<open>(('a\<times>'b)\<times>'c, 'a\<times>('b\<times>'c)) update_hom\<close> where 
-  \<open>assoc r = {((a,(b,c)), ((a,b),c))| a b c. True} O r O {(((a,b),c), (a,(b,c)))| a b c. True}\<close>
-
-lemma assoc_is_hom: \<open>update_hom assoc\<close>
-proof -
-  let ?assoc = \<open>assoc :: (('a\<times>'b)\<times>'c, 'a\<times>('b\<times>'c)) update_hom\<close>
-  term \<open>rel_of_update_hom ?assoc\<close>
-  define R :: \<open>(((('a\<times>'b)\<times>'c) \<times> (('a\<times>'b)\<times>'c)) \<times> ('a\<times>('b\<times>'c)) \<times> ('a\<times>('b\<times>'c))) set\<close>
-    where \<open>R = {((((ax,bx),cx), ((ay,by),cy)), (ax,(bx,cx)), (ay,(by,cy)))| ax ay bx by cx cy. True}\<close>
-  have "?assoc = Image R"
-    apply (rule ext)
-    by (auto simp: R_def assoc_def Image_def relcomp_def relcompp_apply)
-  then show \<open>update_hom ?assoc\<close>
-    using update_hom_def by auto
-qed
-
-
-lemma assoc_apply: \<open>assoc (tensor_update (tensor_update a b) c) = (tensor_update a (tensor_update b c))\<close>
-  unfolding assoc_def rel_prod_def
-  apply (auto simp: case_prod_beta image_def relcomp_def relcompp_apply)
-  by (metis fst_conv snd_conv)+ *)
-
 definition lvalue :: \<open>('a,'b) update_hom \<Rightarrow> bool\<close> where
   \<open>lvalue F \<longleftrightarrow> update_hom F \<and> (\<forall>a a'. F a O F a' = F (a O a')) \<and> F Id = Id \<and> (\<forall>a. F (a\<inverse>) = (F a)\<inverse>)\<close>
 
