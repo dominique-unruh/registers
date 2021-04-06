@@ -1,3 +1,5 @@
+section \<open>Axioms of lvalues\<close>
+
 theory Axioms
   imports Main
 begin

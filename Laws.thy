@@ -1,3 +1,5 @@
+section \<open>Generic laws about lvalues\<close>
+
 theory Laws
   imports Axioms "HOL-Library.Rewrite" Misc
 begin
@@ -339,7 +341,7 @@ lemma lvalue_Snd_lvalue_Fst[simp]:
   apply (rule tensor_extensionality)
   using assms by (auto simp: lvalue_pair_apply Fst_def Snd_def lvalue_mult tensor_update_mult lvalue_swap)
 
-section \<open>Associativity of the tensor product\<close>
+subsection \<open>Associativity of the tensor product\<close>
 
 definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain) update \<Rightarrow> ('a\<times>('b\<times>'c)) update\<close> where 
   \<open>assoc = ((Fst; Snd o Fst); Snd o Snd)\<close>

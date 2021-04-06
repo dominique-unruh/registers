@@ -1,3 +1,5 @@
+section \<open>Quantum teleportation\<close>
+
 theory Teleport
   imports 
     QHoare

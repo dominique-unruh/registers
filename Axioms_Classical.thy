@@ -1,6 +1,11 @@
+section \<open>Classical instantiation of lvalues\<close>
+
 (* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Classical.thy)
  
-   domain \<rightarrow> type *)
+   domain \<rightarrow> type
+
+   Generic laws about lvalues \<rightarrow> Generic laws about lvalues, instantiated classically
+*)
 
 theory Axioms_Classical
   imports Main

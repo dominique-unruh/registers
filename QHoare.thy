@@ -1,3 +1,5 @@
+section \<open>Very simple Quantum Hoare logic\<close>
+
 theory QHoare
   imports Quantum2
 begin

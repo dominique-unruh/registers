@@ -1,5 +1,5 @@
 session LValues = "LValues-Prerequisites" +
-  options [document = pdf, document_variants = "document:outline=-proof,/ML"]
+  options [document_output = "document", document = pdf, document_variants = "document:outline=-proof,/ML"]
   theories All
   document_files "root.tex"
 

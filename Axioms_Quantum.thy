@@ -1,3 +1,5 @@
+section \<open>Classical instantiation of lvalues\<close>
+
 (* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Quantum.thy)
 
     # Type classe
@@ -20,6 +22,8 @@
     tensor_update_mult \<rightarrow> comp_tensor_op
     tensor_update_is_2hom \<rightarrow> tensor_op_cbilinear
 
+    # Chapter name
+    Generic laws about lvalues \<rightarrow> Generic laws about lvalues, instantiated quantumly
 *)
 
 theory Axioms_Quantum

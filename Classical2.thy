@@ -1,3 +1,5 @@
+section \<open>Derived facts about classical lvalues\<close>
+
 theory Classical2
   imports Laws_Classical
 begin

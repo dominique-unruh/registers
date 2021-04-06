@@ -1,3 +1,5 @@
+section \<open>Tensor products (finite dimensional)\<close>
+
 theory Finite_Tensor_Product
   imports Bounded_Operators.Complex_L2 Misc
 begin

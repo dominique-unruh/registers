@@ -1,3 +1,5 @@
+section \<open>Derived facts about quantum lvalues\<close>
+
 theory Quantum2
   imports
     Laws_Quantum

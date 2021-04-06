@@ -1,3 +1,5 @@
+section \<open>Tensor products as matrices\<close>
+
 theory Finite_Tensor_Product_Matrices
   imports Finite_Tensor_Product
 begin

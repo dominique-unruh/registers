@@ -1,12 +1,20 @@
+section \<open>Miscellaneous facts\<close>
+
+text \<open>This theory proves various facts that are not directly related to this developments 
+but do not occur in the important theories.\<close>
+
 theory Misc
   imports Bounded_Operators.Bounded_Operators_Code "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix
     "HOL-ex.Sketch_and_Explore"
 begin
 
+\<comment> \<open>Remove notation that collides with the notation we use\<close>
 no_notation Order.top ("\<top>\<index>")
 unbundle no_vec_syntax
 unbundle no_inner_syntax
+
+\<comment> \<open>Import notation from Bounded Operator and Jordan Normal Form libraries\<close>
 unbundle cblinfun_notation
 unbundle jnf_notation
 

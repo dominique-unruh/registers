@@ -14,7 +14,7 @@ type_synonym ('a,'b) matrix = \<open>('a ell2, 'b ell2) cblinfun\<close>
 
 subsection \<open>Basic quantum states\<close>
 
-subsubsection \<open>EPR pair \<beta>00\<close>
+subsubsection \<open>EPR pair\<close>
 
 definition "vector_\<beta>00 = vec_of_list [ 1/sqrt 2::complex, 0, 0, 1/sqrt 2 ]"
 definition \<beta>00 :: \<open>(bit\<times>bit) ell2\<close> where [code del]: "\<beta>00 = onb_enum_of_vec vector_\<beta>00"
@@ -28,7 +28,7 @@ lemma vec_of_ell2_\<beta>00[simp, code]: "vec_of_ell2 \<beta>00 = vector_\<beta>
 lemma norm_\<beta>00[simp]: "norm \<beta>00 = 1"
   by eval
 
-subsubsection \<open>Ket plus |+\<rangle>\<close>
+subsubsection \<open>Ket plus\<close>
 
 definition "vector_ketplus = vec_of_list [ 1/sqrt 2::complex, 1/sqrt 2 ]"
 definition ketplus :: \<open>bit ell2\<close> ("|+\<rangle>") where [code del]: \<open>ketplus = onb_enum_of_vec vector_ketplus\<close>
