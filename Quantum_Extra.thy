@@ -1,6 +1,6 @@
 section \<open>Derived facts about quantum lvalues\<close>
 
-theory Quantum2
+theory Quantum_Extra
   imports
     Laws_Quantum
     Bounded_Operators.Bounded_Operators_Code

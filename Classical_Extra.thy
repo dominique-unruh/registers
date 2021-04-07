@@ -1,6 +1,6 @@
 section \<open>Derived facts about classical lvalues\<close>
 
-theory Classical2
+theory Classical_Extra
   imports Laws_Classical
 begin
 

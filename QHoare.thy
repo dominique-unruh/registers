@@ -1,7 +1,7 @@
 section \<open>Very simple Quantum Hoare logic\<close>
 
 theory QHoare
-  imports Quantum2
+  imports Quantum_Extra
 begin
 
 no_notation Order.top ("\<top>\<index>")
