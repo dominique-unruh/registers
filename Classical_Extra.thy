@@ -142,25 +142,17 @@ qed
 lemma lvalue_from_setter_lvalue[simp]:
   fixes s :: "'a \<Rightarrow> 'b \<Rightarrow> 'b" and g :: "'b \<Rightarrow> 'a"
   assumes "valid_getter_setter g s"
-(*   assumes \<open>\<And>b. b = s (g b) b\<close>
-  assumes \<open>\<And>a b. g (s a b) = a\<close>
-  assumes \<open>\<And>a a' b. s a (s a' b) = s a b\<close> *)
   shows "lvalue (lvalue_from_setter g s)"
   apply (rule lvalue_from_setter_lvalue'[where g=g])
   using assms unfolding valid_getter_setter_def by metis+
 
 lemma lvalue_from_setter_set:
   assumes "valid_getter_setter g s"
-(*   assumes \<open>\<And>b. b = s (g b) b\<close>
-  assumes \<open>\<And>a a' b. s a (s a' b) = s a b\<close> *)
   shows \<open>lvalue_from_setter g s {(a, a0)|a. True} = {(b, s a0 b)|b. True}\<close>
   using assms by (auto simp: valid_getter_setter_def lvalue_from_setter_def)
 
 lemma lvalue_from_setter_map:
   assumes "valid_getter_setter g s"
-(*   assumes \<open>\<And>b. b = s (g b) b\<close>
-  assumes \<open>\<And>a b. g (s a b) = a\<close>
-  assumes \<open>\<And>a a' b. s a (s a' b) = s a b\<close> *)
   shows \<open>lvalue_from_setter g s {(a, f a)|a. True} = {(b, s (f (g b)) b)|b. True}\<close>
   using assms by (auto simp: valid_getter_setter_def lvalue_from_setter_def)
 
@@ -175,47 +167,23 @@ lemma lvalue_from_setter_compat:
   apply (auto simp add: lvalue_from_setter_def relcomp_def relcompp_apply)
   by metis+
 
-definition FST :: \<open>('a, 'a\<times>'b) update_hom\<close> where "FST = lvalue_from_setter fst (\<lambda>a (_,b). (a,b))"
-lemma valid_FST: "valid_getter_setter fst (\<lambda>a (_,b). (a,b))"
-  unfolding valid_getter_setter_def by auto
-lemma lvalue_FST[simp]: "lvalue FST"
-  by (metis FST_def lvalue_from_setter_lvalue valid_FST)
 
+(* TODO: define setter_from_lvalue and to get the setter back. This 
+         then implies that lvalues and getter/setters are the same. *)
 
-definition SND :: \<open>('b, 'a\<times>'b) update_hom\<close> where "SND = lvalue_from_setter snd (\<lambda>b (a,_). (a,b))"
-lemma valid_SND: "valid_getter_setter snd (\<lambda>b (a,_). (a,b))"
-  unfolding valid_getter_setter_def by auto
-lemma lvalue_SND[simp]: "lvalue SND"
-  by (metis SND_def lvalue_from_setter_lvalue valid_SND)
+subsubsection \<open>Example\<close>
 
+record memory = 
+  x :: "int*int"
+  y :: nat
 
-lemma compatible_FST_SND: "compatible FST SND"
-  unfolding FST_def SND_def
-  using valid_FST valid_SND 
-  apply (rule lvalue_from_setter_compat)
-  by auto
-
-
-
-
-
-
-
-
-
-
-record bla = x :: "int*int"   y :: nat
-
-definition "xlv = lvalue_from_setter x (\<lambda>a b. b\<lparr>x:=a\<rparr>)"
+definition "X = lvalue_from_setter x (\<lambda>a b. b\<lparr>x:=a\<rparr>)"
 
 lemma valid: \<open>valid_getter_setter x (\<lambda>a b. b\<lparr>x:=a\<rparr>)\<close>
   unfolding valid_getter_setter_def by auto
 
-lemma lvalue: \<open>lvalue xlv\<close>
-  by (simp add: valid xlv_def)
-
-
-
+lemma lvalue: \<open>lvalue X\<close>
+  by (simp add: valid X_def)
 
 
 end

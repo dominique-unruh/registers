@@ -21,12 +21,6 @@ definition hoare :: \<open>'mem ell2 clinear_space \<Rightarrow> ('mem ell2 \<Ri
 definition EQ :: "('a update \<Rightarrow> 'mem update) \<Rightarrow> 'a ell2 \<Rightarrow> 'mem ell2 clinear_space" (infix "=\<^sub>q" 75) where
   "EQ R \<psi> = R (selfbutter \<psi>) *\<^sub>S \<top>"
 
-lemma compatible_selfbutter_join:
-  assumes [compatible]: "compatible R S"
-  shows "R (selfbutter \<psi>) o\<^sub>C\<^sub>L S (selfbutter \<phi>) = (R; S) (selfbutter (\<psi> \<otimes>\<^sub>s \<phi>))"
-  apply (subst lvalue_pair_apply[symmetric, where F=R and G=S])
-  using assms by auto
-
 lemma program_skip[simp]: "program [] = idOp"
   by (simp add: qhoare.program_def)
 

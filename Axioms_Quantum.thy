@@ -1,4 +1,4 @@
-section \<open>Classical instantiation of lvalues\<close>
+section \<open>Quantum instantiation of lvalues\<close>
 
 (* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Quantum.thy)
 

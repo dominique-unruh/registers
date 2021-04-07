@@ -126,5 +126,12 @@ lemma id_tensor_sandwich:
   apply (rule tensor_extensionality) 
   by (simp_all add: tensor_update_hom_is_hom comp_tensor_op sandwich_def tensor_op_adjoint)
 
+
+lemma compatible_selfbutter_join:
+  assumes [compatible]: "compatible R S"
+  shows "R (selfbutter \<psi>) o\<^sub>C\<^sub>L S (selfbutter \<phi>) = (R; S) (selfbutter (\<psi> \<otimes>\<^sub>s \<phi>))"
+  apply (subst lvalue_pair_apply[symmetric, where F=R and G=S])
+  using assms by auto
+
 end
 
