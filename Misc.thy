@@ -1,7 +1,7 @@
 section \<open>Miscellaneous facts\<close>
 
 text \<open>This theory proves various facts that are not directly related to this developments 
-but do not occur in the important theories.\<close>
+but do not occur in the imported theories.\<close>
 
 theory Misc
   imports Bounded_Operators.Bounded_Operators_Code "HOL-Library.Z2"

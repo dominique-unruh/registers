@@ -296,6 +296,25 @@ lemma compatible_tensor_id_update_lr[simp]:
   apply (rule compatibleI)
   using assms by (auto simp: tensor_update_mult)
 
+lemma lvalue_comp_pair:
+  assumes [simp]: \<open>lvalue F\<close> and [simp]: \<open>compatible G H\<close>
+  shows "(F o G; F o H) = F o (G; H)"
+proof (rule tensor_extensionality)
+  show \<open>update_hom (F \<circ> G;F \<circ> H)\<close> and \<open>update_hom (F \<circ> (G;H))\<close>
+    by simp_all
+
+  have [simp]: \<open>compatible (F o G) (F o H)\<close>
+    apply (rule compatible_comp_inner, simp)
+    by simp
+  then have [simp]: \<open>lvalue (F \<circ> G)\<close> \<open>lvalue (F \<circ> H)\<close>
+    unfolding compatible_def by auto
+  from assms have [simp]: \<open>lvalue G\<close> \<open>lvalue H\<close>
+    unfolding compatible_def by auto
+  fix a b
+  show \<open>(F \<circ> G;F \<circ> H) (a \<otimes>\<^sub>u b) = (F \<circ> (G;H)) (a \<otimes>\<^sub>u b)\<close>
+    by (auto simp: lvalue_pair_apply lvalue_mult tensor_update_mult)
+qed
+
 subsection \<open>Fst and Snd\<close>
 
 definition Fst where \<open>Fst a = a \<otimes>\<^sub>u id_update\<close>
