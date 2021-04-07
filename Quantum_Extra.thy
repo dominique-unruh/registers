@@ -24,9 +24,15 @@ lemma lvalue_projector:
   shows "isProjector (F a)"
   using assms unfolding lvalue_def isProjector_algebraic by metis
 
+lemma lvalue_unitary:
+  assumes "lvalue F"
+  assumes "unitary a"
+  shows "unitary (F a)"
+  using assms by (smt (verit, best) lvalue_def unitary_def)
+
 lemma compatible_proj_intersect:
   (* I think this also holds without isProjector, but my proof idea uses the Penrose-Moore 
-     pseudoinverse and we do not have an existence theorem for it. *)
+     pseudoinverse or simultaneous diagonalization and we do not have an existence theorem for it. *)
   assumes "compatible R S" and "isProjector a" and "isProjector b"
   shows "(R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>) = ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)"
 proof (rule antisym)
