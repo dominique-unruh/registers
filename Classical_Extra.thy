@@ -167,6 +167,32 @@ lemma lvalue_from_setter_compat:
   apply (auto simp add: lvalue_from_setter_def relcomp_def relcompp_apply)
   by metis+
 
+definition empty_var :: \<open>'a::{CARD_1} rel \<Rightarrow> 'b::finite rel\<close> where
+  "empty_var a = (if a={} then {} else Id)"
+
+lemma lvalue_empty_var[simp]: \<open>lvalue empty_var\<close>
+proof (unfold lvalue_def, intro conjI allI)
+  show \<open>update_hom empty_var\<close>
+    unfolding empty_var_def update_hom_def
+    by (rule exI[of _ \<open>UNIV \<times> Id\<close>], rule ext, auto)
+  show \<open>empty_var Id = Id\<close>
+    unfolding empty_var_def by auto
+  fix a b :: "'a update"
+  show \<open>empty_var a O empty_var b = empty_var (a O b)\<close>
+    unfolding empty_var_def apply auto
+    by (metis CARD_1_UNIV Image_singleton_iff empty_iff relcomp.relcompI)
+  show \<open>empty_var (a\<inverse>) = (empty_var a)\<inverse>\<close>
+    unfolding empty_var_def by auto
+qed
+
+lemma empty_var_compatible[simp]: \<open>lvalue X \<Longrightarrow> compatible empty_var X\<close>
+  apply (rule compatibleI)
+  using [[simproc del: compatibility_warn]]
+  by (auto simp: empty_var_def)
+
+lemma empty_var_compatible'[simp]: \<open>lvalue X \<Longrightarrow> compatible X empty_var\<close>
+  using compatible_sym empty_var_compatible by blast
+
 
 (* TODO: define setter_from_lvalue and to get the setter back. This 
          then implies that lvalues and getter/setters are the same. *)
