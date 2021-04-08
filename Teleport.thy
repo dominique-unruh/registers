@@ -20,8 +20,6 @@ unbundle no_vec_syntax
 unbundle no_inner_syntax
 
 
-
-
 locale teleport_locale = qhoare "TYPE('mem::finite)" +
   fixes X :: "bit update \<Rightarrow> 'mem::finite update"
     and \<Phi> :: "(bit*bit) update \<Rightarrow> 'mem update"
@@ -63,20 +61,15 @@ lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap)
   by (auto simp: lvalue_pair_apply)
 lemma \<Phi>2_X\<Phi>: \<open>\<Phi>2 a = X\<Phi> (idOp \<otimes>\<^sub>o (idOp \<otimes>\<^sub>o a))\<close>
   by (auto simp: Snd_def lvalue_pair_apply)
-lemmas to_X\<Phi> = \<Phi>_X\<Phi> X\<Phi>1_X\<Phi> X\<Phi>2_X\<Phi> \<Phi>2_X\<Phi>
+lemma X_X\<Phi>: \<open>X a = X\<Phi> (a \<otimes>\<^sub>o idOp)\<close>
+  by (auto simp: lvalue_pair_apply)
+lemma \<Phi>1_X\<Phi>: \<open>\<Phi>1 a = X\<Phi> (idOp \<otimes>\<^sub>o (a \<otimes>\<^sub>o idOp))\<close>
+  by (auto simp: Fst_def lvalue_pair_apply)
+lemmas to_X\<Phi> = \<Phi>_X\<Phi> X\<Phi>1_X\<Phi> X\<Phi>2_X\<Phi> \<Phi>2_X\<Phi> X_X\<Phi> \<Phi>1_X\<Phi>
 
 lemma X_X\<Phi>1: \<open>X a = X\<Phi>1 (a \<otimes>\<^sub>o idOp)\<close>
   by (auto simp: lvalue_pair_apply)
 lemmas to_X\<Phi>1 = X_X\<Phi>1
-
-
-lemma X\<Phi>1_X\<Phi>1_AB: \<open>X\<Phi>1 a = (X\<Phi>1;AB) (a \<otimes>\<^sub>o idOp)\<close>
-  by (auto simp: lvalue_pair_apply)
-lemma XAB_X\<Phi>1_AB: \<open>XAB a = (X\<Phi>1;AB) (((\<lambda>x. x \<otimes>\<^sub>o idOp) \<otimes>\<^sub>h id) (assoc a))\<close>
-  by (simp add: pair_o_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
-      pair_o_assoc[unfolded o_def, THEN fun_cong])
-
-lemmas to_X\<Phi>1_AB = X\<Phi>1_X\<Phi>1_AB XAB_X\<Phi>1_AB
 
 lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes>\<^sub>o assoc a)))\<close>
   by (simp add: pair_o_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
@@ -131,18 +124,6 @@ proof -
 
   also
   define O5 where \<open>O5 = X (selfbutterket b) o\<^sub>C\<^sub>L O4\<close>
-  have O5: \<open>O5 = X\<Phi>1 (butterfly (ket b \<otimes>\<^sub>s ket a) (CNOT *\<^sub>V (hadamard *\<^sub>V ket b) \<otimes>\<^sub>s ket a)) o\<^sub>C\<^sub>L O1\<close> (is "_ = ?rhs")
-  proof -
-    have "O5 = X\<Phi>1 (selfbutterket (b,a)) o\<^sub>C\<^sub>L O3"
-      unfolding O5_def O4_def
-      apply (subst lift_cblinfun_comp[OF compatible_selfbutter_join, where R1=X and S1=\<Phi>1], simp)
-      by simp
-    also have \<open>\<dots> = ?rhs\<close>
-      unfolding O3_def O2_def
-      by (simp add: butterfly_times_right to_X\<Phi>1 times_applyOp tensor_op_adjoint tensor_op_ell2 
-                    lift_cblinfun_comp[OF lvalue_mult] flip: tensor_ell2_ket)
-    finally show ?thesis by -
-  qed
   have \<open>hoare (O4 *\<^sub>S pre) [ifthen X b] (O5 *\<^sub>S pre)\<close>
     apply (rule hoare_ifthen) by (simp add: O5_def assoc_left(2))
 
@@ -163,14 +144,14 @@ proof -
     by (auto simp add: teleport_def comp_def)
 
   have O5': "O5 = (1/2) *\<^sub>C \<Phi>2 (XZ*) o\<^sub>C\<^sub>L X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"
-    unfolding O7 O5 O1_def XZ_def
+    unfolding O7 O5_def O4_def O3_def O2_def O1_def 
     apply (simp split del: if_split only: to_X\<Phi> lvalue_mult[of X\<Phi>])
     apply (simp split del: if_split add: lvalue_mult[of X\<Phi>] 
                 flip: complex_vector.linear_scale
                 del: comp_apply)
     apply (rule arg_cong[of _ _ X\<Phi>])
     apply (rule cblinfun_eq_mat_of_cblinfunI)
-    apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_tensor_op
+    apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_tensor_op XZ_def
                      butterfly_def' cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded 
                      canonical_basis_length_ell2_def mat_of_cblinfun_adjoint' vec_of_onb_enum_ket 
                      cblinfun_of_mat_id swap_sandwich[abs_def] mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult
