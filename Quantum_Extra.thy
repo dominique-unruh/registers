@@ -133,5 +133,20 @@ lemma compatible_selfbutter_join:
   apply (subst lvalue_pair_apply[symmetric, where F=R and G=S])
   using assms by auto
 
+definition empty_var :: \<open>'a::{CARD_1,enum} update \<Rightarrow> 'b::finite update\<close> where
+  "empty_var a = one_dim_isom a *\<^sub>C idOp"
+
+lemma lvalue_empty_var[simp]: \<open>lvalue empty_var\<close>
+  unfolding lvalue_def empty_var_def
+  by (auto simp add: clinearI scaleC_left.add)
+
+lemma empty_var_compatible[simp]: \<open>lvalue X \<Longrightarrow> compatible empty_var X\<close>
+  apply (rule compatibleI)
+  using [[simproc del: Laws_Quantum.compatibility_warn]]
+  by (auto simp: empty_var_def)
+
+lemma empty_var_compatible'[simp]: \<open>lvalue X \<Longrightarrow> compatible X empty_var\<close>
+  using compatible_sym empty_var_compatible by blast
+
 end
 

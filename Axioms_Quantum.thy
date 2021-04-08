@@ -2,7 +2,7 @@ section \<open>Quantum instantiation of lvalues\<close>
 
 (* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Quantum.thy)
 
-    # Type classe
+    # Type classes
     domain \<rightarrow> finite
     
     # Constants

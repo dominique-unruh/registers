@@ -468,5 +468,19 @@ lemma cblinfun_apply_in_image[simp]: "A *\<^sub>V \<psi> \<in> space_as_set (A *
 lemma cbilinear_timesOp[simp]: "cbilinear timesOp"
   by (auto intro!: clinearI simp add: cbilinear_def cblinfun_apply_dist1 cblinfun_apply_dist2)
 
+lemma one_dim_isom_idOp[simp]: \<open>one_dim_isom idOp = (1::complex)\<close>
+  by (metis one_dim_idOp one_dim_isom_one)
+
+lemma one_dim_isom_cblinfun_apply[simp]: \<open>one_dim_isom (a o\<^sub>C\<^sub>L b) = one_dim_isom b o\<^sub>C\<^sub>L one_dim_isom a\<close>
+  by (smt (z3) of_complex_def one_comp_one_cblinfun one_dim_1_times_a_eq_a one_dim_isom_def one_dim_isom_scaleC op_scalar_op scalar_op_op)
+
+lemma one_dim_isom_cblinfun_apply_complex[simp]: \<open>one_dim_isom (a o\<^sub>C\<^sub>L b) = one_dim_isom b * one_dim_isom a\<close>
+  by (smt (z3) complex_scaleC_def one_comp_one_cblinfun one_dim_1_times_a_eq_a one_dim_isom_def one_dim_isom_of_complex one_dim_isom_one one_dim_isom_scaleC one_dim_prod op_scalar_op scalar_op_op)
+
+lemma one_dim_isom_adjoint[simp]: \<open>one_dim_isom (A*) = (one_dim_isom A)*\<close>
+  by (smt (z3) one_cblinfun_adj one_dim_1_times_a_eq_a one_dim_isom_one one_dim_isom_scaleC scalar_times_adj)
+
+lemma one_dim_isom_adjoint_complex[simp]: \<open>one_dim_isom (A*) = cnj (one_dim_isom A)\<close>
+  by (metis (mono_tags, lifting) cinner_complex_def complex_scaleC_def of_complex_inner_1' one_cblinfun_adj one_dim_isom_idem one_dim_isom_scaleC one_dim_scaleC_1 scalar_times_adj)
 
 end
