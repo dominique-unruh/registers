@@ -18,6 +18,9 @@ unbundle cblinfun_notation
 lemma lvalue_id[simp]: \<open>lvalue (\<lambda>x. x)\<close>
   by (metis (mono_tags, lifting) complex_vector.module_hom_ident lvalue_def)
 
+lemma lvalue_id'[simp]: \<open>lvalue id\<close>
+  by (simp add: id_def)
+
 lemma lvalue_projector:
   assumes "lvalue F"
   assumes "isProjector a"
@@ -78,54 +81,54 @@ lemma compatible_proj_mult:
   apply (metis (no_types, lifting) cblinfun_apply_assoc lvalue_mult)
   by (simp add: assms(2) assms(3) isProjector_D2 lvalue_projector)
 
-lemma sandwich_tensor: "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>h sandwich b"
-  for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
-  apply (rule tensor_extensionality)
-  by (auto simp: sandwich_def tensor_update_hom_is_hom comp_tensor_op tensor_op_adjoint)
-
-lemma sandwich_grow_left: "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes>\<^sub>o idOp)"
-  for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
-    by (simp add: sandwich_tensor sandwich_id)
-
-lemma lvalue_sandwich: \<open>lvalue F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
-  by (smt (verit, del_insts) lvalue_def sandwich_def)
-
 lemma unitary_sandwich_lvalue: \<open>unitary a \<Longrightarrow> lvalue (sandwich a)\<close>
   unfolding lvalue_def sandwich_def
   by (smt (z3) adjoint_twice assoc_left(1) cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI op_scalar_op scalar_op_op times_adjoint times_idOp2 unitary_def)
 
+lemma sandwich_tensor: 
+  fixes a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
+  assumes \<open>unitary a\<close> \<open>unitary b\<close>
+  shows "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>h sandwich b"
+  apply (rule tensor_extensionality)
+  by (auto simp: unitary_sandwich_lvalue assms sandwich_def tensor_update_hom_is_hom comp_tensor_op tensor_op_adjoint)
+
+lemma sandwich_grow_left: 
+  fixes a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
+  assumes "unitary a"
+  shows "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes>\<^sub>o idOp)"
+  by (simp add: unitary_sandwich_lvalue assms sandwich_tensor sandwich_id)
+
+lemma lvalue_sandwich: \<open>lvalue F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
+  by (smt (verit, del_insts) lvalue_def sandwich_def)
+
 lemma assoc_ell2_sandwich: \<open>assoc = sandwich assoc_ell2\<close>
-  unfolding sandwich_def
   apply (rule tensor_extensionality3')
-    apply simp
-   apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
+    apply (simp_all add: unitary_sandwich_lvalue)[2]
   apply (rule equal_ket)
   apply (case_tac x)
-  by (simp add: assoc_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor
+  by (simp add: sandwich_def assoc_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor
            flip: tensor_ell2_ket)
 
 lemma assoc_ell2'_sandwich: \<open>assoc' = sandwich assoc_ell2'\<close>
-  unfolding sandwich_def
   apply (rule tensor_extensionality3)
-    apply simp
-   apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
+    apply (simp_all add: unitary_sandwich_lvalue)[2]
   apply (rule equal_ket)
   apply (case_tac x)
-  by (simp add: assoc'_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor 
+  by (simp add: sandwich_def assoc'_apply times_applyOp tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor 
            flip: tensor_ell2_ket)
 
 lemma swap_sandwich: "swap = sandwich Uswap"
   apply (rule tensor_extensionality)
-    apply (auto simp: sandwich_def)
+    apply (auto simp: sandwich_def)[2]
   apply (rule tensor_ell2_extensionality)
-  by (simp add: times_applyOp tensor_op_ell2)
+  by (simp add: sandwich_def times_applyOp tensor_op_ell2)
 
 lemma id_tensor_sandwich: 
   fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2"
+  assumes "unitary a"
   shows "id \<otimes>\<^sub>h sandwich a = sandwich (idOp \<otimes>\<^sub>o a)"
   apply (rule tensor_extensionality) 
-  by (simp_all add: tensor_update_hom_is_hom comp_tensor_op sandwich_def tensor_op_adjoint)
-
+  using assms by (auto simp: tensor_update_hom_is_hom comp_tensor_op sandwich_def tensor_op_adjoint unitary_sandwich_lvalue)
 
 lemma compatible_selfbutter_join:
   assumes [compatible]: "compatible R S"

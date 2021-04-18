@@ -335,5 +335,16 @@ lemma tensor_ell2_extensionality:
   apply (rule equal_ket, case_tac x, hypsubst_thin)
   by (simp add: assms flip: tensor_ell2_ket)
 
+lemma assoc_ell2'_assoc_ell2[simp]: \<open>assoc_ell2' o\<^sub>C\<^sub>L assoc_ell2 = idOp\<close>
+  by (auto intro!: equal_ket simp: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor simp flip: tensor_ell2_ket)
+
+lemma assoc_ell2_assoc_ell2'[simp]: \<open>assoc_ell2 o\<^sub>C\<^sub>L assoc_ell2' = idOp\<close>
+  by (auto intro!: equal_ket simp: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor simp flip: tensor_ell2_ket)
+
+lemma unitary_assoc_ell2[simp]: "unitary assoc_ell2"
+  unfolding unitary_def by auto
+
+lemma unitary_assoc_ell2'[simp]: "unitary assoc_ell2'"
+  unfolding unitary_def by auto
 
 end

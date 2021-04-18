@@ -116,6 +116,8 @@ lemma Uswap_adjoint[simp]: "adjoint Uswap = Uswap"
   by eval
 lemma Uswap_involution[simp]: "Uswap o\<^sub>C\<^sub>L Uswap = idOp"
   by eval
+lemma unitary_Uswap[simp]: "unitary Uswap"
+  unfolding unitary_def by simp
 
 lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otimes>\<^sub>s s\<close>
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])

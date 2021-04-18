@@ -393,6 +393,17 @@ lemma csemilinear_csemilinear: "csemilinear f \<Longrightarrow> csemilinear g \<
   apply (simp add: additive.add csemilinear_def)
   by (simp add: csemilinear.scaleC)
 
+lemma csemilinear_clinear: "csemilinear f \<Longrightarrow> clinear g \<Longrightarrow> csemilinear (g o f)"
+  apply (rule csemilinearI)
+  apply (simp add: additive.add clinear_additive_D csemilinear_def)
+  by (simp add: complex_vector.linear_scale csemilinear.scaleC)
+
+lemma clinear_csemilinear: "clinear f \<Longrightarrow> csemilinear g \<Longrightarrow> csemilinear (g o f)"
+  apply (rule csemilinearI)
+  apply (simp add: additive.add clinear_additive_D csemilinear_def)
+  by (simp add: complex_vector.linear_scale csemilinear.scaleC)
+
+
 lemma csemilinear_equal_ket:
   fixes f g :: \<open>'a::finite ell2 \<Rightarrow> _\<close>
   assumes \<open>csemilinear f\<close>
