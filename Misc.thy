@@ -18,22 +18,12 @@ unbundle no_inner_syntax
 unbundle cblinfun_notation
 unbundle jnf_notation
 
-lemma apply_cblinfun_distr_left: "(A + B) *\<^sub>V x = A *\<^sub>V x + B *\<^sub>V x"
-  apply transfer by simp
-
-lemma ket_Kronecker_delta: \<open>\<langle>ket i, ket j\<rangle> = (if i=j then 1 else 0)\<close>
-  by (simp add: ket_Kronecker_delta_eq ket_Kronecker_delta_neq)
-
 abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
 abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)"
 
-lemma sum_butter[simp]: \<open>(\<Sum>(i::'a::finite)\<in>UNIV. butterket i i) = idOp\<close>
-  apply (rule equal_ket)
-  apply (subst complex_vector.linear_sum[where f=\<open>\<lambda>y. y *\<^sub>V ket _\<close>])
-  apply (auto simp add: apply_cblinfun_distr_left clinearI butterfly_def' times_applyOp ket_Kronecker_delta)
-  apply (subst sum.mono_neutral_cong_right[where S=\<open>{_}\<close>])
-  by auto
+term "x::_::onb_enum == y::(_ \<Rightarrow>\<^sub>C\<^sub>L _)"
 
+(* TODO: generalize for any onb instead of ket *)
 lemma linfun_cspan: \<open>cspan {butterket i j| (i::'b::finite) (j::'a::finite). True} = UNIV\<close>
 proof (rule, simp, rule)
   fix f :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
