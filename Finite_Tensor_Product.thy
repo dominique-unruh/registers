@@ -347,4 +347,34 @@ lemma unitary_assoc_ell2[simp]: "unitary assoc_ell2"
 lemma unitary_assoc_ell2'[simp]: "unitary assoc_ell2'"
   unfolding unitary_def by auto
 
+lemma tensor_op_left_add: \<open>(x + y) \<otimes>\<^sub>o b = x \<otimes>\<^sub>o b + y \<otimes>\<^sub>o b\<close>
+  for x y :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+  apply (auto intro!: equal_ket simp: tensor_op_ket)
+  by (simp add: plus_cblinfun.rep_eq tensor_ell2_add1 tensor_op_ket)
+
+lemma tensor_op_right_add: \<open>b \<otimes>\<^sub>o (x + y) = b \<otimes>\<^sub>o x + b \<otimes>\<^sub>o y\<close>
+  for x y :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+  apply (auto intro!: equal_ket simp: tensor_op_ket)
+  by (simp add: plus_cblinfun.rep_eq tensor_ell2_add2 tensor_op_ket)
+
+lemma tensor_op_scaleC_left: \<open>(c *\<^sub>C x) \<otimes>\<^sub>o b = c *\<^sub>C (x \<otimes>\<^sub>o b)\<close>
+  for x :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+  apply (auto intro!: equal_ket simp: tensor_op_ket)
+  using tensor_ell2_scaleC1 by blast
+
+lemma tensor_op_scaleC_right: \<open>b \<otimes>\<^sub>o (c *\<^sub>C x) = c *\<^sub>C (b \<otimes>\<^sub>o x)\<close>
+  for x :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+  apply (auto intro!: equal_ket simp: tensor_op_ket)
+  by (simp add: tensor_ell2_scaleC2)
+
+lemma clinear_tensor_left[simp]: \<open>clinear (\<lambda>a. a \<otimes>\<^sub>o b :: _::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L _::finite ell2)\<close>
+  apply (rule clinearI)
+   apply (rule tensor_op_left_add)
+  by (rule tensor_op_scaleC_left)
+
+lemma clinear_tensor_right[simp]: \<open>clinear (\<lambda>b. a \<otimes>\<^sub>o b :: _::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L _::finite ell2)\<close>
+  apply (rule clinearI)
+   apply (rule tensor_op_right_add)
+  by (rule tensor_op_scaleC_right)
+
 end

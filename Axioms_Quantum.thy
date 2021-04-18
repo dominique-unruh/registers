@@ -18,6 +18,8 @@ section \<open>Quantum instantiation of lvalues\<close>
     id_update_hom \<rightarrow> complex_vector.linear_id
     comp_update_hom \<rightarrow> Complex_Vector_Spaces.linear_compose
     tensor_update_mult \<rightarrow> comp_tensor_op
+    update_hom_tensor_left_is_hom \<rightarrow> clinear_tensor_right
+    update_hom_tensor_right_is_hom \<rightarrow> clinear_tensor_left
 
     # Chapter name
     Generic laws about lvalues \<rightarrow> Generic laws about lvalues, instantiated quantumly
@@ -50,10 +52,10 @@ lemma update_2hom_sym: \<open>cbilinear F2 \<Longrightarrow> cbilinear (\<lambda
 lemma update_2hom_left_is_hom: \<open>cbilinear F2 \<Longrightarrow> clinear (\<lambda>a. F2 a b)\<close>
   by (auto simp: cbilinear_def) *)
 
-lemma update_hom_mult_right: \<open>clinear (\<lambda>a. a o\<^sub>C\<^sub>L z)\<close> 
-  sorry
+lemma update_hom_mult_right: \<open>clinear (\<lambda>a. a o\<^sub>C\<^sub>L z)\<close>
+  by (simp add: cblinfun_apply_dist1 clinearI)
 lemma update_hom_mult_left: \<open>clinear (\<lambda>a. z o\<^sub>C\<^sub>L a)\<close>
-  sorry
+  by (simp add: cblinfun_apply_dist2 clinearI)
 
 definition lvalue :: \<open>('a::finite update \<Rightarrow> 'b::finite update) \<Rightarrow> bool\<close> where
   "lvalue F \<longleftrightarrow> 
@@ -77,12 +79,6 @@ lemma lvalue_mult: "lvalue F \<Longrightarrow> timesOp (F a) (F b) = F (timesOp 
   unfolding lvalue_def
   by auto
 
-(* TODO: To Tensor Prod *)
-lemma clinear_tensor_left[simp]: \<open>clinear (\<lambda>a. a \<otimes>\<^sub>o b)\<close>
-  sorry
-lemma clinear_tensor_right[simp]: \<open>clinear (\<lambda>b. a \<otimes>\<^sub>o b)\<close>
-  sorry
-
 lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_op a idOp)\<close>
   by (simp add: comp_tensor_op lvalue_def tensor_op_cbilinear tensor_op_adjoint)
 
@@ -96,7 +92,8 @@ definition lvalue_pair ::
   \<open>lvalue_pair F G = tensor_lift (\<lambda>a b. F a o\<^sub>C\<^sub>L G b)\<close>
 
 lemma cbilinear_F_comp_G[simp]: \<open>clinear F \<Longrightarrow> clinear G \<Longrightarrow> cbilinear (\<lambda>a b. F a o\<^sub>C\<^sub>L G b)\<close>
-  sorry
+  unfolding cbilinear_def
+  by (auto simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI clinear_additive_D complex_vector.linear_scale)
 
 lemma lvalue_pair_apply: 
   assumes \<open>lvalue F\<close> and \<open>lvalue G\<close>
@@ -165,7 +162,7 @@ proof (unfold lvalue_def, intro conjI allI)
 qed
 
 
-lemma pair_lvalue_axiom: 
+(* lemma pair_lvalue_axiom: 
   fixes F :: \<open>'a::finite update \<Rightarrow> 'c::finite update\<close> and G :: \<open>'b::finite update \<Rightarrow> 'c update\<close>
   assumes \<open>lvalue F\<close> and \<open>lvalue G\<close> and [simp]: \<open>clinear p\<close>
   assumes compat: \<open>\<And>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close>
@@ -205,19 +202,19 @@ proof (unfold lvalue_def, intro conjI allI)
     using h3 h4 apply (rule tensor_extensionality[THEN fun_cong, where x=y])
     using * by -
 
-  have hom_padjadj: \<open>clinear (\<lambda>a. p (a*)*)\<close>
+  have hom_padjadj: \<open>clinear (\<lambda>a. p (a* )* )\<close>
     using \<open>clinear p\<close>
     by (auto simp: Adj_cblinfun_plus complex_vector.linear_add complex_vector.linear_scale intro!: clinearI)
 
-  have *: \<open>(p (tensor_op a b*))* = p (tensor_op a b)\<close> for a b
+  have *: \<open>(p (tensor_op a b* ))* = p (tensor_op a b)\<close> for a b
     using \<open>lvalue F\<close> \<open>lvalue G\<close>
     by (simp add: compat tensor tensor_op_adjoint lvalue_def)
-  have \<open>(p (x*))* = p x\<close>
+  have \<open>(p (x* ))* = p x\<close>
     apply (rule fun_cong[where x=x])
     apply (rule tensor_extensionality)
     using hom_padjadj * by simp_all
-  then show \<open>p (x*) = (p x)*\<close>
+  then show \<open>p (x* ) = (p x)*\<close>
     by (metis adjoint_twice)
-qed
+qed *)
 
 end

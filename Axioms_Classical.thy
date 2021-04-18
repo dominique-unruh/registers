@@ -35,6 +35,16 @@ lemma id_update_hom: \<open>update_hom id\<close>
   unfolding update_hom_def
   by (metis Image_Id eq_id_iff)
 
+lemma update_hom_mult_right: \<open>update_hom (\<lambda>a. comp_update a z)\<close>
+  unfolding update_hom_def 
+  apply (rule exI[of _ \<open>{((a,b),(c,b))| a b c. (c,a) \<in> z}\<close>])
+  by (auto intro!:ext simp: relcomp_def relcompp_apply Image_def[abs_def])
+
+lemma update_hom_mult_left: \<open>update_hom (\<lambda>a. comp_update z a)\<close>
+  unfolding update_hom_def 
+  apply (rule exI[of _ \<open>{((a,b),(a,d))| a b c d. (b,d) \<in> z}\<close>])
+  by (auto intro!:ext simp: relcomp_def relcompp_apply Image_def[abs_def])
+
 definition rel_of_update_hom :: \<open>('a,'b) update_hom \<Rightarrow> (('a\<times>'a)\<times>('b\<times>'b)) set\<close> where
   \<open>rel_of_update_hom F = (SOME R. F = Image R)\<close>
 
@@ -110,10 +120,8 @@ lemma comp_update_is_2hom: "update_2hom comp_update"
   apply (rule_tac x=\<open>{((a',b'),c')| a' b' c'. fst a' = snd b' \<and> fst c' = fst b' \<and> snd c' = snd a'}\<close> in exI)
   by auto
 
-
 abbreviation (input) tensor_update :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> where
   \<open>tensor_update \<equiv> rel_prod\<close>
-
 
 lemma tensor_update_is_2hom: \<open>update_2hom tensor_update\<close> 
   unfolding update_2hom_def[abs_def]
@@ -211,17 +219,17 @@ definition lvalue :: \<open>('a,'b) update_hom \<Rightarrow> bool\<close> where
 lemma lvalue_of_id: \<open>lvalue F \<Longrightarrow> F id_update = id_update\<close>
   by (simp add: lvalue_def)
 
-lemma update_hom_tensor_left: \<open>update_hom (\<lambda>a. tensor_update a id_update)\<close>
-  unfolding update_hom_def apply (rule exI[of _ \<open>{((a1,a2),((a1,b),(a2,b)))| a1 a2 b. True}\<close>])
+lemma update_hom_tensor_left_is_hom: \<open>update_hom (\<lambda>a. tensor_update a b)\<close>
+  unfolding update_hom_def apply (rule exI[of _ \<open>{((a1,a2),((a1,b1),(a2,b2)))| a1 a2 b1 b2. (b1,b2) \<in> b}\<close>])
   apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
   by (metis fst_conv snd_conv)
-lemma update_hom_tensor_right: \<open>update_hom (\<lambda>a. tensor_update id_update a)\<close>
-  unfolding update_hom_def apply (rule exI[of _ \<open>{((a1,a2),((b,a1),(b,a2)))| a1 a2 b. True}\<close>])
+lemma update_hom_tensor_right_is_hom: \<open>update_hom (\<lambda>a. tensor_update b a)\<close>
+  unfolding update_hom_def apply (rule exI[of _ \<open>{((a1,a2),((b1,a1),(b2,a2)))| a1 a2 b1 b2. (b1,b2) \<in> b}\<close>])
   apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
   by (metis fst_conv snd_conv)
 
 lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_update a id_update)\<close>
-  apply (simp add: lvalue_def update_hom_tensor_left)
+  apply (simp add: lvalue_def update_hom_tensor_left_is_hom)
   apply (auto simp: rel_prod_def case_prod_beta relcomp_def relcompp_apply image_def)
   apply (metis fst_conv pair_in_Id_conv prod.exhaust_sel)
   apply (metis IdI fst_conv snd_conv)
@@ -229,7 +237,7 @@ lemma lvalue_tensor_left: \<open>lvalue (\<lambda>a. tensor_update a id_update)\
   by (metis IdI converse_iff fst_swap snd_conv swap_simp)
 
 lemma lvalue_tensor_right: \<open>lvalue (\<lambda>a. tensor_update id_update a)\<close>
-  apply (simp add: lvalue_def update_hom_tensor_right)
+  apply (simp add: lvalue_def update_hom_tensor_right_is_hom)
   apply (auto simp: rel_prod_def case_prod_beta relcomp_def relcompp_apply image_def)
   apply blast
   apply (metis IdI fst_conv snd_conv)
@@ -251,15 +259,43 @@ lemma
   lvalue_mult: "lvalue F \<Longrightarrow> comp_update (F a) (F b) = F (comp_update a b)"
   by (simp add: lvalue_def)
 
-lemma pair_lvalue_axiom: 
-  assumes \<open>lvalue F\<close>
-  assumes \<open>lvalue G\<close>
-  assumes [simp]: \<open>update_hom p\<close>
+definition lvalue_pair ::
+  \<open>('a update \<Rightarrow> 'c update) \<Rightarrow> ('b update \<Rightarrow> 'c update) \<Rightarrow> (('a\<times>'b) update \<Rightarrow> 'c update)\<close> where
+  \<open>lvalue_pair F G = tensor_lift (\<lambda>a b. comp_update (F a) (G b))\<close>
+
+lemma update_2hom_G_O_F: \<open>update_hom F \<Longrightarrow> update_hom G \<Longrightarrow> update_2hom (\<lambda>a b. G b O F a)\<close>
+  apply (rule update_2hom_o_hom_left_is_hom)
+   apply (rule update_2hom_sym)
+   apply (rule update_2hom_o_hom_left_is_hom)
+    apply (rule update_2hom_sym)
+  by (rule comp_update_is_2hom)
+
+lemma lvalue_pair_apply: 
+  assumes [simp]: \<open>lvalue F\<close> \<open>lvalue G\<close>
+  assumes \<open>\<And>a b. comp_update (F a) (G b) = comp_update (G b) (F a)\<close>
+  shows \<open>(lvalue_pair F G) (tensor_update a b) = comp_update (F a) (G b)\<close>
+  unfolding lvalue_pair_def
+  apply (subst tensor_lift_correct[THEN fun_cong, THEN fun_cong])
+   apply (rule update_2hom_G_O_F)
+  by (simp_all add: lvalue_hom)
+
+lemma lvalue_pair_lvalue:
+  fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
+  assumes [simp]: \<open>lvalue F\<close> and [simp]: \<open>lvalue G\<close>
   assumes compat: \<open>\<And>a b. comp_update (F a) (G b) = comp_update (G b) (F a)\<close>
-  assumes ptensor: \<open>\<And>a b. p (tensor_update a b) = comp_update (F a) (G b)\<close>
-  shows \<open>lvalue p\<close>
+  shows \<open>lvalue (lvalue_pair F G)\<close> 
+  (* assumes ptensor: \<open>\<And>a b. p (tensor_update a b) = comp_update (F a) (G b)\<close> *)
 proof (unfold lvalue_def, intro conjI allI)
-  from assms show \<open>update_hom p\<close> by -
+  define p where \<open>p = (lvalue_pair F G)\<close>
+  show [simp]: \<open>update_hom p\<close>
+    unfolding p_def lvalue_pair_def 
+    apply (rule tensor_lift_hom)
+    apply (rule update_2hom_G_O_F)
+    by (simp_all add: lvalue_hom)
+  have ptensor: \<open>\<And>a b. p (tensor_update a b) = comp_update (F a) (G b)\<close>
+    unfolding p_def lvalue_pair_def apply (subst tensor_lift_correct[THEN fun_cong, THEN fun_cong])
+    apply (rule update_2hom_G_O_F)
+    by (simp_all add: lvalue_hom)
   have h1: \<open>update_hom (\<lambda>a. p a O p a')\<close> for a'
     apply (rule update_2hom_left_is_hom)
     apply (rule update_2hom_o_hom_left_is_hom)
@@ -303,5 +339,6 @@ proof (unfold lvalue_def, intro conjI allI)
   then show \<open>p (a\<inverse>) = (p a)\<inverse>\<close> for a
     by (rule tensor_extensionality[OF h5 h6, THEN fun_cong])
 qed
+
 
 end

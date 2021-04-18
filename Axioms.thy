@@ -33,6 +33,12 @@ axiomatization tensor_update :: \<open>'a::domain update \<Rightarrow> 'b::domai
 axiomatization where tensor_update_mult: \<open>comp_update (tensor_update a c) (tensor_update b d) = tensor_update (comp_update a b) (comp_update c d)\<close>
   for a b :: \<open>'a::domain update\<close> and c d :: \<open>'b::domain update\<close>
 
+
+axiomatization where
+  update_hom_tensor_left_is_hom: "update_hom (tensor_update a :: 'b::domain update \<Rightarrow> _)" and
+  update_hom_tensor_right_is_hom: "update_hom (\<lambda>a::'a::domain update. tensor_update a b)"
+  for a :: "'a::domain update" and b :: "'b::domain update"
+
 axiomatization lvalue :: \<open>('a update \<Rightarrow> 'b update) \<Rightarrow> bool\<close>
 axiomatization where
   lvalue_hom: "lvalue F \<Longrightarrow> update_hom F" and

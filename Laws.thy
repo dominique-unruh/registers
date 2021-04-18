@@ -23,6 +23,9 @@ declare lvalue_tensor_left[simp]
 declare lvalue_tensor_right[simp]
 declare update_hom_mult_right[simp]
 declare update_hom_mult_left[simp]
+declare update_hom_tensor_left_is_hom[simp]
+declare update_hom_tensor_right_is_hom[simp]
+
 
 subsection \<open>Lvalues\<close>
 
@@ -59,14 +62,6 @@ lemma tensor_update_hom_apply[simp]:
   apply (subst lvalue_pair_apply)
   unfolding tensor_update_hom_def 
   by (simp_all add: assms tensor_update_mult)
-
-lemma update_hom_tensor_left_is_hom[simp]: "update_hom ((\<otimes>\<^sub>u) a :: 'b::domain update \<Rightarrow> _)" 
-  for a :: "'a::domain update"
-  sorry
-
-lemma update_hom_tensor_right_is_hom[simp]: "update_hom (\<lambda>a::'a::domain update. (\<otimes>\<^sub>u) a b)"
-  for b :: "'b::domain update"
-  sorry
 
 definition "update_basis (_::'b::domain itself) A \<longleftrightarrow> 
   (\<forall>F G :: 'a::domain update \<Rightarrow> 'b update. update_hom F \<longrightarrow> update_hom G \<longrightarrow> (\<forall>x\<in>A. F x = G x) \<longrightarrow> F = G)"
@@ -189,7 +184,8 @@ lemma pair_lvalue[simp]:
 lemma lvalue_pair_apply:
   assumes \<open>compatible F G\<close>
   shows \<open>(F; G) (a \<otimes>\<^sub>u b) = (F a) *\<^sub>u (G b)\<close>
-  using assms compatible_def lvalue_pair_apply by blast
+  apply (rule lvalue_pair_apply)
+  using assms unfolding compatible_def by metis+
 
 lemma lvalue_pair_apply':
   assumes \<open>compatible F G\<close>
