@@ -134,7 +134,7 @@ qed
 
 lemma tensor_butter: \<open>tensor_op (butterket i j) (butterket k l) = butterket (i,k) (j,l)\<close>
   for i :: "_" and j :: "_::finite" and k :: "_" and l :: "_::finite"
-  apply (rule equal_ket, case_tac x)
+  apply (rule equal_ket, rename_tac x, case_tac x)
   apply (auto simp flip: tensor_ell2_ket simp: times_applyOp tensor_op_ell2 butterfly_def')
   by (auto simp: tensor_ell2_scaleC1 tensor_ell2_scaleC2)
 
@@ -165,7 +165,7 @@ proof (rule ext, rule complex_vector.linear_eq_on_span[where f=F and g=G])
 qed
 
 lemma tensor_id[simp]: \<open>tensor_op idOp idOp = idOp\<close>
-  apply (rule equal_ket, case_tac x)
+  apply (rule equal_ket, rename_tac x, case_tac x)
   by (simp flip: tensor_ell2_ket add: tensor_op_ell2)
 
 lemma tensor_op_adjoint: \<open>(tensor_op a b)* = tensor_op (a*) (b*)\<close>
@@ -174,7 +174,7 @@ lemma tensor_op_adjoint: \<open>(tensor_op a b)* = tensor_op (a*) (b*)\<close>
   by (simp add: adjoint_I)
 
 lemma tensor_butterfly[simp]: "tensor_op (butterfly \<psi> \<psi>') (butterfly \<phi> \<phi>') = butterfly (tensor_ell2 \<psi> \<phi>) (tensor_ell2 \<psi>' \<phi>')"
-  apply (rule equal_ket, case_tac x)
+  apply (rule equal_ket, rename_tac x, case_tac x)
   by (simp flip: tensor_ell2_ket add: tensor_op_ell2 butterfly_def'
       times_applyOp tensor_ell2_scaleC1 tensor_ell2_scaleC2)
 
@@ -269,13 +269,13 @@ lift_definition assoc_ell20' :: \<open>('a::finite\<times>('b::finite\<times>'c:
 
 lift_definition assoc_ell2 :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>('b\<times>'c)) ell2\<close>
   is assoc_ell20
-  apply (rule cbounded_linear_finite_ell2)
+  apply (subst cbounded_linear_finite_dim)
   apply (rule clinearI; transfer)
   by auto
 
 lift_definition assoc_ell2' :: \<open>('a::finite\<times>('b::finite\<times>'c::finite)) ell2 \<Rightarrow>\<^sub>C\<^sub>L (('a\<times>'b)\<times>'c) ell2\<close> is
   assoc_ell20'
-  apply (rule cbounded_linear_finite_ell2)
+  apply (subst cbounded_linear_finite_dim)
   apply (rule clinearI; transfer)
   by auto
 

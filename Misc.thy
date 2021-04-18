@@ -18,26 +18,6 @@ unbundle no_inner_syntax
 unbundle cblinfun_notation
 unbundle jnf_notation
 
-lemma cspan_ket_finite[simp]: "cspan (range ket :: 'a::finite ell2 set) = UNIV"
-  by (metis ket_ell2_span span_finite_dim finite_class.finite_UNIV finite_imageI) 
-
-lemma clinear_equal_ket:
-  fixes f g :: \<open>'a::finite ell2 \<Rightarrow> _\<close>
-  assumes \<open>clinear f\<close>
-  assumes \<open>clinear g\<close>
-  assumes \<open>\<And>i. f (ket i) = g (ket i)\<close>
-  shows \<open>f = g\<close>
-  apply (rule ext)
-  apply (rule complex_vector.linear_eq_on_span[where f=f and g=g and B=\<open>range ket\<close>])
-  using assms by auto
-
-lemma cbounded_linear_finite_ell2[simp, intro!]:
-  fixes f :: \<open>'a::finite ell2 \<Rightarrow> 'b::complex_normed_vector\<close>
-  assumes "clinear f"
-  shows \<open>cbounded_linear f\<close>
-  apply (subst cblinfun_operator_finite_dim[where basis=\<open>ket ` UNIV\<close>])
-  using assms by (auto intro!: cindependent_ket)
-
 lemma apply_cblinfun_distr_left: "(A + B) *\<^sub>V x = A *\<^sub>V x + B *\<^sub>V x"
   apply transfer by simp
 
