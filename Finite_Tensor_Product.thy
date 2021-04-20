@@ -13,7 +13,7 @@ lift_definition tensor_ell2 :: \<open>'a::finite ell2 \<Rightarrow> 'b::finite e
 
 lemma tensor_ell2_add2: \<open>tensor_ell2 a (b + c) = tensor_ell2 a b + tensor_ell2 a c\<close>
   apply transfer apply (rule ext) apply (auto simp: case_prod_beta)
-  by (meson ordered_field_class.sign_simps(42))
+  by (meson algebra_simps)
 
 lemma tensor_ell2_add1: \<open>tensor_ell2 (a + b) c = tensor_ell2 a c + tensor_ell2 b c\<close>
   apply transfer apply (rule ext) apply (auto simp: case_prod_beta)
@@ -32,12 +32,12 @@ lemma tensor_ell2_inner_prod[simp]: \<open>\<langle>tensor_ell2 a b, tensor_ell2
 lemma clinear_tensor_ell21: "clinear (\<lambda>b. tensor_ell2 a b)"
   apply (rule clinearI; transfer)
   apply (auto simp: case_prod_beta)
-  by (simp add: cond_case_prod_eta ordered_field_class.sign_simps(42))
+  by (simp add: cond_case_prod_eta algebra_simps)
 
 lemma clinear_tensor_ell22: "clinear (\<lambda>a. tensor_ell2 a b)"
   apply (rule clinearI; transfer)
   apply (auto simp: case_prod_beta)
-  by (simp add: case_prod_beta' mult.commute ordered_field_class.sign_simps(42))
+  by (simp add: case_prod_beta' algebra_simps)
 
 lemma tensor_ell2_ket[simp]: "tensor_ell2 (ket i) (ket j) = ket (i,j)"
   apply transfer by auto
