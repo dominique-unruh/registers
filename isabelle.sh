@@ -10,8 +10,9 @@ else
     FILES=()
 fi
 
-SESSION=LValues-Prerequisites
-SESSION=Bounded_Operators-Prerequisites
+#SESSION=LValues-Prerequisites
+#SESSION=Bounded_Operators-Prerequisites
+SESSION=Lots-Of-Stuff
 
 ISABELLE_DIR=/opt/Isabelle2021
 

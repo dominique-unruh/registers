@@ -64,7 +64,7 @@ qed
 definition bra :: "'a \<Rightarrow> (_,complex) cblinfun" where "bra i = vector_to_cblinfun (ket i)*" for i
 
 lemma linfun_cindependent: \<open>cindependent {butterket i j| (i::'b::finite) (j::'a::finite). True}\<close>
-proof (rule independent_if_scalars_zero)
+proof (rule complex_vector.independent_if_scalars_zero)
   show finite: \<open>finite {butterket (i::'b) (j::'a) |i j. True}\<close>
     apply (subst (6) conj.left_neutral[symmetric])
     apply (rule finite_image_set2)
@@ -239,7 +239,7 @@ lift_definition cinner_conjugate_space :: "'a conjugate_space \<Rightarrow> 'a c
 instance 
   apply (intro_classes; transfer)
   apply (simp_all add: )
-  apply (simp add: cinner_right_distrib)
+  apply (simp add: cinner_add_right)
   using cinner_ge_zero apply force
   using norm_eq_sqrt_cinner by blast
 end

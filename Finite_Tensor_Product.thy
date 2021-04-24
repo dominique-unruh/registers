@@ -312,11 +312,11 @@ proof (rule adjoint_D[symmetric])
   have [simp]: \<open>clinear (cinner (assoc_ell2' *\<^sub>V x))\<close> for x
     by (metis (no_types, lifting) cblinfun_apply_add cinner_scaleC_right clinearI complex_scaleC_def mult.comm_neutral of_complex_def vector_to_cblinfun_adj_times_vec)
   have [simp]: \<open>clinear (\<lambda>a. \<langle>x, assoc_ell2 *\<^sub>V a\<rangle>)\<close> for x
-    by (simp add: cblinfun_apply_add cinner_right_distrib clinearI)
+    by (simp add: cblinfun_apply_add cinner_add_right clinearI)
   have [simp]: \<open>csemilinear (\<lambda>a. \<langle>a, y\<rangle>)\<close> for y
     using bounded_csemilinear_cinner_left bounded_csemilinear_def by blast
   have [simp]: \<open>csemilinear (\<lambda>a. \<langle>assoc_ell2' *\<^sub>V a, y\<rangle>)\<close> for y
-    by (simp add: cblinfun_apply_add cinner_left_distrib csemilinearI)
+    by (simp add: cblinfun_apply_add cinner_add_left csemilinearI)
   have \<open>\<langle>assoc_ell2' *\<^sub>V (ket x), ket y\<rangle> = \<langle>ket x, assoc_ell2 *\<^sub>V ket y\<rangle>\<close> for x :: \<open>'a \<times> 'b \<times> 'c\<close> and y
     apply (cases x, cases y)
     by (simp flip: tensor_ell2_ket add: assoc_ell2'_tensor assoc_ell2_tensor)
