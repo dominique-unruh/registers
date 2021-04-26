@@ -16,7 +16,7 @@ section \<open>Quantum instantiation of lvalues\<close>
     id_update_right \<rightarrow> times_idOp1
     comp_update_assoc \<rightarrow> cblinfun_apply_assoc
     id_update_hom \<rightarrow> complex_vector.linear_id
-    comp_update_hom \<rightarrow> Complex_Vector_Spaces.linear_compose
+    comp_update_hom \<rightarrow> clinear_compose
     tensor_update_mult \<rightarrow> comp_tensor_op
     update_hom_tensor_left_is_hom \<rightarrow> clinear_tensor_right
     update_hom_tensor_right_is_hom \<rightarrow> clinear_tensor_left
@@ -73,7 +73,7 @@ lemma lvalue_hom: "lvalue F \<Longrightarrow> clinear F"
 lemma lvalue_comp: "lvalue F \<Longrightarrow> lvalue G \<Longrightarrow> lvalue (G \<circ> F)"
   unfolding lvalue_def
   apply auto
-  using Complex_Vector_Spaces.linear_compose by blast
+  using clinear_compose by blast
 
 lemma lvalue_mult: "lvalue F \<Longrightarrow> timesOp (F a) (F b) = F (timesOp a b)"
   unfolding lvalue_def
@@ -93,7 +93,7 @@ definition lvalue_pair ::
 
 lemma cbilinear_F_comp_G[simp]: \<open>clinear F \<Longrightarrow> clinear G \<Longrightarrow> cbilinear (\<lambda>a b. F a o\<^sub>C\<^sub>L G b)\<close>
   unfolding cbilinear_def
-  by (auto simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI clinear_additive_D complex_vector.linear_scale)
+  by (auto simp add: clinear_iff cblinfun_apply_dist1 cblinfun_apply_dist2)
 
 lemma lvalue_pair_apply: 
   assumes \<open>lvalue F\<close> and \<open>lvalue G\<close>
@@ -123,26 +123,26 @@ proof (unfold lvalue_def, intro conjI allI)
     apply (subst lvalue_pair_apply)
     using assms by simp_all
   have [simp]: \<open>clinear (\<lambda>y. lvalue_pair F G (x o\<^sub>C\<^sub>L y))\<close> for x :: \<open>('a\<times>'b) update\<close>
-    apply (rule linear_compose[unfolded o_def, where g=\<open>lvalue_pair F G\<close>])
+    apply (rule clinear_compose[unfolded o_def, where g=\<open>lvalue_pair F G\<close>])
     by (simp_all add: cblinfun_apply_dist2 clinearI)
   have [simp]: \<open>clinear (\<lambda>y. x o\<^sub>C\<^sub>L lvalue_pair F G y)\<close> for x :: \<open>'c update\<close>
-    apply (rule linear_compose[unfolded o_def, where f=\<open>lvalue_pair F G\<close>])
+    apply (rule clinear_compose[unfolded o_def, where f=\<open>lvalue_pair F G\<close>])
     by (simp_all add: cblinfun_apply_dist2 clinearI)
   have [simp]: \<open>clinear (\<lambda>x. lvalue_pair F G (x o\<^sub>C\<^sub>L y))\<close> for y :: \<open>('a\<times>'b) update\<close>
-    apply (rule linear_compose[unfolded o_def, where g=\<open>lvalue_pair F G\<close>])
+    apply (rule clinear_compose[unfolded o_def, where g=\<open>lvalue_pair F G\<close>])
     by (simp_all add: cblinfun_apply_dist1 clinearI)
   have [simp]: \<open>clinear (\<lambda>x. lvalue_pair F G x o\<^sub>C\<^sub>L y)\<close> for y :: \<open>'c update\<close>
-    apply (rule linear_compose[unfolded o_def, where f=\<open>lvalue_pair F G\<close>])
+    apply (rule clinear_compose[unfolded o_def, where f=\<open>lvalue_pair F G\<close>])
     by (simp_all add: cblinfun_apply_dist1 clinearI)
   have [simp]: \<open>F (x o\<^sub>C\<^sub>L y) = F x o\<^sub>C\<^sub>L F y\<close> for x y
     by (simp add: lvalue_mult)
   have [simp]: \<open>G (x o\<^sub>C\<^sub>L y) = G x o\<^sub>C\<^sub>L G y\<close> for x y
     by (simp add: lvalue_mult)
   have [simp]: \<open>clinear (\<lambda>a. (lvalue_pair F G (a*))*)\<close>
-    apply (rule csemilinear_csemilinear[unfolded o_def, where f=\<open>adjoint\<close>])
-     apply (simp add: Adj_cblinfun_plus csemilinearI)
-    apply (rule clinear_csemilinear[unfolded o_def, where g=\<open>adjoint\<close>])
-    by (simp_all add: Adj_cblinfun_plus csemilinearI)
+    apply (rule antilinear_o_antilinear[unfolded o_def, where f=\<open>adjoint\<close>])
+     apply (simp add: Adj_cblinfun_plus antilinearI)
+    apply (rule antilinear_o_clinear[unfolded o_def, where g=\<open>adjoint\<close>])
+    by (simp_all add: Adj_cblinfun_plus antilinearI)
   have [simp]: \<open>F (a*) = (F a)*\<close> for a
     using assms(1) lvalue_def by blast
   have [simp]: \<open>G (b*) = (G b)*\<close> for b

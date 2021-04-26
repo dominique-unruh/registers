@@ -238,15 +238,15 @@ proof -
   have *: \<open>G *\<^sub>V tensor_op a (butterket k l) = F2 a (butterket k l)\<close> for a k l
     apply (rule complex_vector.linear_eq_on_span[where g=\<open>\<lambda>a. F2 a _\<close> and B=\<open>{butterket k l|k l. True}\<close>])
     unfolding linfun_cspan
-    using * apply (auto intro!: linear_compose[unfolded o_def, where f=\<open>\<lambda>a. tensor_op a _\<close> and g=\<open>(*\<^sub>V) G\<close>])
-    apply (metis cbilinear_def tensor_op_cbilinear)
+    using * apply (auto intro!: clinear_compose[unfolded o_def, where f=\<open>\<lambda>a. tensor_op a _\<close> and g=\<open>(*\<^sub>V) G\<close>])
+     apply (metis cbilinear_def tensor_op_cbilinear)
     apply (simp add: cblinfun_apply_add clinearI)
     using assms unfolding cbilinear_def by blast
   have G_F2: \<open>G *\<^sub>V tensor_op a b = F2 a b\<close> for a b
     apply (rule complex_vector.linear_eq_on_span[where g=\<open>F2 a\<close> and B=\<open>{butterket k l|k l. True}\<close>])
     unfolding linfun_cspan
     using * apply (auto simp: cblinfun_apply_add clinearI
-                        intro!: linear_compose[unfolded o_def, where f=\<open>tensor_op a\<close> and g=\<open>(*\<^sub>V) G\<close>])
+                        intro!: clinear_compose[unfolded o_def, where f=\<open>tensor_op a\<close> and g=\<open>(*\<^sub>V) G\<close>])
     apply (meson cbilinear_def tensor_op_cbilinear)
     using assms unfolding cbilinear_def by blast
 
@@ -269,13 +269,13 @@ lift_definition assoc_ell20' :: \<open>('a::finite\<times>('b::finite\<times>'c:
 
 lift_definition assoc_ell2 :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>('b\<times>'c)) ell2\<close>
   is assoc_ell20
-  apply (subst cbounded_linear_finite_dim)
+  apply (subst bounded_clinear_finite_dim)
   apply (rule clinearI; transfer)
   by auto
 
 lift_definition assoc_ell2' :: \<open>('a::finite\<times>('b::finite\<times>'c::finite)) ell2 \<Rightarrow>\<^sub>C\<^sub>L (('a\<times>'b)\<times>'c) ell2\<close> is
   assoc_ell20'
-  apply (subst cbounded_linear_finite_dim)
+  apply (subst bounded_clinear_finite_dim)
   apply (rule clinearI; transfer)
   by auto
 
@@ -313,17 +313,17 @@ proof (rule adjoint_D[symmetric])
     by (metis (no_types, lifting) cblinfun_apply_add cinner_scaleC_right clinearI complex_scaleC_def mult.comm_neutral of_complex_def vector_to_cblinfun_adj_times_vec)
   have [simp]: \<open>clinear (\<lambda>a. \<langle>x, assoc_ell2 *\<^sub>V a\<rangle>)\<close> for x
     by (simp add: cblinfun_apply_add cinner_add_right clinearI)
-  have [simp]: \<open>csemilinear (\<lambda>a. \<langle>a, y\<rangle>)\<close> for y
-    using bounded_csemilinear_cinner_left bounded_csemilinear_def by blast
-  have [simp]: \<open>csemilinear (\<lambda>a. \<langle>assoc_ell2' *\<^sub>V a, y\<rangle>)\<close> for y
-    by (simp add: cblinfun_apply_add cinner_add_left csemilinearI)
+  have [simp]: \<open>antilinear (\<lambda>a. \<langle>a, y\<rangle>)\<close> for y
+    using bounded_antilinear_cinner_left bounded_antilinear_def by blast
+  have [simp]: \<open>antilinear (\<lambda>a. \<langle>assoc_ell2' *\<^sub>V a, y\<rangle>)\<close> for y
+    by (simp add: cblinfun_apply_add cinner_add_left antilinearI)
   have \<open>\<langle>assoc_ell2' *\<^sub>V (ket x), ket y\<rangle> = \<langle>ket x, assoc_ell2 *\<^sub>V ket y\<rangle>\<close> for x :: \<open>'a \<times> 'b \<times> 'c\<close> and y
     apply (cases x, cases y)
     by (simp flip: tensor_ell2_ket add: assoc_ell2'_tensor assoc_ell2_tensor)
   then have \<open>\<langle>assoc_ell2' *\<^sub>V (ket x), y\<rangle> = \<langle>ket x, assoc_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>'a \<times> 'b \<times> 'c\<close> and y
     by (rule clinear_equal_ket[THEN fun_cong, rotated 2], simp_all)
   then show \<open>\<langle>assoc_ell2' *\<^sub>V x, y\<rangle> = \<langle>x, assoc_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>('a \<times> 'b \<times> 'c) ell2\<close> and y
-    by (rule csemilinear_equal_ket[THEN fun_cong, rotated 2], simp_all)
+    by (rule antilinear_equal_ket[THEN fun_cong, rotated 2], simp_all)
 qed
 
 lemma adjoint_assoc_ell2'[simp]: \<open>adjoint assoc_ell2' = assoc_ell2\<close>
