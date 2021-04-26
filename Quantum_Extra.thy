@@ -52,7 +52,7 @@ proof (rule antisym)
   have "isProjector (S b)"
     using assms(1) assms(3) compatible_lvalue2 lvalue_projector by blast
   show \<open>(R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>) \<le> (R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>\<close>
-  proof (unfold less_eq_clinear_space.rep_eq, rule)
+  proof (unfold less_eq_ccsubspace.rep_eq, rule)
     fix \<psi>
     assume asm: \<open>\<psi> \<in> space_as_set ((R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>))\<close>
     then have \<open>\<psi> \<in> space_as_set (R a *\<^sub>S \<top>)\<close>

@@ -188,7 +188,7 @@ proof -
 
   with hoare
   show ?thesis
-    by (meson basic_trans_rules(31) hoare_def less_eq_clinear_space.rep_eq)
+    by (meson basic_trans_rules(31) hoare_def less_eq_ccsubspace.rep_eq)
 qed
 
 end
