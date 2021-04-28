@@ -19,9 +19,7 @@ subsubsection \<open>EPR pair\<close>
 definition "vector_\<beta>00 = vec_of_list [ 1/sqrt 2::complex, 0, 0, 1/sqrt 2 ]"
 definition \<beta>00 :: \<open>(bit\<times>bit) ell2\<close> where [code del]: "\<beta>00 = onb_enum_of_vec vector_\<beta>00"
 lemma vec_of_onb_enum_\<beta>00[simp]: "vec_of_onb_enum \<beta>00 = vector_\<beta>00"
-  apply (auto simp add: \<beta>00_def vector_\<beta>00_def)
-  apply (subst onb_enum_of_vec_inverse')
-  by (auto simp add: canonical_basis_length_ell2_def)
+  by (auto simp add: \<beta>00_def vector_\<beta>00_def)
 lemma vec_of_ell2_\<beta>00[simp, code]: "vec_of_ell2 \<beta>00 = vector_\<beta>00"
   by (simp add: vec_of_ell2_def)
 
@@ -33,9 +31,7 @@ subsubsection \<open>Ket plus\<close>
 definition "vector_ketplus = vec_of_list [ 1/sqrt 2::complex, 1/sqrt 2 ]"
 definition ketplus :: \<open>bit ell2\<close> ("|+\<rangle>") where [code del]: \<open>ketplus = onb_enum_of_vec vector_ketplus\<close>
 lemma vec_of_onb_enum_ketplus[simp]: "vec_of_onb_enum ketplus = vector_ketplus"
-  apply (auto simp add: ketplus_def vector_ketplus_def)
-  apply (subst onb_enum_of_vec_inverse')
-  by (auto simp add: canonical_basis_length_ell2_def)
+  by (auto simp add: ketplus_def vector_ketplus_def)
 lemma vec_of_ell2_ketplus[simp, code]: "vec_of_ell2 ketplus = vector_ketplus"
   by (simp add: vec_of_ell2_def)
 
@@ -48,7 +44,7 @@ definition pauliX :: \<open>(bit, bit) matrix\<close> where [code del]: "pauliX 
 lemma [simp, code]: "mat_of_cblinfun pauliX = matrix_pauliX"
   apply (auto simp add: pauliX_def matrix_pauliX_def)
   apply (subst cblinfun_of_mat_inverse)
-  by (auto simp add: canonical_basis_length_ell2_def)
+  by (auto)
 
 lemma pauliX_adjoint[simp]: "pauliX* = pauliX"
   by eval
@@ -62,7 +58,7 @@ definition pauliZ :: \<open>(bit, bit) matrix\<close> where [code del]: "pauliZ 
 lemma [simp, code]: "mat_of_cblinfun pauliZ = matrix_pauliZ"
   apply (auto simp add: pauliZ_def matrix_pauliZ_def)
   apply (subst cblinfun_of_mat_inverse)
-  by (auto simp add: canonical_basis_length_ell2_def)
+  by (auto)
 lemma pauliZ_adjoint[simp]: "pauliZ* = pauliZ"
   by eval
 lemma pauliZZ[simp]: "pauliZ o\<^sub>C\<^sub>L pauliZ = idOp"
@@ -77,7 +73,7 @@ definition hadamard :: \<open>(bit,bit) matrix\<close> where [code del]: "hadama
 lemma [simp, code]: "mat_of_cblinfun hadamard = matrix_hadamard"
   apply (auto simp add: hadamard_def matrix_hadamard_def)
   apply (subst cblinfun_of_mat_inverse)
-  by (auto simp add: canonical_basis_length_ell2_def)
+  by (auto)
 
 lemma hada_adj[simp]: "hadamard* = hadamard"
   by eval
@@ -91,7 +87,7 @@ definition CNOT :: \<open>(bit*bit, bit*bit) matrix\<close> where [code del]: "C
 lemma [simp, code]: "mat_of_cblinfun CNOT = matrix_CNOT"
   apply (auto simp add: CNOT_def matrix_CNOT_def)
   apply (subst cblinfun_of_mat_inverse)
-  by (auto simp add: canonical_basis_length_ell2_def)
+  by (auto)
 
 lemma [simp]: "CNOT* = CNOT"
   by eval
@@ -106,7 +102,7 @@ definition Uswap :: \<open>(bit\<times>bit, bit\<times>bit) matrix\<close> where
 lemma mat_of_cblinfun_Uswap[simp, code]: "mat_of_cblinfun Uswap = matrix_Uswap"
   apply (auto simp add: Uswap_def matrix_Uswap_def)
   apply (subst cblinfun_of_mat_inverse)
-  by (auto simp add: canonical_basis_length_ell2_def)
+  by (auto)
 
 lemma dim_col_Uswap[simp]: "dim_col matrix_Uswap = 4"
   unfolding matrix_Uswap_def by simp
@@ -127,10 +123,7 @@ lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otim
   apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
   apply (simp add: clinear_tensor_ell22)
   apply (rule ell2_eq_vec_of_onb_enumI)
-  apply (simp add: mat_of_cblinfun_description vec_of_onb_enum_ket
-      canonical_basis_length_ell2_def)
+  apply (simp add: mat_of_cblinfun_description vec_of_onb_enum_ket)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)
-
-
 
 end
