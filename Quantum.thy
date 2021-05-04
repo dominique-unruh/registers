@@ -108,7 +108,7 @@ lemma dim_col_Uswap[simp]: "dim_col matrix_Uswap = 4"
   unfolding matrix_Uswap_def by simp
 lemma dim_row_Uswap[simp]: "dim_row matrix_Uswap = 4"
   unfolding matrix_Uswap_def by simp
-lemma Uswap_adjoint[simp]: "adjoint Uswap = Uswap"
+lemma Uswap_adjoint[simp]: "Uswap* = Uswap"
   by eval
 lemma Uswap_involution[simp]: "Uswap o\<^sub>C\<^sub>L Uswap = idOp"
   by eval

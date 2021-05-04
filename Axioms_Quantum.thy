@@ -139,9 +139,9 @@ proof (unfold lvalue_def, intro conjI allI)
   have [simp]: \<open>G (x o\<^sub>C\<^sub>L y) = G x o\<^sub>C\<^sub>L G y\<close> for x y
     by (simp add: lvalue_mult)
   have [simp]: \<open>clinear (\<lambda>a. (lvalue_pair F G (a*))*)\<close>
-    apply (rule antilinear_o_antilinear[unfolded o_def, where f=\<open>adjoint\<close>])
+    apply (rule antilinear_o_antilinear[unfolded o_def, where f=\<open>adj\<close>])
      apply (simp add: Adj_cblinfun_plus antilinearI)
-    apply (rule antilinear_o_clinear[unfolded o_def, where g=\<open>adjoint\<close>])
+    apply (rule antilinear_o_clinear[unfolded o_def, where g=\<open>adj\<close>])
     by (simp_all add: Adj_cblinfun_plus antilinearI)
   have [simp]: \<open>F (a*) = (F a)*\<close> for a
     using assms(1) lvalue_def by blast
