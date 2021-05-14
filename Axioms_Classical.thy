@@ -65,19 +65,6 @@ lemma converse_preregister: \<open>preregister converse\<close>
   apply (rule exI[where x=\<open>{((x,y),(y,x))| x y. True}\<close>])
   by (auto simp: converse_def Image_def)
 
-type_synonym ('a,'b,'c) update_2hom = \<open>'a update \<Rightarrow> 'b update \<Rightarrow> 'c update\<close>
-
-definition update_2hom :: "('a, 'b, 'c) update_2hom \<Rightarrow> bool" where
-  \<open>update_2hom F2 \<longleftrightarrow> (\<exists>R2. \<forall>a b. F2 a b = R2 `` (a \<times> b))\<close>
-
-definition rel_of_update_2hom :: \<open>('a,'b,'c) update_2hom \<Rightarrow> ((('a\<times>'a) \<times> ('b\<times>'b)) \<times> ('c\<times>'c)) set\<close> where
-  \<open>rel_of_update_2hom F2 = (SOME R2. \<forall>a b. F2 a b = R2 `` (a \<times> b))\<close>
-
-lemma rel_of_update_2hom: \<open>update_2hom F2 \<Longrightarrow> F2 a b = rel_of_update_2hom F2 `` (a \<times> b)\<close>
-  unfolding rel_of_update_2hom_def update_2hom_def
-  apply (rule someI2_ex)
-  by auto
-
 definition rel_prod :: "('a*'b) set => ('c*'d) set => (('a*'c) * ('b*'d)) set" where
   "rel_prod a b = (\<lambda>((a,b),(c,d)). ((a,c),(b,d))) ` (a \<times> b)"
 
@@ -94,90 +81,8 @@ lemma rel_prod_converse: \<open>(rel_prod a b)\<inverse> = rel_prod (a\<inverse>
 lemma rel_prod_Id[simp]: "rel_prod Id Id = Id"
   by (auto simp: rel_prod_def Id_def case_prod_beta image_def)
 
-lemma update_hom_o_2hom_is_2hom: \<open>update_2hom F2 \<Longrightarrow> preregister G \<Longrightarrow> update_2hom (\<lambda>a b. G (F2 a b))\<close>
-  unfolding update_2hom_def preregister_def apply auto 
-  apply (rule_tac x=\<open>R2 O R\<close> in exI)
-  by auto
-lemma update_2hom_o_hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> preregister G \<Longrightarrow> update_2hom (\<lambda>a b. F2 (G a) b)\<close>
-  unfolding update_2hom_def preregister_def apply auto 
-  apply (rule_tac x=\<open>rel_prod R Id O R2\<close> in exI)
-  apply (auto simp: rel_prod_def case_prod_beta)
-  apply fastforce by blast
-
-lemma update_2hom_sym: \<open>update_2hom F2 \<Longrightarrow> update_2hom (\<lambda>a b. F2 b a)\<close> 
-  unfolding update_2hom_def preregister_def apply auto 
-  apply (rule_tac x=\<open>(\<lambda>((a,b),c). ((b,a),c)) ` R2\<close> in exI)
-  apply (auto simp: case_prod_beta Image_def)
-  apply fastforce by blast
-
-lemma update_2hom_left_is_hom: \<open>update_2hom F2 \<Longrightarrow> preregister (\<lambda>a. F2 a b)\<close>
-  unfolding update_2hom_def preregister_def apply auto 
-  apply (rule_tac x=\<open>{(a',c')| a' b' c'. ((a',b'),c') \<in> R2 \<and> b' \<in> b}\<close> in exI)
-  by fastforce
-
-lemma comp_update_is_2hom: "update_2hom comp_update"
-  unfolding update_2hom_def
-  apply (rule_tac x=\<open>{((a',b'),c')| a' b' c'. fst a' = snd b' \<and> fst c' = fst b' \<and> snd c' = snd a'}\<close> in exI)
-  by auto
-
 abbreviation (input) tensor_update :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> where
   \<open>tensor_update \<equiv> rel_prod\<close>
-
-lemma tensor_update_is_2hom: \<open>update_2hom tensor_update\<close> 
-  unfolding update_2hom_def[abs_def]
-  apply (rule exI[of _ \<open>{(((ax,ay),(bx,by)), ((ax,bx),(ay,by)))| ax ay bx by. True} :: ((('a \<times> 'a) \<times> 'b \<times> 'b) \<times> ('a \<times> 'b) \<times> 'a \<times> 'b) set\<close>])
-  apply (auto simp: rel_prod_def image_def case_prod_beta)
-  by force
-
-definition tensor_lift :: \<open>('a, 'b, 'c) update_2hom
-                            \<Rightarrow> (('a\<times>'b, 'c) preregister)\<close>
-  where "tensor_lift F2 ab = {(cx,cy)| cx cy ax ay bx by. ((ax,bx),(ay,by)) \<in> ab
-             \<and> (((ax,ay), (bx,by)), (cx,cy)) \<in> rel_of_update_2hom F2}"
-
-lemma tensor_lift_clinear: 
-  assumes "update_2hom F2"
-  shows "preregister (tensor_lift F2)"
-proof -
-  define R2 where "R2 = rel_of_update_2hom F2"
-  from assms
-  have R2: "F2 a b = R2 `` (a \<times> b)" for a b
-    by (simp add: R2_def rel_of_update_2hom)
-  define R where \<open>R = {(((ax, bx), (ay, by)), (cx, cy))| ax bx ay by cx cy. (((ax, ay), (bx, by)), (cx, cy)) \<in> R2}\<close>
-  have \<open>tensor_lift F2 = (``) R\<close>
-   unfolding tensor_lift_def R2_def[symmetric]
-   using R_def by blast
-  then show ?thesis
-    unfolding preregister_def by auto
-qed
-
-lemma tensor_lift_correct: 
-  assumes \<open>update_2hom F2\<close>
-  shows \<open>(\<lambda>a b. tensor_lift F2 (tensor_update a b)) = F2\<close>
-proof (intro ext)
-  fix a :: \<open>('a\<times>'a) set\<close> and b :: \<open>('b\<times>'b) set\<close>
-  define R2 where \<open>R2 = rel_of_update_2hom F2\<close>
-  then have F2R2: "F2 a b = R2 `` (a \<times> b)" for a b
-    using rel_of_update_2hom assms by metis
-  show \<open>tensor_lift F2 (rel_prod a b) = F2 a b\<close>
-  proof (intro set_eqI, case_tac x, rename_tac x y, hypsubst, rule iffI)
-    fix x y :: 'c
-    assume "(x, y) \<in> F2 a b"
-    then have xyR2: \<open>(x,y) \<in> R2 `` (a \<times> b)\<close>
-      using F2R2 by auto
-    then show \<open>(x, y) \<in> tensor_lift F2 (tensor_update a b)\<close>
-      unfolding tensor_lift_def R2_def[symmetric]
-      apply (auto simp: rel_prod_def case_prod_beta image_def)
-      by (meson fst_eqD snd_eqD)
-  next
-    fix x y :: 'c
-    assume \<open>(x, y) \<in> tensor_lift F2 (tensor_update a b)\<close>
-    then have \<open>(x, y) \<in> R2 `` (a \<times> b)\<close>
-      unfolding tensor_lift_def R2_def[symmetric]
-      by (auto simp: rel_prod_def case_prod_beta image_def)
-    then show \<open>(x, y) \<in> F2 a b\<close>
-      using F2R2 by auto
-  qed
-qed
 
 lemma tensor_extensionality:
   assumes \<open>preregister F\<close>
@@ -261,23 +166,24 @@ lemma
 
 definition register_pair ::
   \<open>('a update \<Rightarrow> 'c update) \<Rightarrow> ('b update \<Rightarrow> 'c update) \<Rightarrow> (('a\<times>'b) update \<Rightarrow> 'c update)\<close> where
-  \<open>register_pair F G = tensor_lift (\<lambda>a b. comp_update (F a) (G b))\<close>
+  \<open>register_pair F G = Image {(((x1,y1),(x2,y2)),(m1,m3)) | x1 x2 y1 y2 m1 m2 m3.
+      ((x1,x2),(m2,m3)) \<in> rel_of_preregister F \<and> ((y1,y2),(m1,m2)) \<in> rel_of_preregister G}\<close>
 
-lemma update_2hom_G_O_F: \<open>preregister F \<Longrightarrow> preregister G \<Longrightarrow> update_2hom (\<lambda>a b. G b O F a)\<close>
-  apply (rule update_2hom_o_hom_left_is_hom)
-   apply (rule update_2hom_sym)
-   apply (rule update_2hom_o_hom_left_is_hom)
-    apply (rule update_2hom_sym)
-  by (rule comp_update_is_2hom)
-
-lemma register_pair_apply: 
+lemma register_pair_apply:
   assumes [simp]: \<open>register F\<close> \<open>register G\<close>
   assumes \<open>\<And>a b. comp_update (F a) (G b) = comp_update (G b) (F a)\<close>
   shows \<open>(register_pair F G) (tensor_update a b) = comp_update (F a) (G b)\<close>
-  unfolding register_pair_def
-  apply (subst tensor_lift_correct[THEN fun_cong, THEN fun_cong])
-   apply (rule update_2hom_G_O_F)
-  by (simp_all add: register_preregister)
+proof -
+  have [simp]: \<open>F a = rel_of_preregister F `` a\<close>
+    by (metis assms(1) register_preregister rel_of_preregister)
+  have [simp]: \<open>G b = rel_of_preregister G `` b\<close>
+    by (metis assms(2) register_preregister rel_of_preregister)
+
+  show ?thesis
+    unfolding register_pair_def 
+    apply (auto simp: relcomp_unfold rel_prod_def Image_def case_prod_beta)
+    by blast
+qed
 
 lemma register_pair_is_register:
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
@@ -286,43 +192,40 @@ lemma register_pair_is_register:
   shows \<open>register (register_pair F G)\<close> 
 proof (unfold register_def, intro conjI allI)
   define p where \<open>p = (register_pair F G)\<close>
+  
   show [simp]: \<open>preregister p\<close>
-    unfolding p_def register_pair_def 
-    apply (rule tensor_lift_clinear)
-    apply (rule update_2hom_G_O_F)
-    by (simp_all add: register_preregister)
+    unfolding p_def register_pair_def preregister_def by auto
+  
   have ptensor: \<open>\<And>a b. p (tensor_update a b) = comp_update (F a) (G b)\<close>
-    unfolding p_def register_pair_def apply (subst tensor_lift_correct[THEN fun_cong, THEN fun_cong])
-    apply (rule update_2hom_G_O_F)
-    by (simp_all add: register_preregister)
+    unfolding p_def
+    using assms by (rule register_pair_apply)
+
   have h1: \<open>preregister (\<lambda>a. p a O p a')\<close> for a'
-    apply (rule update_2hom_left_is_hom)
-    apply (rule update_2hom_o_hom_left_is_hom)
-    using comp_update_is_2hom update_2hom_sym by auto
+    apply (rule comp_preregister[where F=p, unfolded o_def])
+    by (simp_all add: preregister_mult_left)
   have h2: \<open>preregister (\<lambda>a. p (a O a'))\<close> for a'
-    apply (rule update_2hom_left_is_hom)
-    apply (rule update_hom_o_2hom_is_2hom[where G=p])
-    using comp_update_is_2hom update_2hom_sym by auto
+    apply (rule comp_preregister[where G=p, unfolded o_def])
+    by (simp_all add: preregister_mult_left)
   have h3: \<open>preregister (\<lambda>a'. p a O p a')\<close> for a
-    apply (rule update_2hom_left_is_hom)
-    apply (rule update_2hom_o_hom_left_is_hom)
-    using comp_update_is_2hom update_2hom_sym by auto
+    apply (rule comp_preregister[where F=p, unfolded o_def])
+    by (simp_all add: preregister_mult_right)
   have h4: \<open>preregister (\<lambda>a'. p (a O a'))\<close> for a
-    apply (rule update_2hom_left_is_hom)
-    apply (rule update_hom_o_2hom_is_2hom[where G=p])
-    using comp_update_is_2hom update_2hom_sym by auto
+    apply (rule comp_preregister[where G=p, unfolded o_def])
+    by (simp_all add: preregister_mult_right)
   have h5: \<open>preregister (\<lambda>a. p (a\<inverse>))\<close>
     apply (rule comp_preregister[where G=p, unfolded o_def])
     by (simp_all add: converse_preregister)
   have h6: \<open>preregister (\<lambda>a. (p a)\<inverse>)\<close>
     apply (rule comp_preregister[where F=p, unfolded o_def])
     by (simp_all add: converse_preregister)
+
   have \<open>p (tensor_update a1 a2) O p (tensor_update a1' a2') = p ((tensor_update a1 a2) O (tensor_update a1' a2'))\<close> for a1 a2 a1' a2'
     unfolding ptensor tensor_update_mult
     by (metis assms(1) assms(2) comp_update_assoc register_mult compat) 
   
   then have \<open>p (tensor_update a1 a2) O p a' = p ((tensor_update a1 a2) O a')\<close> for a1 a2 a'
     by (rule tensor_extensionality[OF h3 h4, THEN fun_cong])
+
   then show \<open>p a O p a' = p (a O a')\<close> for a a'
     by (rule tensor_extensionality[OF h1 h2, THEN fun_cong])
 
