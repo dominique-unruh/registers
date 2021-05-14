@@ -1,4 +1,4 @@
-section \<open>Derived facts about classical lvalues\<close>
+section \<open>Derived facts about classical registers\<close>
 
 theory Classical_Extra
   imports Laws_Classical
@@ -6,25 +6,25 @@ begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
 
-lemma lvalue_single_valued:
-  assumes lvalueF: \<open>lvalue F\<close>
+lemma register_single_valued:
+  assumes registerF: \<open>register F\<close>
   assumes single: \<open>single_valued a\<close>
   shows \<open>single_valued (F a)\<close>
 proof -
   have "mono F"
-    by (simp add: lvalueF lvalue_hom update_hom_mono)
+    by (simp add: registerF register_preregister preregister_mono)
   
   from single
   have contains_Id: "a\<inverse> O a \<subseteq> Id"
     by (auto simp add: single_valued_def)
 
   have "(F a)\<inverse> O F a = F (a\<inverse> O a)"
-    by (metis lvalueF lvalue_def)
+    by (metis registerF register_def)
   also have \<open>\<dots> \<subseteq> F Id\<close>
     using \<open>mono F\<close> contains_Id
     by (meson monoD)
   also have \<open>\<dots> = Id\<close>
-    using lvalueF lvalue_def by blast
+    using registerF register_def by blast
   
   finally show "single_valued (F a)"
     by (auto simp: single_valued_def)
@@ -32,148 +32,148 @@ qed
 
 
 
-lemma lvalue_fulldom:
-  assumes lvalueF: \<open>lvalue F\<close>
+lemma register_fulldom:
+  assumes registerF: \<open>register F\<close>
   assumes adom: \<open>Domain a = UNIV\<close>
   shows \<open>Domain (F a) = UNIV\<close>
 proof -
   have "mono F"
-    by (simp add: lvalueF lvalue_hom update_hom_mono)
+    by (simp add: registerF preregister_mono)
   
   from adom
   have contains_Id: "a O a\<inverse> \<supseteq> Id"
     by (auto simp add: converse_def relcomp_def relcompp_apply)
   
   have "F a O (F a)\<inverse> = F (a O a\<inverse>)"
-    by (metis lvalueF lvalue_def)
+    by (metis registerF register_def)
   also have \<open>\<dots> \<supseteq> F Id\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
     using \<open>mono F\<close> contains_Id
     by (meson monoD)
   also have \<open>\<dots> = Id\<close>
-    using lvalueF lvalue_def by blast
+    using registerF register_def by blast
   
   finally show "Domain (F a) = UNIV"
     by auto
 qed
 
 
-lemma lvalue_fullrange:
-  assumes lvalueF: \<open>lvalue F\<close>
+lemma register_fullrange:
+  assumes registerF: \<open>register F\<close>
   assumes arange: \<open>Range a = UNIV\<close>
   shows \<open>Range (F a) = UNIV\<close>
-  using lvalue_fulldom[OF lvalueF arange[folded Domain_converse]]
-  by (metis Domain_converse lvalueF lvalue_def)
+  using register_fulldom[OF registerF arange[folded Domain_converse]]
+  by (metis Domain_converse registerF register_def)
 
 
-definition "permutation_lvalue (p::'b\<Rightarrow>'a) a = {(inv p x, inv p y)| x y. (x,y) \<in> a}"
+definition "permutation_register (p::'b\<Rightarrow>'a) a = {(inv p x, inv p y)| x y. (x,y) \<in> a}"
 
-lemma permutation_lvalue_hom[simp]: "update_hom (permutation_lvalue p)"
-  unfolding update_hom_def
+lemma permutation_register_hom[simp]: "preregister (permutation_register p)"
+  unfolding preregister_def
   apply (rule exI[of _ \<open>{((x,y), (inv p x, inv p y))| x y. True}\<close>])
-  by (auto simp: permutation_lvalue_def[abs_def])
+  by (auto simp: permutation_register_def[abs_def])
 
-lemma permutation_lvalue_lvalue: 
+lemma permutation_register_register: 
   fixes p :: "'b \<Rightarrow> 'a"
   assumes "bij p"
-  shows "lvalue (permutation_lvalue p)"
-proof (unfold lvalue_def, intro conjI allI)
-  show \<open>update_hom (permutation_lvalue p)\<close>
+  shows "register (permutation_register p)"
+proof (unfold register_def, intro conjI allI)
+  show \<open>preregister (permutation_register p)\<close>
     by simp
-  show \<open>permutation_lvalue p Id = Id\<close>
-    unfolding permutation_lvalue_def Id_def apply auto
+  show \<open>permutation_register p Id = Id\<close>
+    unfolding permutation_register_def Id_def apply auto
     by (simp add: assms bij_inv_eq_iff)
   fix a a'
-  show \<open>permutation_lvalue p a O permutation_lvalue p a' = permutation_lvalue p (a O a')\<close>
-    apply (auto simp: permutation_lvalue_def relcomp_def relcompp_apply)
+  show \<open>permutation_register p a O permutation_register p a' = permutation_register p (a O a')\<close>
+    apply (auto simp: permutation_register_def relcomp_def relcompp_apply)
     by (metis assms bij_def surj_f_inv_f)
-  show \<open>permutation_lvalue p (a\<inverse>) = (permutation_lvalue p a)\<inverse>\<close>
-    by (auto simp: permutation_lvalue_def)
+  show \<open>permutation_register p (a\<inverse>) = (permutation_register p a)\<inverse>\<close>
+    by (auto simp: permutation_register_def)
 qed
 
-lemma lvalue_prod1: \<open>lvalue (\<lambda>a. rel_prod a Id)\<close>
-  unfolding lvalue_def apply (intro conjI allI)
+lemma register_prod1: \<open>register (\<lambda>a. rel_prod a Id)\<close>
+  unfolding register_def apply (intro conjI allI)
   using update_2hom_left_is_hom tensor_update_is_2hom apply blast
     apply (simp add: tensor_update_mult)
    apply simp
   by (simp add: rel_prod_converse)
 
 
-definition lvalue_from_setter :: \<open>('b\<Rightarrow>'a) \<Rightarrow> ('a\<Rightarrow>'b\<Rightarrow>'b) \<Rightarrow> ('a,'b) update_hom\<close> where
-  \<open>lvalue_from_setter g s a = {(s ax b, s ay b) | b ax ay. (ax,ay) \<in> a}\<close>
+definition register_from_setter :: \<open>('b\<Rightarrow>'a) \<Rightarrow> ('a\<Rightarrow>'b\<Rightarrow>'b) \<Rightarrow> ('a,'b) preregister\<close> where
+  \<open>register_from_setter g s a = {(s ax b, s ay b) | b ax ay. (ax,ay) \<in> a}\<close>
 
-lemma lvalue_from_setter_hom[simp]: "update_hom (lvalue_from_setter g s)"
-  unfolding update_hom_def 
+lemma register_from_setter_hom[simp]: "preregister (register_from_setter g s)"
+  unfolding preregister_def 
   apply (rule exI[of _ \<open>{((ax, ay), (s ax b, s ay b))| ax ay b. True}\<close>])
   apply (rule ext)
-  by (auto simp: lvalue_from_setter_def[abs_def] Image_def[abs_def])
+  by (auto simp: register_from_setter_def[abs_def] Image_def[abs_def])
 
 definition "valid_getter_setter g s \<longleftrightarrow> 
   (\<forall>b. b = s (g b) b) \<and> (\<forall>a b. g (s a b) = a) \<and> (\<forall>a a' b. s a (s a' b) = s a b)"
 
-(* A bit stronger than lvalue_from_setter_lvalue *)
-lemma lvalue_from_setter_lvalue': 
+(* A bit stronger than register_from_setter_register *)
+lemma register_from_setter_register': 
   fixes s :: "'a \<Rightarrow> 'b \<Rightarrow> 'b" and g :: "'b \<Rightarrow> 'a"
   assumes \<open>\<And>b. \<exists>b'. b = s (g b) b'\<close>
   assumes \<open>\<And>a b. g (s a b) = a\<close>
   assumes \<open>\<And>a a' b1 b2. s a b1 = s a b2 \<Longrightarrow> s a' b1 = s a' b2\<close>
-  shows "lvalue (lvalue_from_setter g s)"
-proof (unfold lvalue_def, intro conjI allI)
-  show \<open>update_hom (lvalue_from_setter g s)\<close>
+  shows "register (register_from_setter g s)"
+proof (unfold register_def, intro conjI allI)
+  show \<open>preregister (register_from_setter g s)\<close>
     by simp
-  show \<open>lvalue_from_setter g s Id = Id\<close>
-    unfolding lvalue_from_setter_def
-    apply (auto simp: lvalue_from_setter_def)
+  show \<open>register_from_setter g s Id = Id\<close>
+    unfolding register_from_setter_def
+    apply (auto simp: register_from_setter_def)
     using assms by blast
 
   fix a 
-  show \<open>lvalue_from_setter g s (a\<inverse>) = (lvalue_from_setter g s a)\<inverse>\<close>
-    unfolding lvalue_from_setter_def
-    by (auto simp: lvalue_from_setter_def)
+  show \<open>register_from_setter g s (a\<inverse>) = (register_from_setter g s a)\<inverse>\<close>
+    unfolding register_from_setter_def
+    by (auto simp: register_from_setter_def)
 
   fix a'
-  show \<open>lvalue_from_setter g s a O lvalue_from_setter g s a' = lvalue_from_setter g s (a O a')\<close>
-    unfolding lvalue_from_setter_def
-    apply (auto simp: lvalue_from_setter_def relcomp_def relcompp_apply)
+  show \<open>register_from_setter g s a O register_from_setter g s a' = register_from_setter g s (a O a')\<close>
+    unfolding register_from_setter_def
+    apply (auto simp: register_from_setter_def relcomp_def relcompp_apply)
     using assms
     by metis
 qed
 
 
-lemma lvalue_from_setter_lvalue[simp]:
+lemma register_from_setter_register[simp]:
   fixes s :: "'a \<Rightarrow> 'b \<Rightarrow> 'b" and g :: "'b \<Rightarrow> 'a"
   assumes "valid_getter_setter g s"
-  shows "lvalue (lvalue_from_setter g s)"
-  apply (rule lvalue_from_setter_lvalue'[where g=g])
+  shows "register (register_from_setter g s)"
+  apply (rule register_from_setter_register'[where g=g])
   using assms unfolding valid_getter_setter_def by metis+
 
-lemma lvalue_from_setter_set:
+lemma register_from_setter_set:
   assumes "valid_getter_setter g s"
-  shows \<open>lvalue_from_setter g s {(a, a0)|a. True} = {(b, s a0 b)|b. True}\<close>
-  using assms by (auto simp: valid_getter_setter_def lvalue_from_setter_def)
+  shows \<open>register_from_setter g s {(a, a0)|a. True} = {(b, s a0 b)|b. True}\<close>
+  using assms by (auto simp: valid_getter_setter_def register_from_setter_def)
 
-lemma lvalue_from_setter_map:
+lemma register_from_setter_map:
   assumes "valid_getter_setter g s"
-  shows \<open>lvalue_from_setter g s {(a, f a)|a. True} = {(b, s (f (g b)) b)|b. True}\<close>
-  using assms by (auto simp: valid_getter_setter_def lvalue_from_setter_def)
+  shows \<open>register_from_setter g s {(a, f a)|a. True} = {(b, s (f (g b)) b)|b. True}\<close>
+  using assms by (auto simp: valid_getter_setter_def register_from_setter_def)
 
 
-lemma lvalue_from_setter_compat:
+lemma register_from_setter_compat:
   assumes [simp]: "valid_getter_setter g1 s1"
   assumes [simp]: "valid_getter_setter g2 s2"
   assumes \<open>\<And>a1 a2 b. s1 a1 (s2 a2 b) = s2 a2 (s1 a1 b)\<close>
-  shows \<open>compatible (lvalue_from_setter g1 s1) (lvalue_from_setter g2 s2)\<close>
+  shows \<open>compatible (register_from_setter g1 s1) (register_from_setter g2 s2)\<close>
   unfolding compatible_def apply simp
   using assms unfolding valid_getter_setter_def
-  apply (auto simp add: lvalue_from_setter_def relcomp_def relcompp_apply)
+  apply (auto simp add: register_from_setter_def relcomp_def relcompp_apply)
   by metis+
 
 definition empty_var :: \<open>'a::{CARD_1} rel \<Rightarrow> 'b::finite rel\<close> where
   "empty_var a = (if a={} then {} else Id)"
 
-lemma lvalue_empty_var[simp]: \<open>lvalue empty_var\<close>
-proof (unfold lvalue_def, intro conjI allI)
-  show \<open>update_hom empty_var\<close>
-    unfolding empty_var_def update_hom_def
+lemma register_empty_var[simp]: \<open>register empty_var\<close>
+proof (unfold register_def, intro conjI allI)
+  show \<open>preregister empty_var\<close>
+    unfolding empty_var_def preregister_def
     by (rule exI[of _ \<open>UNIV \<times> Id\<close>], rule ext, auto)
   show \<open>empty_var Id = Id\<close>
     unfolding empty_var_def by auto
@@ -185,17 +185,17 @@ proof (unfold lvalue_def, intro conjI allI)
     unfolding empty_var_def by auto
 qed
 
-lemma empty_var_compatible[simp]: \<open>lvalue X \<Longrightarrow> compatible empty_var X\<close>
+lemma empty_var_compatible[simp]: \<open>register X \<Longrightarrow> compatible empty_var X\<close>
   apply (rule compatibleI)
   using [[simproc del: compatibility_warn]]
   by (auto simp: empty_var_def)
 
-lemma empty_var_compatible'[simp]: \<open>lvalue X \<Longrightarrow> compatible X empty_var\<close>
+lemma empty_var_compatible'[simp]: \<open>register X \<Longrightarrow> compatible X empty_var\<close>
   using compatible_sym empty_var_compatible by blast
 
 
-(* TODO: define setter_from_lvalue and to get the setter back. This 
-         then implies that lvalues and getter/setters are the same. *)
+(* TODO: define setter_from_register and to get the setter back. This 
+         then implies that registers and getter/setters are the same. *)
 
 subsubsection \<open>Example\<close>
 
@@ -203,12 +203,12 @@ record memory =
   x :: "int*int"
   y :: nat
 
-definition "X = lvalue_from_setter x (\<lambda>a b. b\<lparr>x:=a\<rparr>)"
+definition "X = register_from_setter x (\<lambda>a b. b\<lparr>x:=a\<rparr>)"
 
 lemma valid: \<open>valid_getter_setter x (\<lambda>a b. b\<lparr>x:=a\<rparr>)\<close>
   unfolding valid_getter_setter_def by auto
 
-lemma lvalue: \<open>lvalue X\<close>
+lemma register: \<open>register X\<close>
   by (simp add: valid X_def)
 
 

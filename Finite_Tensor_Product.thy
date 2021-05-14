@@ -189,7 +189,7 @@ lemma
             \<Rightarrow> 'c::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2
             \<Rightarrow> 'e::complex_normed_vector"
   assumes "cbilinear F2"
-  shows tensor_lift_hom: "clinear (tensor_lift F2)"
+  shows tensor_lift_clinear: "clinear (tensor_lift F2)"
   and tensor_lift_correct:  \<open>(\<lambda>a b. tensor_lift F2 (tensor_op a b)) = F2\<close>
 proof -
   define F2' t4 \<phi> where

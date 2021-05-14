@@ -48,42 +48,42 @@ definition "teleport a b = [
 
 
 lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (idOp \<otimes>\<^sub>o a)\<close>
-  by (auto simp: lvalue_pair_apply)
+  by (auto simp: register_pair_apply)
 lemma X\<Phi>1_X\<Phi>: \<open>X\<Phi>1 a = X\<Phi> (assoc (a \<otimes>\<^sub>o idOp))\<close>
   apply (subst pair_o_assoc[unfolded o_def, of X \<Phi>1 \<Phi>2, simplified, THEN fun_cong])
-  by (auto simp: lvalue_pair_apply)
+  by (auto simp: register_pair_apply)
 lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap) (assoc (a \<otimes>\<^sub>o idOp)))\<close>
   apply (subst pair_o_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
-  apply (subst (2) lvalue_Fst_lvalue_Snd[symmetric, of \<Phi>], simp)
+  apply (subst (2) register_Fst_register_Snd[symmetric, of \<Phi>], simp)
   using [[simproc del: compatibility_warn]]
   apply (subst pair_o_swap[unfolded o_def], simp)
   apply (subst pair_o_assoc[unfolded o_def, THEN fun_cong], simp, simp, simp)
-  by (auto simp: lvalue_pair_apply)
+  by (auto simp: register_pair_apply)
 lemma \<Phi>2_X\<Phi>: \<open>\<Phi>2 a = X\<Phi> (idOp \<otimes>\<^sub>o (idOp \<otimes>\<^sub>o a))\<close>
-  by (auto simp: Snd_def lvalue_pair_apply)
+  by (auto simp: Snd_def register_pair_apply)
 lemma X_X\<Phi>: \<open>X a = X\<Phi> (a \<otimes>\<^sub>o idOp)\<close>
-  by (auto simp: lvalue_pair_apply)
+  by (auto simp: register_pair_apply)
 lemma \<Phi>1_X\<Phi>: \<open>\<Phi>1 a = X\<Phi> (idOp \<otimes>\<^sub>o (a \<otimes>\<^sub>o idOp))\<close>
-  by (auto simp: Fst_def lvalue_pair_apply)
+  by (auto simp: Fst_def register_pair_apply)
 lemmas to_X\<Phi> = \<Phi>_X\<Phi> X\<Phi>1_X\<Phi> X\<Phi>2_X\<Phi> \<Phi>2_X\<Phi> X_X\<Phi> \<Phi>1_X\<Phi>
 
 lemma X_X\<Phi>1: \<open>X a = X\<Phi>1 (a \<otimes>\<^sub>o idOp)\<close>
-  by (auto simp: lvalue_pair_apply)
+  by (auto simp: register_pair_apply)
 lemmas to_X\<Phi>1 = X_X\<Phi>1
 
 lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes>\<^sub>o assoc a)))\<close>
-  by (simp add: pair_o_tensor[unfolded o_def, THEN fun_cong] lvalue_pair_apply
+  by (simp add: pair_o_tensor[unfolded o_def, THEN fun_cong] register_pair_apply
       pair_o_swap[unfolded o_def, THEN fun_cong]
       pair_o_assoc'[unfolded o_def, THEN fun_cong]
       pair_o_assoc[unfolded o_def, THEN fun_cong])
 
 lemma X\<Phi>2_to_X\<Phi>2_AB: \<open>X\<Phi>2 a = (X\<Phi>2;AB) (a \<otimes>\<^sub>o idOp)\<close>
-  by (simp add: lvalue_pair_apply)
+  by (simp add: register_pair_apply)
 
 schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
   apply (subst pair_o_assoc'[unfolded o_def, THEN fun_cong])
      apply simp_all[3]
-  apply (subst lvalue_pair_apply[where a=idOp])
+  apply (subst register_pair_apply[where a=idOp])
     apply simp_all[2]
   apply (subst pair_o_assoc[unfolded o_def, THEN fun_cong])
      apply simp_all[3]
@@ -104,7 +104,7 @@ proof -
     unfolding pre_def O1_def EQ_def
     apply (subst compatible_proj_intersect[where R=XAB and S=\<Phi>])
        apply (simp_all add: butterfly_isProjector)
-    apply (subst swap_lvalues[where R=XAB and S=\<Phi>])
+    apply (subst swap_registers[where R=XAB and S=\<Phi>])
     by (simp_all add: assoc_left(2))
 
   also
@@ -135,7 +135,7 @@ proof -
   also
   define O7 where \<open>O7 = \<Phi>2 (if b = 1 then pauliZ else idOp) o\<^sub>C\<^sub>L O6\<close>
   have O7: \<open>O7 = \<Phi>2 XZ o\<^sub>C\<^sub>L O5\<close>
-    by (auto simp add: O6_def O7_def XZ_def lvalue_mult lift_cblinfun_comp[OF lvalue_mult])
+    by (auto simp add: O6_def O7_def XZ_def register_mult lift_cblinfun_comp[OF register_mult])
   have \<open>hoare (O6 *\<^sub>S pre) [apply (if b=1 then pauliZ else idOp) (\<Phi> \<circ> Snd)] (O7 *\<^sub>S pre)\<close>
     apply (rule hoare_apply) 
     by (auto simp add: O7_def assoc_left(2))
@@ -145,8 +145,8 @@ proof -
 
   have O5': "O5 = (1/2) *\<^sub>C \<Phi>2 (XZ*) o\<^sub>C\<^sub>L X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"
     unfolding O7 O5_def O4_def O3_def O2_def O1_def 
-    apply (simp split del: if_split only: to_X\<Phi> lvalue_mult[of X\<Phi>])
-    apply (simp split del: if_split add: lvalue_mult[of X\<Phi>] 
+    apply (simp split del: if_split only: to_X\<Phi> register_mult[of X\<Phi>])
+    apply (simp split del: if_split add: register_mult[of X\<Phi>] 
                 flip: complex_vector.linear_scale
                 del: comp_apply)
     apply (rule arg_cong[of _ _ X\<Phi>])
@@ -166,11 +166,11 @@ proof -
 
   have O7': "O7 = (1/2) *\<^sub>C X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"
     unfolding O7 O5'
-    by (simp add: cblinfun_apply_assoc[symmetric] lvalue_mult[of \<Phi>2] del: comp_apply)
+    by (simp add: cblinfun_apply_assoc[symmetric] register_mult[of \<Phi>2] del: comp_apply)
 
   have "O7 *\<^sub>S pre = X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<Phi> (butterfly (ket (a, b)) \<beta>00) *\<^sub>S \<top>"
     apply (simp add: O7' pre_def EQ_def cblinfun_apply_assoc_subspace)
-    apply (subst lift_cblinfun_comp[OF swap_lvalues[where R=\<Phi> and S=XAB]], simp)
+    apply (subst lift_cblinfun_comp[OF swap_registers[where R=\<Phi> and S=XAB]], simp)
     by (simp add: assoc_left(2))
   also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<top>\<close>
     by (simp add: applyOpSpace_mono)
@@ -179,7 +179,7 @@ proof -
   also have \<open>\<dots> = \<Phi>2AB (selfbutter \<psi>) *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
     apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
         cblinfun_apply_assoc_subspace[symmetric]
-        lvalue_mult)
+        register_mult)
     by (simp add: sandwich_def cblinfun_apply_assoc[symmetric] comp_tensor_op tensor_op_adjoint)
   also have \<open>\<dots> \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
     by (simp add: EQ_def applyOpSpace_mono)
