@@ -61,7 +61,7 @@ proof (rule, simp, rule)
     by (metis (mono_tags, lifting) complex_vector.span_base complex_vector.span_scale complex_vector.span_sum mem_Collect_eq)
 qed
 
-definition bra :: "'a \<Rightarrow> (_,complex) cblinfun" where "bra i = vector_to_cblinfun (ket i)*" for i
+(* definition bra :: "'a \<Rightarrow> (_,complex) cblinfun" where "bra i = vector_to_cblinfun (ket i)*" for i *)
 
 lemma linfun_cindependent: \<open>cindependent {butterket i j| (i::'b::finite) (j::'a::finite). True}\<close>
 proof (rule complex_vector.independent_if_scalars_zero)
@@ -89,7 +89,7 @@ proof (rule complex_vector.independent_if_scalars_zero)
     proof cases
       case i
       then show ?thesis 
-        unfolding g by (auto simp: butterfly_def' times_applyOp bra_def ket_Kronecker_delta_neq)
+        unfolding g by (auto simp: butterfly_def' times_applyOp ket_Kronecker_delta_neq)
     next
       case j
       then show ?thesis
@@ -102,7 +102,7 @@ proof (rule complex_vector.independent_if_scalars_zero)
   also have \<open>\<dots> = (\<Sum>g\<in>{butterket i j |i j. True}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
     unfolding lin_def
     apply (rule complex_vector.linear_sum)
-    by (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
+    by (smt (z3) applyOp_scaleC1 applyOp_scaleC2 cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
   also have \<open>\<dots> = (\<Sum>g\<in>{butterket i j}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
     apply (rule sum.mono_neutral_right)
     using finite * by auto
@@ -110,7 +110,7 @@ proof (rule complex_vector.independent_if_scalars_zero)
     by (simp add: g)
   also have \<open>\<dots> = f g\<close>
     unfolding g 
-    by (auto simp: butterfly_def' times_applyOp bra_def ket_Kronecker_delta_eq)
+    by (auto simp: butterfly_def' times_applyOp ket_Kronecker_delta_eq)
   finally show \<open>f g = 0\<close>
     by simp
 qed

@@ -62,7 +62,7 @@ proof -
   have \<open>cindependent S\<close>
     using S_def cindependent_ket by blast
   moreover have \<open>cspan S = UNIV\<close>
-    by (metis S_def finite_class.finite_UNIV finite_imageI ket_ell2_span span_finite_dim)
+    using S_def cspan_ket_finite by blast
   moreover have \<open>finite S\<close>
     using S_def finite_class.finite_UNIV by blast
   ultimately have "cblinfun_extension_exists S \<phi>'"
@@ -201,11 +201,11 @@ proof -
     obtain i  j  k  l  where x: "x = (i,j,k,l)" by (meson prod_cases4) 
     obtain i' j' k' l' where y: "y = (i',j',k',l')" by (meson prod_cases4) 
     have 1: "bra (i,k) *\<^sub>V t4 x *\<^sub>V ket (j,l) = 1"
-      by (auto simp: bra_def t4_def x tensor_op_ell2 butterfly_def' times_applyOp ket_Kronecker_delta_eq
+      by (auto simp: t4_def x tensor_op_ell2 butterfly_def' times_applyOp ket_Kronecker_delta_eq
                simp flip: tensor_ell2_ket)
     assume \<open>x \<noteq> y\<close>
     then have 2: "bra (i,k) *\<^sub>V t4 y *\<^sub>V ket (j,l) = 0"
-      by (auto simp: bra_def t4_def x y tensor_op_ell2 butterfly_def' times_applyOp ket_Kronecker_delta_neq
+      by (auto simp: t4_def x y tensor_op_ell2 butterfly_def' times_applyOp ket_Kronecker_delta_neq
                simp flip: tensor_ell2_ket)
     from 1 2 that
     show False

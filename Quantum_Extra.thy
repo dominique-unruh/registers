@@ -137,7 +137,7 @@ lemma compatible_selfbutter_join:
   using assms by auto
 
 definition empty_var :: \<open>'a::{CARD_1,enum} update \<Rightarrow> 'b::finite update\<close> where
-  "empty_var a = one_dim_isom a *\<^sub>C idOp"
+  "empty_var a = one_dim_iso a *\<^sub>C idOp"
 
 lemma register_empty_var[simp]: \<open>register empty_var\<close>
   unfolding register_def empty_var_def
