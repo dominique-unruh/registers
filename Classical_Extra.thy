@@ -213,9 +213,6 @@ lemma empty_var_compatible'[simp]: \<open>register X \<Longrightarrow> compatibl
   using compatible_sym empty_var_compatible by blast
 
 
-(* TODO: define setter_from_register and to get the setter back. This 
-         then implies that registers and getter/setters are the same. *)
-
 subsubsection \<open>Example\<close>
 
 record memory = 
