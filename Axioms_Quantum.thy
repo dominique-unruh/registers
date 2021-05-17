@@ -18,8 +18,8 @@ section \<open>Quantum instantiation of registers\<close>
     id_preregister \<rightarrow> complex_vector.linear_id
     comp_preregister \<rightarrow> clinear_compose
     tensor_update_mult \<rightarrow> comp_tensor_op
-    preregister_tensor_left \<rightarrow> clinear_tensor_right
-    preregister_tensor_right \<rightarrow> clinear_tensor_left
+    # preregister_tensor_left \<rightarrow> clinear_tensor_right
+    # preregister_tensor_right \<rightarrow> clinear_tensor_left
 
     # Chapter name
     Generic laws about registers \<rightarrow> Generic laws about registers, instantiated quantumly

@@ -23,9 +23,28 @@ declare register_tensor_left[simp]
 declare register_tensor_right[simp]
 declare preregister_mult_right[simp]
 declare preregister_mult_left[simp]
-declare preregister_tensor_left[simp]
-declare preregister_tensor_right[simp]
+(* declare preregister_tensor_left[simp] *)
+(* declare preregister_tensor_right[simp] *)
 
+subsection \<open>Preregisters\<close>
+
+lemma preregister_tensor_left[simp]: \<open>preregister (\<lambda>b::'b::domain update. tensor_update a b)\<close>
+  for a :: \<open>'a::domain update\<close>
+proof -
+  have \<open>preregister ((\<lambda>b1::('a\<times>'b) update. (a \<otimes>\<^sub>u id_update) *\<^sub>u b1) o (\<lambda>b. tensor_update id_update b))\<close>
+    by (rule comp_preregister; simp)
+  then show ?thesis
+    by (simp add: o_def tensor_update_mult)
+qed
+
+lemma preregister_tensor_right[simp]: \<open>preregister (\<lambda>a::'a::domain update. tensor_update a b)\<close>  
+  for b :: \<open>'b::domain update\<close>
+proof -
+  have \<open>preregister ((\<lambda>a1::('a\<times>'b) update. (id_update \<otimes>\<^sub>u b) *\<^sub>u a1) o (\<lambda>a. tensor_update a id_update))\<close>
+    by (rule comp_preregister, simp_all)
+  then show ?thesis
+    by (simp add: o_def tensor_update_mult)
+qed
 
 subsection \<open>Lvalues\<close>
 

@@ -124,32 +124,28 @@ definition register :: \<open>('a,'b) preregister \<Rightarrow> bool\<close> whe
 lemma register_id: \<open>register F \<Longrightarrow> F id_update = id_update\<close>
   by (simp add: register_def)
 
-lemma preregister_tensor_left: \<open>preregister (\<lambda>a. tensor_update a b)\<close>
+(* lemma preregister_tensor_left: \<open>preregister (\<lambda>a. tensor_update a b)\<close>
   unfolding preregister_def apply (rule exI[of _ \<open>{((a1,a2),((a1,b1),(a2,b2)))| a1 a2 b1 b2. (b1,b2) \<in> b}\<close>])
   apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
   by (metis fst_conv snd_conv)
 lemma preregister_tensor_right: \<open>preregister (\<lambda>a. tensor_update b a)\<close>
   unfolding preregister_def apply (rule exI[of _ \<open>{((a1,a2),((b1,a1),(b2,a2)))| a1 a2 b1 b2. (b1,b2) \<in> b}\<close>])
   apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def)
-  by (metis fst_conv snd_conv)
+  by (metis fst_conv snd_conv) *)
 
 lemma register_tensor_left: \<open>register (\<lambda>a. tensor_update a id_update)\<close>
-  apply (simp add: register_def preregister_tensor_left)
-  apply (auto simp: rel_prod_def case_prod_beta relcomp_def relcompp_apply image_def)
-  apply (metis fst_conv pair_in_Id_conv prod.exhaust_sel)
-  apply (metis IdI fst_conv snd_conv)
-  apply (metis IdI fst_conv snd_conv)
-  by (metis IdI converse_iff fst_swap snd_conv swap_simp)
+  apply (auto simp: register_def preregister_def)
+    apply (rule exI[of _ \<open>{((a1,a2),((a1,b),(a2,b)))| a1 a2 b. True}\<close>])
+      apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def 
+                  relcompp_apply relcomp_def converse_def)
+  by (metis fst_conv snd_conv)+
 
 lemma register_tensor_right: \<open>register (\<lambda>a. tensor_update id_update a)\<close>
-  apply (simp add: register_def preregister_tensor_right)
-  apply (auto simp: rel_prod_def case_prod_beta relcomp_def relcompp_apply image_def)
-  apply blast
-  apply (metis IdI fst_conv snd_conv)
-  apply (metis IdI fst_conv snd_eqD)
-  apply (metis IdI fst_conv snd_conv)
-  by (metis IdI converse_iff fst_conv snd_conv)
-
+  apply (auto simp: register_def preregister_def)
+    apply (rule exI[of _ \<open>{((b1,b2),((a,b1),(a,b2)))| a b1 b2. True}\<close>])
+      apply (auto intro!: ext simp: Image_def[abs_def] rel_prod_def case_prod_beta image_def Id_def 
+                  relcompp_apply relcomp_def converse_def)
+  by (metis fst_conv snd_conv)+
 
 lemma
   register_preregister: "register F \<Longrightarrow> preregister F"
