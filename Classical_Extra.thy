@@ -12,7 +12,7 @@ lemma register_single_valued:
   shows \<open>single_valued (F a)\<close>
 proof -
   have "mono F"
-    by (simp add: registerF register_preregister preregister_mono)
+    by (simp add: registerF preregister_mono)
   
   from single
   have contains_Id: "a\<inverse> O a \<subseteq> Id"
@@ -158,6 +158,33 @@ lemma register_from_setter_compat:
   using assms unfolding valid_getter_setter_def
   apply (auto simp add: register_from_setter_def relcomp_def relcompp_apply)
   by metis+
+
+definition setter_from_register :: \<open>('a,'b) preregister \<Rightarrow> ('a \<Rightarrow> 'b \<Rightarrow> 'b)\<close> where
+  \<open>setter_from_register F a' m = (THE m'. (m,m') \<in> F {(a, a') |a. True})\<close>
+
+definition getter_from_register :: \<open>('a,'b) preregister \<Rightarrow> ('b \<Rightarrow> 'a)\<close> where
+  \<open>getter_from_register F m = (THE a. (m,m) \<in> F {(a,a)})\<close>
+
+lemma setter_from_register:
+  assumes \<open>valid_getter_setter g s\<close>
+  shows \<open>setter_from_register (register_from_setter g s) = s\<close>
+  unfolding setter_from_register_def
+  apply (subst register_from_setter_set[OF assms])
+  by auto
+
+lemma getter_from_register:
+  assumes \<open>valid_getter_setter g s\<close>
+  shows \<open>getter_from_register (register_from_setter g s) = g\<close>
+proof -
+  from assms
+  have \<open>\<exists>!a. \<exists>b. m = s a b\<close> for m
+    unfolding valid_getter_setter_def 
+    apply auto by metis
+  with assms show ?thesis
+    unfolding getter_from_register_def register_from_setter_def valid_getter_setter_def 
+    apply (auto intro!:ext)
+    by (smt (verit, ccfv_threshold) Uniq_def the1_equality')
+qed
 
 definition empty_var :: \<open>'a::{CARD_1} rel \<Rightarrow> 'b::finite rel\<close> where
   "empty_var a = (if a={} then {} else Id)"
