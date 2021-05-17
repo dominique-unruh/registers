@@ -40,8 +40,8 @@ proof (rule, simp, rule)
       by simp
     also have \<open>\<dots> = (\<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV. butterket j j *\<^sub>V f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       apply (subst (5) complex_vector.linear_sum)
-       apply (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
-      by simp
+       apply (auto intro!: clinearI simp add: cblinfun_apply_add plus_cblinfun.rep_eq)
+      by (metis (no_types, hide_lams) applyOp_scaleC2 plus_cblinfun.rep_eq)
     also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. butterket j j *\<^sub>V f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       by (simp add: sum.cartesian_product)
     also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i *\<^sub>V \<phi>))\<close>
