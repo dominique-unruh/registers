@@ -81,24 +81,24 @@ lemma register_tensor_apply[simp]:
   unfolding register_tensor_def 
   by (simp_all add: assms tensor_update_mult)
 
-definition "update_base (_::'b::domain itself) A \<longleftrightarrow> 
+definition "separating (_::'b::domain itself) A \<longleftrightarrow> 
   (\<forall>F G :: 'a::domain update \<Rightarrow> 'b update. preregister F \<longrightarrow> preregister G \<longrightarrow> (\<forall>x\<in>A. F x = G x) \<longrightarrow> F = G)"
 
-lemma update_base_UNIV[simp]: \<open>update_base TYPE(_) UNIV\<close>
-  unfolding update_base_def by auto
+lemma separating_UNIV[simp]: \<open>separating TYPE(_) UNIV\<close>
+  unfolding separating_def by auto
 
-lemma update_base_mono: \<open>A \<subseteq> B \<Longrightarrow> update_base TYPE('a::domain) A \<Longrightarrow> update_base TYPE('a) B\<close>
-  unfolding update_base_def by (meson in_mono) 
+lemma separating_mono: \<open>A \<subseteq> B \<Longrightarrow> separating TYPE('a::domain) A \<Longrightarrow> separating TYPE('a) B\<close>
+  unfolding separating_def by (meson in_mono) 
 
-lemma register_eqI: \<open>update_base TYPE('b::domain) A \<Longrightarrow> preregister F \<Longrightarrow> preregister G \<Longrightarrow> (\<And>x. x\<in>A \<Longrightarrow> F x = G x) \<Longrightarrow> F = (G::_ \<Rightarrow> 'b update)\<close>
-  unfolding update_base_def by auto
+lemma register_eqI: \<open>separating TYPE('b::domain) A \<Longrightarrow> preregister F \<Longrightarrow> preregister G \<Longrightarrow> (\<And>x. x\<in>A \<Longrightarrow> F x = G x) \<Longrightarrow> F = (G::_ \<Rightarrow> 'b update)\<close>
+  unfolding separating_def by auto
 
-lemma update_base_tensor:
+lemma separating_tensor:
   fixes A :: \<open>'a::domain update set\<close> and B :: \<open>'b::domain update set\<close>
-  assumes [simp]: \<open>update_base TYPE('c::domain) A\<close>
-  assumes [simp]: \<open>update_base TYPE('c) B\<close>
-  shows \<open>update_base TYPE('c) {a \<otimes>\<^sub>u b | a b. a\<in>A \<and> b\<in>B}\<close>
-proof (unfold update_base_def, intro allI impI)
+  assumes [simp]: \<open>separating TYPE('c::domain) A\<close>
+  assumes [simp]: \<open>separating TYPE('c) B\<close>
+  shows \<open>separating TYPE('c) {a \<otimes>\<^sub>u b | a b. a\<in>A \<and> b\<in>B}\<close>
+proof (unfold separating_def, intro allI impI)
   fix F G :: \<open>('a\<times>'b) update \<Rightarrow> 'c update\<close>
   assume [simp]: \<open>preregister F\<close> \<open>preregister G\<close>
   have [simp]: \<open>preregister (\<lambda>x. F (a \<otimes>\<^sub>u x))\<close> for a
@@ -128,15 +128,15 @@ proof (unfold update_base_def, intro allI impI)
     by auto
 qed
 
-(* Easier to apply using 'rule' than update_base_tensor *)
-lemma update_base_tensor':
+(* Easier to apply using 'rule' than separating_tensor *)
+lemma separating_tensor':
   fixes A :: \<open>'a::domain update set\<close> and B :: \<open>'b::domain update set\<close>
-  assumes \<open>update_base TYPE('c::domain) A\<close>
-  assumes \<open>update_base TYPE('c) B\<close>
+  assumes \<open>separating TYPE('c::domain) A\<close>
+  assumes \<open>separating TYPE('c) B\<close>
   assumes \<open>C = {a \<otimes>\<^sub>u b | a b. a\<in>A \<and> b\<in>B}\<close>
-  shows \<open>update_base TYPE('c) C\<close>
+  shows \<open>separating TYPE('c) C\<close>
   using assms
-  by (simp add: update_base_tensor)
+  by (simp add: separating_tensor)
 
 lemma tensor_extensionality3: 
   fixes F G :: \<open>('a::domain\<times>'b::domain\<times>'c::domain) update \<Rightarrow> 'd::domain update\<close>
@@ -144,11 +144,11 @@ lemma tensor_extensionality3:
   assumes "\<And>f g h. F (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h) = G (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h)"
   shows "F = G"
 proof (rule register_eqI[where A=\<open>{a\<otimes>\<^sub>ub\<otimes>\<^sub>uc| a b c. True}\<close>])
-  have \<open>update_base TYPE('d) {b \<otimes>\<^sub>u c |b c. True}\<close>
-    apply (rule update_base_tensor'[where A=UNIV and B=UNIV])
+  have \<open>separating TYPE('d) {b \<otimes>\<^sub>u c |b c. True}\<close>
+    apply (rule separating_tensor'[where A=UNIV and B=UNIV])
     by auto
-  then show \<open>update_base TYPE('d) {a \<otimes>\<^sub>u b \<otimes>\<^sub>u c |a b c. True}\<close>
-    apply (rule_tac update_base_tensor'[where A=UNIV and B=\<open>{b\<otimes>\<^sub>uc| b c. True}\<close>])
+  then show \<open>separating TYPE('d) {a \<otimes>\<^sub>u b \<otimes>\<^sub>u c |a b c. True}\<close>
+    apply (rule_tac separating_tensor'[where A=UNIV and B=\<open>{b\<otimes>\<^sub>uc| b c. True}\<close>])
     by auto
   show \<open>preregister F\<close> \<open>preregister G\<close> by auto
   show \<open>x \<in> {a \<otimes>\<^sub>u b \<otimes>\<^sub>u c |a b c. True} \<Longrightarrow> F x = G x\<close> for x
@@ -161,11 +161,11 @@ lemma tensor_extensionality3':
   assumes "\<And>f g h. F ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h) = G ((f \<otimes>\<^sub>u g) \<otimes>\<^sub>u h)"
   shows "F = G"
 proof (rule register_eqI[where A=\<open>{(a\<otimes>\<^sub>ub)\<otimes>\<^sub>uc| a b c. True}\<close>])
-  have \<open>update_base TYPE('d) {a \<otimes>\<^sub>u b | a b. True}\<close>
-    apply (rule update_base_tensor'[where A=UNIV and B=UNIV])
+  have \<open>separating TYPE('d) {a \<otimes>\<^sub>u b | a b. True}\<close>
+    apply (rule separating_tensor'[where A=UNIV and B=UNIV])
     by auto
-  then show \<open>update_base TYPE('d) {(a \<otimes>\<^sub>u b) \<otimes>\<^sub>u c |a b c. True}\<close>
-    apply (rule_tac update_base_tensor'[where B=UNIV and A=\<open>{a\<otimes>\<^sub>ub| a b. True}\<close>])
+  then show \<open>separating TYPE('d) {(a \<otimes>\<^sub>u b) \<otimes>\<^sub>u c |a b c. True}\<close>
+    apply (rule_tac separating_tensor'[where B=UNIV and A=\<open>{a\<otimes>\<^sub>ub| a b. True}\<close>])
     by auto
   show \<open>preregister F\<close> \<open>preregister G\<close> by auto
   show \<open>x \<in> {(a \<otimes>\<^sub>u b) \<otimes>\<^sub>u c |a b c. True} \<Longrightarrow> F x = G x\<close> for x
