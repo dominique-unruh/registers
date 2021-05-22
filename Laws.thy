@@ -46,7 +46,7 @@ proof -
     by (simp add: o_def tensor_update_mult)
 qed
 
-subsection \<open>Lvalues\<close>
+subsection \<open>Registers\<close>
 
 lemma id_update_tensor_register[simp]:
   assumes \<open>register F\<close>

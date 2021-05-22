@@ -10,7 +10,7 @@ else
     FILES=()
 fi
 
-#SESSION=LValues-Prerequisites
+#SESSION=Registers-Prerequisites
 #SESSION=Bounded_Operators-Prerequisites
 SESSION=Lots-Of-Stuff
 
