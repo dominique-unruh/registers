@@ -12,7 +12,7 @@ cloc :
 Laws_Classical.thy Laws_Quantum.thy :
 	python3 instantiate_laws.py
 
-registers.zip : $(wildcard *.thy) Laws_Classical.thy Laws_Quantum.thy ROOT ROOTS $(wildcard bounded-operators/*.thy) $(wildcard bounded-operators/extra/*.thy) bounded-operators/ROOT README.md .fake-session-dir/1/.gitignore bounded-operators/document/root.tex bounded-operators/fake-session-dir/1/empty instantiate_laws.py document/root.tex
+registers.zip : $(filter-out Experiments.thy, $(wildcard *.thy)) Laws_Classical.thy Laws_Quantum.thy ROOT ROOTS $(wildcard bounded-operators/*.thy) $(wildcard bounded-operators/extra/*.thy) bounded-operators/ROOT README.md .fake-session-dir/1/.gitignore bounded-operators/document/root.tex bounded-operators/fake-session-dir/1/empty instantiate_laws.py document/root.tex
 	zip $@ $^
 
 test : registers.zip document/outline.pdf

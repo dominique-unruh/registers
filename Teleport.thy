@@ -52,7 +52,7 @@ lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (idOp \<otimes>\<^sub>o a)\<clos
 lemma X\<Phi>1_X\<Phi>: \<open>X\<Phi>1 a = X\<Phi> (assoc (a \<otimes>\<^sub>o idOp))\<close>
   apply (subst pair_o_assoc[unfolded o_def, of X \<Phi>1 \<Phi>2, simplified, THEN fun_cong])
   by (auto simp: register_pair_apply)
-lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>h swap) (assoc (a \<otimes>\<^sub>o idOp)))\<close>
+lemma X\<Phi>2_X\<Phi>: \<open>X\<Phi>2 a = X\<Phi> ((id \<otimes>\<^sub>r swap) (assoc (a \<otimes>\<^sub>o idOp)))\<close>
   apply (subst pair_o_tensor[unfolded o_def, THEN fun_cong], simp, simp, simp)
   apply (subst (2) register_Fst_register_Snd[symmetric, of \<Phi>], simp)
   using [[simproc del: compatibility_warn]]
@@ -71,7 +71,7 @@ lemma X_X\<Phi>1: \<open>X a = X\<Phi>1 (a \<otimes>\<^sub>o idOp)\<close>
   by (auto simp: register_pair_apply)
 lemmas to_X\<Phi>1 = X_X\<Phi>1
 
-lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes>\<^sub>o assoc a)))\<close>
+lemma XAB_to_X\<Phi>2_AB: \<open>XAB a = (X\<Phi>2;AB) ((swap \<otimes>\<^sub>r id) (assoc' (idOp \<otimes>\<^sub>o assoc a)))\<close>
   by (simp add: pair_o_tensor[unfolded o_def, THEN fun_cong] register_pair_apply
       pair_o_swap[unfolded o_def, THEN fun_cong]
       pair_o_assoc'[unfolded o_def, THEN fun_cong]
@@ -174,12 +174,12 @@ proof -
     by (simp add: assoc_left(2))
   also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<top>\<close>
     by (simp add: applyOpSpace_mono)
-  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes>\<^sub>o idOp) *\<^sub>S (X\<Phi>2;AB) ((swap \<otimes>\<^sub>h id) (assoc' (idOp \<otimes>\<^sub>o assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
+  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes>\<^sub>o idOp) *\<^sub>S (X\<Phi>2;AB)
+                      ((swap \<otimes>\<^sub>r id) (assoc' (idOp \<otimes>\<^sub>o assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
     by (simp add: to_X\<Phi>2_AB)
   also have \<open>\<dots> = \<Phi>2AB (selfbutter \<psi>) *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
     apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
-        cblinfun_apply_assoc_subspace[symmetric]
-        register_mult)
+        cblinfun_apply_assoc_subspace[symmetric] register_mult)
     by (simp add: sandwich_def cblinfun_apply_assoc[symmetric] comp_tensor_op tensor_op_adjoint)
   also have \<open>\<dots> \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
     by (simp add: EQ_def applyOpSpace_mono)

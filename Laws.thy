@@ -62,12 +62,12 @@ lemma register_tensor_id_update[simp]:
 
 subsection \<open>Tensor product of homs\<close>
 
-definition register_tensor  (infixr "\<otimes>\<^sub>h" 70) where
+definition register_tensor  (infixr "\<otimes>\<^sub>r" 70) where
   "register_tensor F G = register_pair (\<lambda>a. tensor_update (F a) id_update) (\<lambda>b. tensor_update id_update (G b))"
 
 lemma register_tensor_is_hom: 
   fixes F :: "'a::domain update \<Rightarrow> 'b::domain update" and G :: "'c::domain update \<Rightarrow> 'd::domain update"
-  shows "register F \<Longrightarrow> register G \<Longrightarrow> register (F \<otimes>\<^sub>h G)"
+  shows "register F \<Longrightarrow> register G \<Longrightarrow> register (F \<otimes>\<^sub>r G)"
   unfolding register_tensor_def
   apply (rule register_pair_is_register)
   by (simp_all add: tensor_update_mult)
@@ -75,7 +75,7 @@ lemma register_tensor_is_hom:
 lemma register_tensor_apply[simp]:
   fixes F :: "'a::domain update \<Rightarrow> 'b::domain update" and G :: "'c::domain update \<Rightarrow> 'd::domain update"
   assumes \<open>register F\<close> and \<open>register G\<close>
-  shows "(F \<otimes>\<^sub>h G) (a \<otimes>\<^sub>u b) = F a \<otimes>\<^sub>u G b"
+  shows "(F \<otimes>\<^sub>r G) (a \<otimes>\<^sub>u b) = F a \<otimes>\<^sub>u G b"
   unfolding register_tensor_def
   apply (subst register_pair_apply)
   unfolding register_tensor_def 
@@ -230,7 +230,7 @@ lemma compatible_register2: \<open>compatible F G \<Longrightarrow> register G\<
 
 lemma pair_o_tensor:
   assumes "compatible A B" and [simp]: \<open>register C\<close> and [simp]: \<open>register D\<close>
-  shows "(A; B) o (C \<otimes>\<^sub>h D) = (A o C; B o D)"
+  shows "(A; B) o (C \<otimes>\<^sub>r D) = (A o C; B o D)"
   apply (rule tensor_extensionality)
   using assms by (simp_all add: register_tensor_is_hom register_pair_apply comp_preregister)
 
@@ -523,12 +523,12 @@ no_notation comp_update (infixl "*\<^sub>u" 55)
 no_notation tensor_update (infixr "\<otimes>\<^sub>u" 70)
 
 bundle register_notation begin
-notation register_tensor (infixr "\<otimes>\<^sub>h" 70)
+notation register_tensor (infixr "\<otimes>\<^sub>r" 70)
 notation register_pair ("'(_;_')")
 end
 
 bundle no_register_notation begin
-no_notation register_tensor (infixr "\<otimes>\<^sub>h" 70)
+no_notation register_tensor (infixr "\<otimes>\<^sub>r" 70)
 no_notation register_pair ("'(_;_')")
 end
 

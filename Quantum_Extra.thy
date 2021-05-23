@@ -88,14 +88,14 @@ lemma unitary_sandwich_register: \<open>unitary a \<Longrightarrow> register (sa
 lemma sandwich_tensor: 
   fixes a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
   assumes \<open>unitary a\<close> \<open>unitary b\<close>
-  shows "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>h sandwich b"
+  shows "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>r sandwich b"
   apply (rule tensor_extensionality)
   by (auto simp: unitary_sandwich_register assms sandwich_def register_tensor_is_hom comp_tensor_op tensor_op_adjoint)
 
 lemma sandwich_grow_left: 
   fixes a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
   assumes "unitary a"
-  shows "sandwich a \<otimes>\<^sub>h id = sandwich (a \<otimes>\<^sub>o idOp)"
+  shows "sandwich a \<otimes>\<^sub>r id = sandwich (a \<otimes>\<^sub>o idOp)"
   by (simp add: unitary_sandwich_register assms sandwich_tensor sandwich_id)
 
 lemma register_sandwich: \<open>register F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
@@ -126,7 +126,7 @@ lemma swap_sandwich: "swap = sandwich Uswap"
 lemma id_tensor_sandwich: 
   fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2"
   assumes "unitary a"
-  shows "id \<otimes>\<^sub>h sandwich a = sandwich (idOp \<otimes>\<^sub>o a)"
+  shows "id \<otimes>\<^sub>r sandwich a = sandwich (idOp \<otimes>\<^sub>o a)"
   apply (rule tensor_extensionality) 
   using assms by (auto simp: register_tensor_is_hom comp_tensor_op sandwich_def tensor_op_adjoint unitary_sandwich_register)
 
