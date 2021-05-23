@@ -13,9 +13,13 @@ Laws_Classical.thy Laws_Quantum.thy :
 	python3 instantiate_laws.py
 
 registers.zip : $(filter-out Experiments.thy, $(wildcard *.thy)) Laws_Classical.thy Laws_Quantum.thy ROOT ROOTS $(wildcard bounded-operators/*.thy) $(wildcard bounded-operators/extra/*.thy) bounded-operators/ROOT README.md .fake-session-dir/1/.gitignore bounded-operators/document/root.tex bounded-operators/fake-session-dir/1/empty instantiate_laws.py document/root.tex
-	zip $@ $^
+	( git describe --tags --long --always --dirty --broken && git describe --always --all ) > GITREVISION
+	zip $@ $^ GITREVISION
 
-test : registers.zip document/outline.pdf
+test :
+	output=$$(git status --porcelain) && [ -z "$$output" ]
+	git submodule foreach git clean -fdx
+	make registers.zip
 	rm -v /opt/Isabelle2021/heaps/*/Bounded_Operators*
 	rm -v /opt/Isabelle2021/heaps/*/Registers*
 	rm -rf /tmp/registers-test
