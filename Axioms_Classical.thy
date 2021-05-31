@@ -3,6 +3,8 @@ section \<open>Classical instantiation of registerss\<close>
 (* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Classical.thy)
  
    domain \<rightarrow> type
+   comp_update \<rightarrow> map_comp
+   id_update \<rightarrow> Some
 
    Generic laws about registers \<rightarrow> Generic laws about registers, instantiated classically
 *)
@@ -13,21 +15,12 @@ begin
 
 type_synonym 'a update = \<open>'a \<rightharpoonup> 'a\<close>
 
-typ \<open>int update\<close>
-
-(* TODO: direct instantiation *)
-abbreviation (input) comp_update :: "'a update \<Rightarrow> 'a update \<Rightarrow> 'a update" where
-  "comp_update a b \<equiv> a \<circ>\<^sub>m b"
-
-abbreviation (input) id_update :: "'a update" where
-  "id_update \<equiv> Some"
-
-lemma id_update_left: "comp_update id_update a = a"
+lemma id_update_left: "Some \<circ>\<^sub>m a = a"
   by (auto intro!: ext simp add: map_comp_def option.case_eq_if)
-lemma id_update_right: "comp_update a id_update = a"
+lemma id_update_right: "a \<circ>\<^sub>m Some = a"
   by auto
 
-lemma comp_update_assoc: "comp_update (comp_update a b) c = comp_update a (comp_update b c)"
+lemma comp_update_assoc: "(a \<circ>\<^sub>m b) \<circ>\<^sub>m c = a \<circ>\<^sub>m (b \<circ>\<^sub>m c)"
   by (auto intro!: ext simp add: map_comp_def option.case_eq_if)
 
 type_synonym ('a,'b) preregister = \<open>'a update \<Rightarrow> 'b update\<close>
@@ -40,13 +33,13 @@ lemma id_preregister: \<open>preregister id\<close>
   apply (rule exI[of _ \<open>\<lambda>a m. Some a\<close>])
   by (simp add: option.case_eq_if)
 
-lemma preregister_mult_right: \<open>preregister (\<lambda>a. comp_update a z)\<close>
+lemma preregister_mult_right: \<open>preregister (\<lambda>a. a \<circ>\<^sub>m z)\<close>
   unfolding preregister_def 
   apply (rule exI[of _ \<open>\<lambda>m. the (z m)\<close>])
   apply (rule exI[of _ \<open>\<lambda>x m. case z m of None \<Rightarrow> None | _ \<Rightarrow> Some x\<close>])
   by (auto simp add: option.case_eq_if)
 
-lemma preregister_mult_left: \<open>preregister (\<lambda>a. comp_update z a)\<close>
+lemma preregister_mult_left: \<open>preregister (\<lambda>a. z \<circ>\<^sub>m a)\<close>
   unfolding preregister_def 
   apply (rule exI[of _ \<open>\<lambda>m. m\<close>])
   apply (rule exI[of _ \<open>\<lambda>x m. z x\<close>])
@@ -75,7 +68,7 @@ definition rel_prod :: "('a*'b) set => ('c*'d) set => (('a*'c) * ('b*'d)) set" w
 definition tensor_update :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> where
   \<open>tensor_update a b m = (case a (fst m) of None \<Rightarrow> None | Some x \<Rightarrow> (case b (snd m) of None \<Rightarrow> None | Some y \<Rightarrow> Some (x,y)))\<close>
 
-lemma tensor_update_mult: \<open>comp_update (tensor_update a c) (tensor_update b d) = tensor_update (comp_update a b) (comp_update c d)\<close>
+lemma tensor_update_mult: \<open>tensor_update a c \<circ>\<^sub>m tensor_update b d = tensor_update (a \<circ>\<^sub>m b) (c \<circ>\<^sub>m d)\<close>
   by (auto intro!: ext simp add: map_comp_def option.case_eq_if tensor_update_def)
 
 definition update1 :: \<open>'a \<Rightarrow> 'a \<Rightarrow> 'a update\<close> where
@@ -188,16 +181,16 @@ qed
 definition register :: \<open>('a,'b) preregister \<Rightarrow> bool\<close> where
   \<open>register F \<longleftrightarrow> (\<exists>g s. F = register_from_getter_setter g s \<and> valid_getter_setter g s)\<close>
 
-lemma register_id: \<open>register F \<Longrightarrow> F id_update = id_update\<close>
+lemma register_id: \<open>register F \<Longrightarrow> F Some = Some\<close>
   by (auto simp add: register_def valid_getter_setter_def register_from_getter_setter_def)
 
-lemma register_tensor_left: \<open>register (\<lambda>a. tensor_update a id_update)\<close>
+lemma register_tensor_left: \<open>register (\<lambda>a. tensor_update a Some)\<close>
   apply (auto simp: register_def)
   apply (rule exI[of _ fst])
   apply (rule exI[of _ \<open>\<lambda>x' (x,y). (x',y)\<close>])
   by (auto intro!: ext simp add: tensor_update_def valid_getter_setter_def register_from_getter_setter_def option.case_eq_if)
 
-lemma register_tensor_right: \<open>register (\<lambda>a. tensor_update id_update a)\<close>
+lemma register_tensor_right: \<open>register (\<lambda>a. tensor_update Some a)\<close>
   apply (auto simp: register_def)
   apply (rule exI[of _ snd])
   apply (rule exI[of _ \<open>\<lambda>y' (x,y). (x,y')\<close>])
@@ -235,7 +228,7 @@ proof -
     unfolding register_def register_from_getter_setter_def by blast
 qed
 
-lemma register_mult: "register F \<Longrightarrow> comp_update (F a) (F b) = F (comp_update a b)"
+lemma register_mult: "register F \<Longrightarrow> F a \<circ>\<^sub>m F b = F (a \<circ>\<^sub>m b)"
   by (auto intro!: ext simp: register_def register_from_getter_setter_def[abs_def] valid_getter_setter_def map_comp_def option.case_eq_if)
 
 definition register_pair ::
@@ -245,15 +238,15 @@ definition register_pair ::
 
 lemma compatible_setter:
   assumes [simp]: \<open>register F\<close> \<open>register G\<close>
-  assumes compat: \<open>\<And>a b. comp_update (F a) (G b) = comp_update (G b) (F a)\<close>
+  assumes compat: \<open>\<And>a b. F a \<circ>\<^sub>m G b = G b \<circ>\<^sub>m F a\<close>
   shows \<open>snd (getter_setter F) x o snd (getter_setter G) y = snd (getter_setter G) y o snd (getter_setter F) x\<close>
   using compat apply (auto intro!: ext simp: getter_setter_def register_apply_def o_def map_comp_def)
   by (smt (verit, best) assms(1) assms(2) option.case_eq_if option.distinct(1) register_def register_from_getter_setter_def)
 
 lemma register_pair_apply:
   assumes [simp]: \<open>register F\<close> \<open>register G\<close>
-  assumes \<open>\<And>a b. comp_update (F a) (G b) = comp_update (G b) (F a)\<close>
-  shows \<open>(register_pair F G) (tensor_update a b) = comp_update (F a) (G b)\<close>
+  assumes \<open>\<And>a b. F a \<circ>\<^sub>m G b = G b \<circ>\<^sub>m F a\<close>
+  shows \<open>(register_pair F G) (tensor_update a b) = F a \<circ>\<^sub>m G b\<close>
 proof -
   obtain gF sF gG sG where gsF: \<open>getter_setter F = (gF, sF)\<close> and gsG: \<open>getter_setter G = (gG, sG)\<close>
     by (metis surj_pair)
@@ -281,7 +274,7 @@ qed
 lemma register_pair_is_register:
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
   assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
-  assumes compat: \<open>\<And>a b. comp_update (F a) (G b) = comp_update (G b) (F a)\<close>
+  assumes compat: \<open>\<And>a b. F a \<circ>\<^sub>m G b = G b \<circ>\<^sub>m F a\<close>
   shows \<open>register (register_pair F G)\<close>
 proof -
   obtain gF sF gG sG where gsF: \<open>getter_setter F = (gF, sF)\<close> and gsG: \<open>getter_setter G = (gG, sG)\<close>
