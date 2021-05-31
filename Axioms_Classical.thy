@@ -152,30 +152,30 @@ definition "valid_getter_setter g s \<longleftrightarrow>
 
 definition \<open>register_from_getter_setter g s a m = (case a (g m) of None \<Rightarrow> None | Some x \<Rightarrow> Some (s x m))\<close>
 definition \<open>register_apply F a = the o F (Some o a)\<close>
-definition \<open>getter_setter F = (let s = (\<lambda>a. register_apply F (\<lambda>_. a)) in ((\<lambda>m. THE x. s x m = m), s))\<close> for F :: \<open>'a update \<Rightarrow> 'b update\<close>
+definition \<open>setter F a m = register_apply F (\<lambda>_. a) m\<close> for F :: \<open>'a update \<Rightarrow> 'b update\<close>
+definition \<open>getter F m = (THE x. setter F x m = m)\<close> for F :: \<open>'a update \<Rightarrow> 'b update\<close>
 
-lemma getter_setter_of_register_from_getter_setter:
+lemma
   assumes \<open>valid_getter_setter g s\<close>
-  shows \<open>getter_setter (register_from_getter_setter g s) = (g, s)\<close>
+  shows getter_of_register_from_getter_setter[simp]: \<open>getter (register_from_getter_setter g s) = g\<close>
+    and setter_of_register_from_getter_setter[simp]: \<open>setter (register_from_getter_setter g s) = s\<close>
 proof -
-  define g' s' where \<open>g' = fst (getter_setter (register_from_getter_setter g s))\<close>
-    and \<open>s' = snd (getter_setter (register_from_getter_setter g s))\<close>
-  have \<open>s = s'\<close>
-    by (auto intro!:ext simp: s'_def getter_setter_def register_apply_def register_from_getter_setter_def)
-  moreover have \<open>g = g'\<close>
+  define g' s' where \<open>g' = getter (register_from_getter_setter g s)\<close>
+    and \<open>s' = setter (register_from_getter_setter g s)\<close>
+  show \<open>s' = s\<close>
+    by (auto intro!:ext simp: s'_def setter_def register_apply_def register_from_getter_setter_def)
+  moreover show \<open>g' = g\<close>
   proof (rule ext, rename_tac m)
     fix m
     have \<open>g' m = (THE x. s x m = m)\<close>
-      by (auto intro!:ext simp: g'_def getter_setter_def register_apply_def register_from_getter_setter_def)
+      by (auto intro!:ext simp: g'_def s'_def[symmetric] \<open>s'=s\<close> getter_def register_apply_def register_from_getter_setter_def)
     moreover have \<open>s (g m) m = m\<close>
       by (metis assms valid_getter_setter_def)
     moreover have \<open>x = x'\<close> if \<open>s x m = m\<close> \<open>s x' m = m\<close> for x x'
       by (metis assms that(1) that(2) valid_getter_setter_def)
-    ultimately show \<open>g m = g' m\<close>
+    ultimately show \<open>g' m = g m\<close>
       by (simp add: Uniq_def the1_equality')
   qed
-  ultimately show ?thesis
-    unfolding s'_def g'_def by (metis surjective_pairing) 
 qed
 
 definition register :: \<open>('a,'b) preregister \<Rightarrow> bool\<close> where
@@ -233,14 +233,14 @@ lemma register_mult: "register F \<Longrightarrow> F a \<circ>\<^sub>m F b = F (
 
 definition register_pair ::
   \<open>('a update \<Rightarrow> 'c update) \<Rightarrow> ('b update \<Rightarrow> 'c update) \<Rightarrow> (('a\<times>'b) update \<Rightarrow> 'c update)\<close> where
-  \<open>register_pair F G = (let (gF, sF) = getter_setter F; (gG, sG) = getter_setter G in
-    register_from_getter_setter (\<lambda>m. (gF m, gG m)) (\<lambda>(a,b) m. sF a (sG b m)))\<close>
+  \<open>register_pair F G =
+    register_from_getter_setter (\<lambda>m. (getter F m, getter G m)) (\<lambda>(a,b) m. setter F a (setter G b m))\<close>
 
 lemma compatible_setter:
   assumes [simp]: \<open>register F\<close> \<open>register G\<close>
   assumes compat: \<open>\<And>a b. F a \<circ>\<^sub>m G b = G b \<circ>\<^sub>m F a\<close>
-  shows \<open>snd (getter_setter F) x o snd (getter_setter G) y = snd (getter_setter G) y o snd (getter_setter F) x\<close>
-  using compat apply (auto intro!: ext simp: getter_setter_def register_apply_def o_def map_comp_def)
+  shows \<open>setter F x o setter G y = setter G y o setter F x\<close>
+  using compat apply (auto intro!: ext simp: setter_def register_apply_def o_def map_comp_def)
   by (smt (verit, best) assms(1) assms(2) option.case_eq_if option.distinct(1) register_def register_from_getter_setter_def)
 
 lemma register_pair_apply:
@@ -248,26 +248,24 @@ lemma register_pair_apply:
   assumes \<open>\<And>a b. F a \<circ>\<^sub>m G b = G b \<circ>\<^sub>m F a\<close>
   shows \<open>(register_pair F G) (tensor_update a b) = F a \<circ>\<^sub>m G b\<close>
 proof -
-  obtain gF sF gG sG where gsF: \<open>getter_setter F = (gF, sF)\<close> and gsG: \<open>getter_setter G = (gG, sG)\<close>
-    by (metis surj_pair)
-  then have validF: \<open>valid_getter_setter gF sF\<close> and validG: \<open>valid_getter_setter gG sG\<close>
-    by (metis assms fst_conv getter_setter_of_register_from_getter_setter register_def snd_conv)+
-  then have F: \<open>F = register_from_getter_setter gF sF\<close> and G: \<open>G = register_from_getter_setter gG sG\<close>
-    by (metis Pair_inject assms getter_setter_of_register_from_getter_setter gsF gsG register_def)+
-  have gFsG: \<open>gF (sG y m) = gF m\<close> for y m
+  have validF: \<open>valid_getter_setter (getter F) (setter F)\<close> and validG: \<open>valid_getter_setter (getter G) (setter G)\<close>
+    by (metis assms getter_of_register_from_getter_setter register_def setter_of_register_from_getter_setter)+
+  then have F: \<open>F = register_from_getter_setter (getter F) (setter F)\<close> and G: \<open>G = register_from_getter_setter (getter G) (setter G)\<close>
+    by (metis assms getter_of_register_from_getter_setter register_def setter_of_register_from_getter_setter)+
+  have gFsG: \<open>getter F (setter G y m) = getter F m\<close> for y m
   proof -
-    have \<open>gF (sG y m) = gF (sG y (sF (gF m) m))\<close>
+    have \<open>getter F (setter G y m) = getter F (setter G y (setter F (getter F m) m))\<close>
       using validF by (metis valid_getter_setter_def)
-    also have \<open>\<dots> = gF (sF (gF m) (sG y m))\<close>
-      by (smt (verit, best) assms(1) assms(2) assms(3) comp_apply compatible_setter gsF gsG snd_conv)
-    also have \<open>\<dots> = gF m\<close>
+    also have \<open>\<dots> = getter F (setter F (getter F m) (setter G y m))\<close>
+      by (metis (mono_tags, lifting) assms(1) assms(2) assms(3) comp_eq_dest_lhs compatible_setter)
+    also have \<open>\<dots> = getter F m\<close>
       by (metis validF valid_getter_setter_def)
     finally show ?thesis by -
   qed
 
   show ?thesis
     apply (subst (2) F, subst (2) G)
-    by (auto intro!:ext simp: register_pair_def gsF gsG tensor_update_def map_comp_def option.case_eq_if
+    by (auto intro!:ext simp: register_pair_def tensor_update_def map_comp_def option.case_eq_if
               register_from_getter_setter_def gFsG)
 qed
 
@@ -277,16 +275,13 @@ lemma register_pair_is_register:
   assumes compat: \<open>\<And>a b. F a \<circ>\<^sub>m G b = G b \<circ>\<^sub>m F a\<close>
   shows \<open>register (register_pair F G)\<close>
 proof -
-  obtain gF sF gG sG where gsF: \<open>getter_setter F = (gF, sF)\<close> and gsG: \<open>getter_setter G = (gG, sG)\<close>
-    by (metis surj_pair)
-  then have validF: \<open>valid_getter_setter gF sF\<close> and validG: \<open>valid_getter_setter gG sG\<close>
-    by (metis assms case_prodD case_prodI getter_setter_of_register_from_getter_setter register_def)+
-  then have \<open>valid_getter_setter (\<lambda>m. (gF m, gG m)) (\<lambda>(a, b) m. sF a (sG b m))\<close>
-    apply (auto simp: valid_getter_setter_def) (* Sledgehammer proof: *)
-    apply (smt (verit, best) assms(1) assms(2) comp_apply compat compatible_setter gsF gsG snd_conv)
-    by (smt (verit, best) assms(1) assms(2) comp_apply compat compatible_setter gsF gsG snd_conv)
+  have validF: \<open>valid_getter_setter (getter F) (setter F)\<close> and validG: \<open>valid_getter_setter (getter G) (setter G)\<close>
+    by (metis assms getter_of_register_from_getter_setter register_def setter_of_register_from_getter_setter)+
+  then have \<open>valid_getter_setter (\<lambda>m. (getter F m, getter G m)) (\<lambda>(a, b) m. setter F a (setter G b m))\<close>
+    apply (simp add: valid_getter_setter_def)
+    by (metis (mono_tags, lifting) assms comp_eq_dest_lhs compat compatible_setter)
   then show ?thesis
-    by (auto simp: register_pair_def gsF gsG register_def)
+    by (auto simp: register_pair_def register_def)
 qed
 
 end
