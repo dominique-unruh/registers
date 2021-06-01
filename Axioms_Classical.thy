@@ -10,7 +10,7 @@ section \<open>Classical instantiation of registerss\<close>
 *)
 
 theory Axioms_Classical
-  imports Main HOL.Map
+  imports Main
 begin
 
 type_synonym 'a update = \<open>'a \<rightharpoonup> 'a\<close>
@@ -61,9 +61,6 @@ proof -
   then show "preregister (G \<circ> F)"
     using preregister_def by blast
 qed
-
-definition rel_prod :: "('a*'b) set => ('c*'d) set => (('a*'c) * ('b*'d)) set" where
-  "rel_prod a b = (\<lambda>((a,b),(c,d)). ((a,c),(b,d))) ` (a \<times> b)"
 
 definition tensor_update :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> where
   \<open>tensor_update a b m = (case a (fst m) of None \<Rightarrow> None | Some x \<Rightarrow> (case b (snd m) of None \<Rightarrow> None | Some y \<Rightarrow> Some (x,y)))\<close>

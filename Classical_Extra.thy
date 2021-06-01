@@ -1,10 +1,8 @@
 section \<open>Derived facts about classical registers\<close>
 
 theory Classical_Extra
-  imports Laws_Classical
+  imports Laws_Classical Misc
 begin
-
-no_notation m_inv ("inv\<index> _" [81] 80)
 
 lemma register_from_getter_setter_of_getter_setter[simp]: \<open>register_from_getter_setter (getter F) (setter F) = F\<close> if \<open>register F\<close>
   by (metis getter_of_register_from_getter_setter register_def setter_of_register_from_getter_setter that)

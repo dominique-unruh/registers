@@ -11,6 +11,7 @@ begin
 
 \<comment> \<open>Remove notation that collides with the notation we use\<close>
 no_notation Order.top ("\<top>\<index>")
+no_notation m_inv ("inv\<index> _" [81] 80)
 unbundle no_vec_syntax
 unbundle no_inner_syntax
 

@@ -1,10 +1,8 @@
 section \<open>Generic laws about registers\<close>
 
 theory Laws
-  imports Axioms "HOL-Library.Rewrite" Misc
+  imports Axioms
 begin
-
-no_notation Group.mult (infixl "\<otimes>\<index>" 70)
 
 text \<open>This notation is only used inside this file\<close>
 notation comp_update (infixl "*\<^sub>u" 55)
