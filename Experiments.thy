@@ -61,7 +61,6 @@ lemma ortho_isometry:
 proof -
   have [simp]: \<open>b \<in> closure (cspan B)\<close> for b
     using spanB apply transfer by simp
-
   have *: \<open>cinner (U* *\<^sub>V U *\<^sub>V \<psi>) \<phi> = cinner \<psi> \<phi>\<close> if \<open>\<psi>\<in>B\<close> and \<open>\<phi>\<in>B\<close> for \<psi> \<phi>
     by (simp add: adjoint_I orthoU that(1) that(2))
   have *: \<open>cinner (U* *\<^sub>V U *\<^sub>V \<psi>) \<phi> = cinner \<psi> \<phi>\<close> if \<open>\<psi>\<in>B\<close> for \<psi> \<phi>
@@ -306,7 +305,7 @@ lemma register_decomposition:
   fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
   shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_basis) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
-              (\<forall>\<theta>. \<Phi> \<theta> = U o\<^sub>C\<^sub>L (\<theta> \<otimes>\<^sub>o idOp) o\<^sub>C\<^sub>L U*)\<close>
+              (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o idOp))\<close>
 proof -
   note [[simproc del: compatibility_warn]]
   fix \<xi>0 :: 'a
@@ -590,77 +589,148 @@ proof -
   qed
 
   with \<open>unitary U\<close> show ?thesis
-    by auto
+    by (auto simp: sandwich_def)
 qed
 
 lemma register_decomposition_converse: 
   assumes \<open>unitary U\<close>
-  shows \<open>register (\<lambda>x. U o\<^sub>C\<^sub>L (idOp \<otimes>\<^sub>o x) o\<^sub>C\<^sub>L U*)\<close>
-proof (unfold register_def, intro conjI allI)
-  note [[simproc del: Laws_Quantum.compatibility_warn]]
-  define F where \<open>F x = U o\<^sub>C\<^sub>L (idOp \<otimes>\<^sub>o x) o\<^sub>C\<^sub>L U*\<close> for x
-  show \<open>clinear F\<close>
-    by (auto intro!: clinearI simp: F_def cblinfun_apply_dist1 cblinfun_apply_dist2
-                                    tensor_op_right_add tensor_op_scaleC_right)
-  show \<open>F idOp = idOp\<close>
-    using Axioms_Quantum.register_id F_def assms by fastforce
-  show \<open>F (a o\<^sub>C\<^sub>L b) = F a o\<^sub>C\<^sub>L F b\<close> for a b
-    by (metis (no_types, lifting) F_def \<open>unitary U\<close> adjUU comp_tensor_op lift_cblinfun_comp(2) times_idOp1 unitary_isometry)
-  show \<open>F (a*) = F a*\<close> for a
-    by (simp add: F_def lift_cblinfun_comp(2) tensor_op_adjoint)
+  shows \<open>register (\<lambda>x. sandwich U (idOp \<otimes>\<^sub>o x))\<close>
+  using _ unitary_sandwich_register apply (rule register_comp[unfolded o_def])
+  using assms by auto
+
+lemma swap_swap: \<open>swap o swap = id\<close>
+  by (metis Laws_Quantum.swap_def compatible_Snd_Fst pair_Fst_Snd pair_o_swap)
+
+definition \<open>iso_register F \<longleftrightarrow> register F \<and> (\<exists>G. register G \<and> F o G = id \<and> G o F = id)\<close>
+
+lemma iso_registerI:
+  assumes \<open>register F\<close> \<open>register G\<close> \<open>F o G = id\<close> \<open>G o F = id\<close>
+  shows \<open>iso_register F\<close>
+  using assms(1) assms(2) assms(3) assms(4) iso_register_def by blast
+
+(* definition \<open>equivalent_registers F G \<longleftrightarrow> (register F \<and> (\<exists>I. iso_register I \<and> F o I = G))\<close>
+
+lemma equivalent_registers_sym:
+  assumes \<open>equivalent_registers F G\<close>
+  shows \<open>equivalent_registers G F\<close>
+  sorry *)
+
+definition \<open>complements F G \<longleftrightarrow> compatible F G \<and> iso_register (F;G)\<close>
+
+lemma complements_sym: \<open>complements G F\<close> if \<open>complements F G\<close>
+proof -
+  from that have \<open>iso_register (F;G)\<close>
+    by (meson complements_def)
+  then obtain I where [simp]: \<open>register I\<close> and \<open>(F;G) o I = id\<close> and \<open>I o (F;G) = id\<close>
+    using iso_register_def by blast
+(*   from \<open>iso_register I\<close> obtain I'
+    where II'[simp]: \<open>I o I' = id\<close> and I'I[simp]: \<open>I' o I = id\<close> and [simp]: \<open>register I'\<close>
+    using iso_register_def by blastx *)
+  have \<open>register (swap o I)\<close>
+    using \<open>register I\<close> register_comp register_swap by blast
+(*   have \<open>iso_register (swap o I)\<close>
+    apply (rule iso_registerI[where G=\<open>I' o swap\<close>])
+       apply auto[2]
+    using II'[THEN fun_cong] I'I swap_swap[where 'a='c and 'b='a, THEN fun_cong]
+      swap_swap[where 'a='a and 'b='c, THEN fun_cong]
+    by (simp_all add: o_def id_def) *)
+  moreover have \<open>(G;F) o (swap o I) = id\<close>
+    by (metis (no_types, hide_lams) \<open>(F;G) \<circ> I = id\<close> compatible_def complements_def pair_o_swap rewriteL_comp_comp that)
+  moreover have \<open>(swap o I) o (G;F) = id\<close>
+    by (metis (no_types, hide_lams) Experiments.swap_swap \<open>I \<circ> (F;G) = id\<close> calculation(2) comp_def eq_id_iff)
+  ultimately have \<open>iso_register (G;F)\<close>
+    using compatible_sym complements_def iso_registerI pair_is_register that by blast
+  then show \<open>complements G F\<close>
+    by (meson compatible_sym complements_def that)
 qed
 
-
-definition \<open>iso_register F \<longleftrightarrow> (\<exists>G. F o G = id \<and> G o F = id)\<close>
-
-definition \<open>equivalent_register F G \<longleftrightarrow> (register F \<and> (\<exists>I. iso_register I \<and> F o I = G))\<close>
-
-
-lemma register_complement:
+lemma complement_exists:
   fixes F :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes \<open>register F\<close>
-  shows \<open>\<exists>G :: ('a, 'b) complement_basis update \<Rightarrow> 'b update.
-              register G \<and> compatible F G \<and> equivalent_register (F;G) id\<close>
+  shows \<open>\<exists>G :: ('a, 'b) complement_basis update \<Rightarrow> 'b update. complements F G\<close>
 proof -
   note [[simproc del: Laws_Quantum.compatibility_warn]]
   obtain U :: \<open>('a \<times> ('a, 'b) complement_basis) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
-    where [simp]: "unitary U" and F: \<open>F a = U o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o idOp) o\<^sub>C\<^sub>L U*\<close> for a
+    where [simp]: "unitary U" and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o idOp)\<close> for a
     apply atomize_elim using assms by (rule register_decomposition)
-  define G :: \<open>(('a, 'b) complement_basis) update \<Rightarrow> 'b update\<close> where \<open>G b = U o\<^sub>C\<^sub>L (idOp \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L U*\<close> for b
+  define G :: \<open>(('a, 'b) complement_basis) update \<Rightarrow> 'b update\<close> where \<open>G b = sandwich U (idOp \<otimes>\<^sub>o b)\<close> for b
   have [simp]: \<open>register G\<close>
     unfolding G_def apply (rule register_decomposition_converse) by simp
-  moreover 
   have \<open>F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close> for a b
   proof -
-    have \<open>F a o\<^sub>C\<^sub>L G b = U o\<^sub>C\<^sub>L a \<otimes>\<^sub>o b o\<^sub>C\<^sub>L U*\<close>
-      apply (auto simp: F G_def)
+    have \<open>F a o\<^sub>C\<^sub>L G b = sandwich U (a \<otimes>\<^sub>o b)\<close>
+      apply (auto simp: F G_def sandwich_def)
       by (metis (no_types, lifting) \<open>unitary U\<close> adjUU assoc_left(1) comp_tensor_op times_idOp1 times_idOp2 unitary_isometry)
-    moreover have \<open>G b o\<^sub>C\<^sub>L F a = U o\<^sub>C\<^sub>L a \<otimes>\<^sub>o b o\<^sub>C\<^sub>L U*\<close>
-      apply (auto simp: F G_def)
+    moreover have \<open>G b o\<^sub>C\<^sub>L F a = sandwich U (a \<otimes>\<^sub>o b)\<close>
+      apply (auto simp: F G_def sandwich_def)
       by (metis (no_types, lifting) \<open>unitary U\<close> adjUU assoc_left(1) comp_tensor_op times_idOp1 times_idOp2 unitary_isometry)
     ultimately show ?thesis by simp
   qed
   then have [simp]: \<open>compatible F G\<close>
     by (auto simp: compatible_def \<open>register F\<close> \<open>register G\<close>)
-  moreover have \<open>equivalent_register (F;G) id\<close>
+  moreover have \<open>iso_register (F;G)\<close>
   proof -
-    have \<open>(F;G) (a \<otimes>\<^sub>o b) = U o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L U*\<close> for a b
-      apply (auto simp: register_pair_apply F G_def)
+    have \<open>(F;G) (a \<otimes>\<^sub>o b) = sandwich U (a \<otimes>\<^sub>o b)\<close> for a b
+      apply (auto simp: register_pair_apply F G_def sandwich_def)
       by (metis (no_types, lifting) \<open>unitary U\<close> adjUU assoc_left(1) comp_tensor_op times_idOp1 times_idOp2 unitary_isometry)
-    then have FG: \<open>(F;G) = (\<lambda>x. U o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L U*)\<close>
+    then have FG: \<open>(F;G) = sandwich U\<close>
       apply (rule tensor_extensionality[rotated -1])
       by (simp_all add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
-    define I where \<open>I x = U* o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L U\<close> for x
-    have \<open>I o (F;G) = id\<close> and \<open>(F;G) o I = id\<close>
-      apply (auto intro!:ext simp: I_def[abs_def] FG)
+    define I where \<open>I = sandwich (U*)\<close> for x
+    have [simp]: \<open>register I\<close>
+      by (simp add: I_def unitary_sandwich_register)
+    have \<open>I o (F;G) = id\<close> and FGI: \<open>(F;G) o I = id\<close>
+      apply (auto intro!:ext simp: I_def[abs_def] FG sandwich_def)
       apply (metis (no_types, hide_lams) \<open>unitary U\<close> adjUU assoc_left(1) times_idOp1 times_idOp2 unitary_isometry)
       by (metis (no_types, lifting) UadjU \<open>unitary U\<close> assoc_left(1) times_idOp1 times_idOp2)
-    then show ?thesis
-      using \<open>compatible F G\<close> equivalent_register_def iso_register_def pair_is_register by blast
+    then show \<open>iso_register (F;G)\<close>
+      by (auto intro!: iso_registerI)
   qed
   ultimately show ?thesis
-    apply (rule_tac exI[of _ G]) by auto
+    apply (rule_tac exI[of _ G]) by (auto simp: complements_def)
 qed
 
+definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
+
+lemma commutant_exchange:
+  assumes \<open>iso_register F\<close>
+  shows \<open>commutant (F ` X) = F ` commutant X\<close>
+  sorry
+
+lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o idOp)) = range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
+  sorry
+
+lemma complement_range:
+  assumes \<open>complements F G\<close>
+  shows \<open>range G = commutant (range F)\<close>
+proof -
+  have [simp]: \<open>register F\<close> \<open>register G\<close>
+    using assms compatible_def complements_def by metis+
+  have [simp]: \<open>iso_register (F;G)\<close>
+    using assms complements_def by blast
+  have [simp]: \<open>(F;G) (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close> for a b
+    using Laws_Quantum.register_pair_apply assms complements_def by blast
+  have [simp]: \<open>range F = (F;G) ` range (\<lambda>a. a \<otimes>\<^sub>o idOp)\<close>
+    by force
+  have [simp]: \<open>range G = (F;G) ` range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
+    by force
+  show \<open>range G = commutant (range F)\<close>
+    by (simp add: commutant_exchange commutant_tensor1)
+qed
+
+(* I think the only quantum specific step here so far is the use of commutant_tensor1 *)
+lemma complement_unique:
+  assumes "complements F G"
+  assumes "complements F H"
+  shows "\<exists>I. iso_register I \<and> (F;G) o I = (F;H)"
+proof -
+  from assms
+  have \<open>range G = range H\<close>
+    by (metis complement_range)
+
+
+  show ?thesis
+    sorry
+qed
 
 end
