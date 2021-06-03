@@ -289,16 +289,32 @@ lemma cblinfun_apply_clinear[simp]: \<open>clinear ((*\<^sub>V) A)\<close>
 
 (* TODO move  *)
 lemma isomorphism_cdim_eqI:
-  assumes \<open>clinear f\<close>
-  assumes \<open>bij_betw f S T\<close>
-  assumes \<open>csubspace S\<close>
+  assumes lin_f: \<open>clinear f\<close>
+  (* assumes bij_f: \<open>bij_betw f S T\<close> *)
+  assumes inj_f: \<open>inj_on f (cspan S)\<close>
+  (* assumes \<open>csubspace S\<close> *)
+  assumes im_S: \<open>f ` S = T\<close>
   shows \<open>cdim S = cdim T\<close>
 proof -
-  show ?thesis
-    sorry
+  obtain SB where SB_span: "cspan SB = cspan S" and indep_SB: \<open>cindependent SB\<close> (*  and \<open>SB \<subseteq> S\<close> *)
+    by (metis complex_vector.basis_exists complex_vector.span_mono complex_vector.span_span subset_antisym)
+  with lin_f inj_f have indep_fSB: \<open>cindependent (f ` SB)\<close>
+    apply (rule_tac complex_vector.linear_independent_injective_image)
+    by auto
+  from lin_f have \<open>cspan (f ` SB) = f ` cspan SB\<close>
+    by (meson complex_vector.linear_span_image)
+  also from SB_span lin_f have \<open>\<dots> = cspan T\<close>
+    by (metis complex_vector.linear_span_image im_S)
+  finally have \<open>cdim T = card (f ` SB)\<close>
+    using indep_fSB complex_vector.dim_eq_card by blast
+  also have \<open>\<dots> = card SB\<close>
+    apply (rule card_image) using inj_f
+    by (metis SB_span complex_vector.linear_inj_on_span_iff_independent_image indep_fSB lin_f)
+  also have \<open>\<dots> = cdim S\<close>
+    using indep_SB SB_span
+    by (metis complex_vector.dim_eq_card)
+  finally show ?thesis by simp
 qed
-
-lemmas cindependent_ket[simp]
 
 (* https://mathoverflow.net/a/390180/101775 *)
 lemma register_decomposition:
@@ -440,8 +456,9 @@ proof -
       apply (rule bij_betwI[where g=\<open>Si_to_Sj j i\<close>])
       using S2S S2S2S by (auto intro!: funcsetI)
     have \<open>cdim (space_as_set (S i)) = cdim (space_as_set (S j))\<close>
-      using lin bij apply (rule isomorphism_cdim_eqI[where f=\<open>Si_to_Sj i j\<close>])
-      by simp
+      using lin apply (rule isomorphism_cdim_eqI[where f=\<open>Si_to_Sj i j\<close>])
+      using bij apply (auto simp: bij_betw_def)
+      by (metis complex_vector.span_span cspanB)
     then show ?thesis
       by (metis complex_vector.dim_span_eq_card_independent cspanB indepB)
   qed
@@ -470,7 +487,7 @@ proof -
     apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>k. u (inv ket k))\<close>])
     apply (subst cblinfun_extension_exists)
       apply (rule cblinfun_extension_exists_finite)
-    by (auto simp add: inj_ket)
+    by (auto simp add: inj_ket cindependent_ket)
 
   define eqa where \<open>eqa a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: 'a
   define eqc where \<open>eqc a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>('a,'b) complement_basis\<close>
@@ -773,8 +790,71 @@ proof (rule Set.set_eqI)
     by -
 qed
 
+lemma cinner_ket_equal:
+  assumes \<open>\<And>i. cinner (ket i) \<psi> = cinner (ket i) \<phi>\<close>
+  shows \<open>\<psi> = \<phi>\<close>
+  apply (rule cinner_extensionality')
+  apply (rule equal_span_applyOpSpace[where A="cinner \<psi>" and G="range ket"])
+  apply (auto simp: ket_ell2_span bounded_clinear_cinner_right)
+  by (metis assms cinner_commute)
+
 lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o idOp)) = range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
-  sorry
+proof (rule Set.set_eqI, rule iffI)
+  fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
+  fix \<gamma> :: 'a
+  assume \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o idOp))\<close>
+  then have comm: \<open>(a \<otimes>\<^sub>o idOp) *\<^sub>V x *\<^sub>V \<psi> = x *\<^sub>V (a \<otimes>\<^sub>o idOp) *\<^sub>V \<psi>\<close> for a \<psi>
+    by (metis (mono_tags, lifting) commutant_def mem_Collect_eq rangeI times_applyOp)
+
+  obtain x' where x': \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close> for j l
+  proof atomize_elim
+    obtain \<psi> where \<psi>: \<open>cinner (ket j) (\<psi> l) = cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l))\<close> for l j
+      apply (atomize_elim, rule choice, rule allI)
+      apply (rule_tac x=\<open>Abs_ell2 (\<lambda>j. cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l)))\<close> in exI)
+      by (simp add: cinner_ket_left Abs_ell2_inverse)
+    obtain x' where \<open>x' *\<^sub>V ket l = \<psi> l\<close> for l
+      apply atomize_elim
+      apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>l. \<psi> (inv ket l))\<close>])
+      apply (subst cblinfun_extension_exists)
+        apply (rule cblinfun_extension_exists_finite)
+      by (auto simp add: inj_ket cindependent_ket)
+    with \<psi> have \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l))\<close> for j l
+      by auto
+    then show \<open>\<exists>x'. \<forall>j l. cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l))\<close>
+      by auto
+  qed
+
+  have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l)) = cinner (ket (i,j)) ((idOp \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close> for i j k l
+  proof -
+    (* fix i k :: 'a and j l :: 'b *)
+    have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l))
+        = cinner ((butterket i \<gamma> \<otimes>\<^sub>o idOp) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o idOp) *\<^sub>V ket (\<gamma>,l))\<close>
+      by (auto simp: tensor_op_ket)
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) ((butterket \<gamma> i \<otimes>\<^sub>o idOp) *\<^sub>V x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o idOp) *\<^sub>V ket (\<gamma>,l))\<close>
+      by (metis (no_types, lifting) adjoint_I butterfly_adjoint idOp_adjoint tensor_op_adjoint)
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterket \<gamma> i \<otimes>\<^sub>o idOp o\<^sub>C\<^sub>L butterket k \<gamma> \<otimes>\<^sub>o idOp) *\<^sub>V ket (\<gamma>,l))\<close>
+      unfolding comm by (simp add: times_applyOp)
+    also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close>
+      by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left)
+    also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket j) (x' *\<^sub>V ket l)\<close>
+      by (simp add: x')
+    also have \<open>\<dots> = cinner (ket (i,j)) ((idOp \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close>
+      apply (simp add: tensor_op_ket)
+      by (simp flip: tensor_ell2_ket)
+    finally show ?thesis by -
+  qed
+  then have \<open>x = (idOp \<otimes>\<^sub>o x')\<close>
+    by (auto intro!: equal_ket cinner_ket_equal)
+  then show \<open>x \<in> range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
+    by auto
+next
+  fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
+  assume \<open>x \<in> range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
+  then obtain b where x: \<open>x = idOp \<otimes>\<^sub>o b\<close>
+    by auto
+  then show \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o idOp))\<close>
+    by (auto simp: x commutant_def comp_tensor_op)
+qed
 
 lemma complement_range:
   assumes \<open>complements F G\<close>
