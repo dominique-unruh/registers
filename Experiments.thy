@@ -598,6 +598,62 @@ lemma register_decomposition_converse:
   using _ unitary_sandwich_register apply (rule register_comp[unfolded o_def])
   using assms by auto
 
+lemma idOp_not_0[simp]: \<open>(idOp :: 'a::{complex_normed_vector, not_singleton} \<Rightarrow>\<^sub>C\<^sub>L _) \<noteq> 0\<close>
+  by (metis ccsubspace_top_not_bot kernel_0 kernel_id zero_ccsubspace_def)
+
+lemma tensor_ell2_nonzero: \<open>a \<otimes>\<^sub>s b \<noteq> 0\<close> if \<open>a \<noteq> 0\<close> and \<open>b \<noteq> 0\<close>
+  apply (use that in transfer)
+  apply auto
+  by (metis mult_eq_0_iff old.prod.case)
+
+lemma tensor_op_nonzero:
+  fixes a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+  assumes \<open>a \<noteq> 0\<close> and \<open>b \<noteq> 0\<close>
+  shows \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
+proof -
+  from \<open>a \<noteq> 0\<close> obtain i where i: \<open>a *\<^sub>V ket i \<noteq> 0\<close>
+    by (metis applyOp0 equal_ket)
+  from \<open>b \<noteq> 0\<close> obtain j where j: \<open>b *\<^sub>V ket j \<noteq> 0\<close>
+    by (metis applyOp0 equal_ket)
+  from i j have ijneq0: \<open>(a *\<^sub>V ket i) \<otimes>\<^sub>s (b *\<^sub>V ket j) \<noteq> 0\<close>
+    by (simp add: tensor_ell2_nonzero)
+  have \<open>(a *\<^sub>V ket i) \<otimes>\<^sub>s (b *\<^sub>V ket j) = (a \<otimes>\<^sub>o b) *\<^sub>V ket (i,j)\<close>
+    by (simp add: tensor_op_ket)
+  with ijneq0 show \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
+    by force
+qed
+
+lemma inj_tensor_left: \<open>inj (\<lambda>a::'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2. a \<otimes>\<^sub>o b)\<close> if \<open>b \<noteq> 0\<close> for b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+proof (rule injI, rule ccontr)
+  fix x y :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close>
+  assume eq: \<open>x \<otimes>\<^sub>o b = y \<otimes>\<^sub>o b\<close>
+  assume neq: \<open>x \<noteq> y\<close>
+  define a where \<open>a = x - y\<close>
+  from neq a_def have neq0: \<open>a \<noteq> 0\<close>
+    by auto
+  with \<open>b \<noteq> 0\<close> have \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
+    by (simp add: tensor_op_nonzero)
+  then have \<open>x \<otimes>\<^sub>o b \<noteq> y \<otimes>\<^sub>o b\<close>
+    unfolding a_def
+    by (metis add_cancel_left_left diff_add_cancel tensor_op_left_add) 
+  with eq show False
+    by auto
+qed
+
+lemma register_inj: \<open>inj F\<close> if \<open>register F\<close>
+proof -
+  obtain U :: \<open>('a \<times> ('a, 'b) complement_basis) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+    where \<open>unitary U\<close> and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o idOp)\<close> for a
+    apply atomize_elim using \<open>register F\<close> by (rule register_decomposition)
+  have \<open>inj (sandwich U)\<close>
+    by (smt (verit, best) \<open>unitary U\<close> assoc_left(1) inj_onI sandwich_def times_idOp1 times_idOp2 unitary_def)
+  moreover have \<open>inj (\<lambda>a::'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L _. a \<otimes>\<^sub>o idOp)\<close>
+    by (rule inj_tensor_left, simp)
+  ultimately show \<open>inj F\<close>
+    unfolding F
+    by (smt (z3) inj_def) 
+qed
+
 lemma swap_swap: \<open>swap o swap = id\<close>
   by (metis Laws_Quantum.swap_def compatible_Snd_Fst pair_Fst_Snd pair_o_swap)
 
@@ -613,7 +669,7 @@ lemma iso_registerI:
 lemma equivalent_registers_sym:
   assumes \<open>equivalent_registers F G\<close>
   shows \<open>equivalent_registers G F\<close>
-  sorry *)
+   *)
 
 definition \<open>complements F G \<longleftrightarrow> compatible F G \<and> iso_register (F;G)\<close>
 
@@ -693,9 +749,29 @@ qed
 definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
 
 lemma commutant_exchange:
+  fixes F :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes \<open>iso_register F\<close>
   shows \<open>commutant (F ` X) = F ` commutant X\<close>
-  sorry
+proof (rule Set.set_eqI)
+  fix x :: \<open>'b update\<close>
+  from assms
+  obtain G where \<open>F o G = id\<close> and \<open>G o F = id\<close> and [simp]: \<open>register G\<close>
+    using iso_register_def by blast
+  from assms have [simp]: \<open>register F\<close>
+    using iso_register_def by blast
+  have \<open>x \<in> commutant (F ` X) \<longleftrightarrow> (\<forall>y \<in> F ` X. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x)\<close>
+    by (simp add: commutant_def)
+  also have \<open>\<dots> \<longleftrightarrow> (\<forall>y \<in> F ` X. G x o\<^sub>C\<^sub>L G y = G y o\<^sub>C\<^sub>L G x)\<close>
+    by (metis (no_types, hide_lams) \<open>F \<circ> G = id\<close> \<open>G o F = id\<close> \<open>register G\<close> comp_def eq_id_iff register_def)
+  also have \<open>\<dots> \<longleftrightarrow> (\<forall>y \<in> X. G x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L G x)\<close>
+    by (simp add: \<open>G \<circ> F = id\<close> pointfree_idE)
+  also have \<open>\<dots> \<longleftrightarrow> G x \<in> commutant X\<close>
+    by (simp add: commutant_def)
+  also have \<open>\<dots> \<longleftrightarrow> x \<in> F ` commutant X\<close>
+    by (metis (no_types, hide_lams) \<open>G \<circ> F = id\<close> \<open>F \<circ> G = id\<close> image_iff pointfree_idE)
+  finally show \<open>x \<in> commutant (F ` X) \<longleftrightarrow> x \<in> F ` commutant X\<close>
+    by -
+qed
 
 lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o idOp)) = range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
   sorry
@@ -718,7 +794,156 @@ proof -
     by (simp add: commutant_exchange commutant_tensor1)
 qed
 
-(* I think the only quantum specific step here so far is the use of commutant_tensor1 *)
+(* (* TODO not used? *)
+lemma register_isometric: \<open>norm (F x) = norm x\<close> if \<open>register F\<close>
+   *)
+
+lemma register_adjoint: "F (a*) = (F a)*" if \<open>register F\<close>
+  using register_def that by blast
+
+lemma same_range_equivalent:
+  fixes F :: \<open>'a::finite update \<Rightarrow> 'c::finite update\<close> and G :: \<open>'b::finite update \<Rightarrow> 'c::finite update\<close>
+  assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
+  assumes \<open>range F = range G\<close>
+  shows \<open>\<exists>I. iso_register I \<and> F o I = G\<close>
+proof -
+  have G_rangeF[simp]: \<open>G x \<in> range F\<close> for x
+    by (simp add: assms)
+  have F_rangeG[simp]: \<open>F x \<in> range G\<close> for x
+    by (simp add: assms(3)[symmetric])
+  have [simp]: \<open>inj F\<close> and [simp]: \<open>inj G\<close>
+    by (simp_all add: register_inj)
+  have [simp]: \<open>clinear F\<close> \<open>clinear G\<close>
+    by simp_all
+  define I J where \<open>I x = inv F (G x)\<close> and \<open>J y = inv G (F y)\<close> for x y
+  have addI: \<open>I (x + y) = I x + I y\<close> for x y
+    unfolding I_def
+    apply (rule injD[OF \<open>inj F\<close>])
+    apply (subst complex_vector.linear_add[OF \<open>clinear F\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)+
+    by (simp add: complex_vector.linear_add)
+  have addJ: \<open>J (x + y) = J x + J y\<close> for x y
+    unfolding J_def
+    apply (rule injD[OF \<open>inj G\<close>])
+    apply (subst complex_vector.linear_add[OF \<open>clinear G\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
+    by (simp add: complex_vector.linear_add)
+  have scaleI: \<open>I (r *\<^sub>C x) = r *\<^sub>C I x\<close> for r x
+    unfolding I_def
+    apply (rule injD[OF \<open>inj F\<close>])
+    apply (subst complex_vector.linear_scale[OF \<open>clinear F\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)+
+    by (simp add: complex_vector.linear_scale)
+  have scaleJ: \<open>J (r *\<^sub>C x) = r *\<^sub>C J x\<close> for r x
+    unfolding J_def
+    apply (rule injD[OF \<open>inj G\<close>])
+    apply (subst complex_vector.linear_scale[OF \<open>clinear G\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
+    by (simp add: complex_vector.linear_scale)
+(*  have norm: \<open>norm (I x) = norm x\<close> for x
+  proof -
+    have \<open>norm (I x) = norm (F (I x))\<close>
+      by (simp add: register_isometric)
+    also have \<open>\<dots> = norm (G x)\<close>
+    also have \<open>\<dots> = norm x\<close>
+      by (simp add: register_isometric)
+    finally show ?thesis by -
+  qed *)
+  have unitalI: \<open>I idOp = idOp\<close>
+    unfolding I_def
+    apply (rule injD[OF \<open>inj F\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=F])
+     apply auto
+    by (metis Axioms_Quantum.register_id G_rangeF assms(2))
+  have unitalJ: \<open>J idOp = idOp\<close>
+    unfolding J_def
+    apply (rule injD[OF \<open>inj G\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=G])
+     apply auto
+    by (metis Axioms_Quantum.register_id F_rangeG assms(1))
+  have multI: \<open>I (a o\<^sub>C\<^sub>L b) = I a o\<^sub>C\<^sub>L I b\<close> for a b
+    unfolding I_def
+    apply (rule injD[OF \<open>inj F\<close>])
+    apply (subst register_mult[symmetric, OF \<open>register F\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)+
+    by (simp add: register_mult)
+  have multJ: \<open>J (a o\<^sub>C\<^sub>L b) = J a o\<^sub>C\<^sub>L J b\<close> for a b
+    unfolding J_def
+    apply (rule injD[OF \<open>inj G\<close>])
+    apply (subst register_mult[symmetric, OF \<open>register G\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
+    by (simp add: register_mult)
+  have adjI: \<open>I (a*) = (I a)*\<close> for a
+    unfolding I_def
+    apply (rule injD[OF \<open>inj F\<close>])
+    apply (subst register_adjoint[OF \<open>register F\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)+
+    using assms(2) register_adjoint by blast
+  have adjJ: \<open>J (a*) = (J a)*\<close> for a
+    unfolding J_def
+    apply (rule injD[OF \<open>inj G\<close>])
+    apply (subst register_adjoint[OF \<open>register G\<close>])
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
+    using assms(1) register_adjoint by blast
+
+  from addI scaleI unitalI multI adjI
+  have \<open>register I\<close>
+    unfolding register_def by (auto intro!: clinearI)
+  from addJ scaleJ unitalJ multJ adjJ
+  have \<open>register J\<close>
+    unfolding register_def by (auto intro!: clinearI)
+
+  have \<open>I o J = id\<close>
+    unfolding I_def J_def o_def
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)
+    apply (subst Hilbert_Choice.inv_f_f[OF \<open>inj F\<close>])
+    by auto
+  have \<open>J o I = id\<close>
+    unfolding I_def J_def o_def
+    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)
+    apply (subst Hilbert_Choice.inv_f_f[OF \<open>inj G\<close>])
+    by auto
+
+  from \<open>I o J = id\<close> \<open>J o I = id\<close> \<open>register I\<close> \<open>register J\<close>
+  have \<open>iso_register I\<close>
+    using iso_register_def by blast
+
+  have \<open>F o I = G\<close>
+    unfolding I_def o_def
+    by (subst Hilbert_Choice.f_inv_into_f[where f=F], auto)
+
+  with \<open>iso_register I\<close> show ?thesis
+    by auto
+qed
+
+lemma iso_register_id[simp]: \<open>iso_register id\<close>
+  by (simp add: iso_register_def)
+
+lemma tensor_register_distrib: \<open>(F \<otimes>\<^sub>r G) o (F' \<otimes>\<^sub>r G') = (F o F') \<otimes>\<^sub>r (G o G')\<close> 
+  if [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
+  apply (rule tensor_extensionality)
+  by (auto simp: register_tensor_is_hom)
+
+lemma register_tensor_id[simp]: \<open>id \<otimes>\<^sub>r id = id\<close>
+  apply (rule tensor_extensionality)
+  by (auto simp add: register_tensor_is_hom)
+
+lemma iso_register_tensor[simp]: \<open>iso_register (F \<otimes>\<^sub>r G)\<close> if \<open>iso_register F\<close> and \<open>iso_register G\<close>
+proof -
+  from that have [simp]: \<open>register F\<close> \<open>register G\<close>
+    using iso_register_def by blast+
+  from \<open>iso_register F\<close>
+  obtain F' where [simp]: \<open>register F'\<close> \<open>F o F' = id\<close> \<open>F' o F = id\<close>
+    using iso_register_def by blast
+  from \<open>iso_register G\<close>
+  obtain G' where [simp]: \<open>register G'\<close> \<open>G o G' = id\<close> \<open>G' o G = id\<close>
+    using iso_register_def by blast
+  show ?thesis
+    apply (rule iso_registerI[where G=\<open>F' \<otimes>\<^sub>r G'\<close>])
+    by (auto simp add: register_tensor_is_hom tensor_register_distrib)
+qed
+
+(* I think the only quantum specific step here so far is the use of commutant_tensor1 and same_range_equivalent *)
 lemma complement_unique:
   assumes "complements F G"
   assumes "complements F H"
@@ -727,10 +952,21 @@ proof -
   from assms
   have \<open>range G = range H\<close>
     by (metis complement_range)
-
-
-  show ?thesis
-    sorry
+  then obtain J where [simp]: \<open>iso_register J\<close> and \<open>G o J = H\<close>
+    by (meson assms(1) assms(2) compatible_def complements_def same_range_equivalent)
+(*   have \<open>((F;G) o (id \<otimes>\<^sub>r J)) (idOp \<otimes>\<^sub>o b) = (F;H) (idOp \<otimes>\<^sub>o b)\<close> for b
+    by (metis \<open>G \<circ> J = H\<close> \<open>iso_register J\<close> assms(1) comp_id complements_def iso_register_def pair_o_tensor register_id')
+  moreover have \<open>((F;G) o (id \<otimes>\<^sub>r J)) (a \<otimes>\<^sub>o idOp) = (F;H) (a \<otimes>\<^sub>o idOp)\<close> for a
+    by (metis \<open>G \<circ> J = H\<close> \<open>iso_register J\<close> assms(1) comp_id complements_def iso_register_def pair_o_tensor register_id')
+  ultimately *)
+  (* have \<open>((F;G) o (id \<otimes>\<^sub>r J)) (a \<otimes>\<^sub>o b) = (F;H) (a \<otimes>\<^sub>o b)\<close> for a b
+    by (metis \<open>G \<circ> J = H\<close> \<open>iso_register J\<close> assms(1) comp_id complements_def iso_register_def pair_o_tensor register_id')
+  then *) have \<open>(F;G) o (id \<otimes>\<^sub>r J) = (F;H)\<close>
+    by (metis \<open>G \<circ> J = H\<close> \<open>iso_register J\<close> assms(1) comp_id complements_def iso_register_def pair_o_tensor register_id')
+  moreover have \<open>iso_register (id \<otimes>\<^sub>r J)\<close>
+    by simp
+  ultimately show ?thesis
+    by blast
 qed
 
 end
