@@ -377,8 +377,7 @@ proof -
     also have \<open>\<dots> = cinner (P' j *\<^sub>V P' i *\<^sub>V x') y'\<close>
       by (metis adjoint_I' isProjector_algebraic proj_P')
     also have \<open>\<dots> = cinner (\<Phi> (P j o\<^sub>C\<^sub>L P i) *\<^sub>V x') y'\<close>
-      unfolding P'_def register_mult[OF \<open>register \<Phi>\<close>, symmetric]
-      by (simp add: lift_cblinfun_comp(4))
+      unfolding P'_def register_mult[OF \<open>register \<Phi>\<close>, symmetric] by simp
     also have \<open>\<dots> = cinner (\<Phi> (selfbutterket j o\<^sub>C\<^sub>L selfbutterket i) *\<^sub>V x') y'\<close>
       unfolding P_butter by simp
     also have \<open>\<dots> = cinner (\<Phi> 0 *\<^sub>V x') y'\<close>
@@ -535,7 +534,7 @@ proof -
     have \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta>) *\<^sub>V \<Phi> (butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
       unfolding times_applyOp \<xi>1\<alpha> Uapply u_def by simp
     also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta> o\<^sub>C\<^sub>L butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
-      by (simp add: lift_cblinfun_comp(4) register_mult)
+      by (metis (no_types, lifting) assms butterfly_times lift_cblinfun_comp(4) register_mult)
     also have \<open>\<dots> = U* *\<^sub>V \<Phi> (eqa \<eta> \<xi>1 *\<^sub>C butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
       by (simp add: eqa_def ket_Kronecker_delta)
     also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>

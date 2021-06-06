@@ -66,7 +66,7 @@ proof (rule antisym)
     from R S have \<open>\<psi> = (R a o\<^sub>C\<^sub>L S b) *\<^sub>V \<psi>\<close>
       by (simp add: times_applyOp)
     also have \<open>\<dots> \<in> space_as_set ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)\<close>
-      by simp
+      apply simp by (metis R S calculation cblinfun_apply_in_image)
     finally show \<open>\<psi> \<in> space_as_set ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)\<close>
       by -
   qed
