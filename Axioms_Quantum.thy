@@ -23,6 +23,7 @@ section \<open>Quantum instantiation of registers\<close>
 
     # Chapter name
     Generic laws about registers \<rightarrow> Generic laws about registers, instantiated quantumly
+    Generic laws about complements \<rightarrow> Generic laws about complements, instantiated quantumly
 *)
 
 theory Axioms_Quantum

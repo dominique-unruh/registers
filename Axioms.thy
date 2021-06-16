@@ -1,4 +1,4 @@
-section \<open>Axioms of registerss\<close>
+section \<open>Axioms of registers\<close>
 
 theory Axioms
   imports Main
