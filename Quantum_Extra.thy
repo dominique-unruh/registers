@@ -15,11 +15,8 @@ no_notation Order.top ("\<top>\<index>")
 unbundle register_notation
 unbundle cblinfun_notation
 
-lemma register_id[simp]: \<open>register (\<lambda>x. x)\<close>
-  by (metis (mono_tags, lifting) complex_vector.module_hom_ident register_def)
-
-lemma register_id'[simp]: \<open>register id\<close>
-  by (simp add: id_def)
+lemma register_id'[simp]: \<open>register (\<lambda>x. x)\<close>
+  using register_id by (simp add: id_def)
 
 lemma register_projector:
   assumes "register F"

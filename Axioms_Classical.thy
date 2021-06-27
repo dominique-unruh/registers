@@ -178,8 +178,13 @@ qed
 definition register :: \<open>('a,'b) preregister \<Rightarrow> bool\<close> where
   \<open>register F \<longleftrightarrow> (\<exists>g s. F = register_from_getter_setter g s \<and> valid_getter_setter g s)\<close>
 
-lemma register_id: \<open>register F \<Longrightarrow> F Some = Some\<close>
+lemma register_of_id: \<open>register F \<Longrightarrow> F Some = Some\<close>
   by (auto simp add: register_def valid_getter_setter_def register_from_getter_setter_def)
+
+lemma register_id: \<open>register id\<close>
+  unfolding register_def
+  apply (rule exI[of _ id], rule exI[of _ \<open>\<lambda>a m. a\<close>])
+  by (auto intro!: ext simp: option.case_eq_if register_from_getter_setter_def valid_getter_setter_def)
 
 lemma register_tensor_left: \<open>register (\<lambda>a. tensor_update a Some)\<close>
   apply (auto simp: register_def)

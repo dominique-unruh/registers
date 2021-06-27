@@ -16,11 +16,12 @@ declare id_update_left[simp]
 declare id_update_right[simp]
 declare register_preregister[simp]
 declare register_comp[simp]
-declare register_id[simp]
+declare register_of_id[simp]
 declare register_tensor_left[simp]
 declare register_tensor_right[simp]
 declare preregister_mult_right[simp]
 declare preregister_mult_left[simp]
+declare register_id[simp]
 (* declare preregister_tensor_left[simp] *)
 (* declare preregister_tensor_right[simp] *)
 
@@ -63,6 +64,7 @@ subsection \<open>Tensor product of homs\<close>
 definition register_tensor  (infixr "\<otimes>\<^sub>r" 70) where
   "register_tensor F G = register_pair (\<lambda>a. tensor_update (F a) id_update) (\<lambda>b. tensor_update id_update (G b))"
 
+(* TODO rename *)
 lemma register_tensor_is_hom: 
   fixes F :: "'a::domain update \<Rightarrow> 'b::domain update" and G :: "'c::domain update \<Rightarrow> 'd::domain update"
   shows "register F \<Longrightarrow> register G \<Longrightarrow> register (F \<otimes>\<^sub>r G)"
@@ -316,6 +318,9 @@ lemma pair_Fst_Snd: \<open>(Fst; Snd) = id\<close>
   apply (rule tensor_extensionality)
   by (simp_all add: register_pair_apply Fst_def Snd_def tensor_update_mult) *)
 
+lemma swap_swap: \<open>swap o swap = id\<close>
+  by (metis swap_def compatible_Snd_Fst pair_Fst_Snd register_comp_pair register_swap swap_o_Fst swap_o_Snd)
+
 lemma register_Fst_register_Snd[simp]: 
   assumes \<open>register F\<close>
   shows \<open>(F o Fst; F o Snd) = F\<close>
@@ -443,6 +448,39 @@ proof (rule tensor_extensionality3)
   show \<open>(((F; G); H) \<circ> assoc') (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h) = (F; (G; H)) (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h)\<close> for f g h
     by (simp add: register_pair_apply assoc'_apply comp_update_assoc)
 qed
+
+subsection \<open>Iso-registers\<close>
+
+definition \<open>iso_register F \<longleftrightarrow> register F \<and> (\<exists>G. register G \<and> F o G = id \<and> G o F = id)\<close>
+  for F :: \<open>_::domain update \<Rightarrow> _::domain update\<close>
+
+lemma iso_registerI:
+  assumes \<open>register F\<close> \<open>register G\<close> \<open>F o G = id\<close> \<open>G o F = id\<close>
+  shows \<open>iso_register F\<close>
+  using assms(1) assms(2) assms(3) assms(4) iso_register_def by blast
+
+lemma iso_register_inv: \<open>iso_register F \<Longrightarrow> iso_register (inv F)\<close>
+  by (metis inv_unique_comp iso_register_def)
+
+lemma iso_register_inv_comp1: \<open>iso_register F \<Longrightarrow> inv F o F = id\<close>
+  using inv_unique_comp iso_register_def by blast
+
+lemma iso_register_inv_comp2: \<open>iso_register F \<Longrightarrow> F o inv F = id\<close>
+  using inv_unique_comp iso_register_def by blast
+
+definition \<open>equivalent_registers F G \<longleftrightarrow> (register F \<and> (\<exists>I. iso_register I \<and> F o I = G))\<close>
+  for F G :: \<open>_::domain update \<Rightarrow> _::domain update\<close>
+
+lemma equivalent_registers_register_left: \<open>equivalent_registers F G \<Longrightarrow> register F\<close>
+  using equivalent_registers_def by auto
+
+lemma equivalent_registers_register_right: \<open>register G\<close> if \<open>equivalent_registers F G\<close>
+  by (metis equivalent_registers_def iso_register_def register_comp that)
+
+lemma equivalent_registers_sym:
+  assumes \<open>equivalent_registers F G\<close>
+  shows \<open>equivalent_registers G F\<close>
+  by (smt (verit) assms comp_id equivalent_registers_def equivalent_registers_register_right fun.map_comp iso_register_def)
 
 subsection \<open>Compatibility simplification\<close>
 

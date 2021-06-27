@@ -50,8 +50,11 @@ definition register :: \<open>('a::finite update \<Rightarrow> 'b::finite update
    \<and> (\<forall>a b. F(a o\<^sub>C\<^sub>L b) = F a o\<^sub>C\<^sub>L F b)
    \<and> (\<forall>a. F (a*) = (F a)*)"
 
-lemma register_id: \<open>register F \<Longrightarrow> F idOp = idOp\<close>
+lemma register_of_id: \<open>register F \<Longrightarrow> F idOp = idOp\<close>
   by (simp add: register_def)
+
+lemma register_id: \<open>register id\<close>
+  by (simp add: register_def complex_vector.module_hom_id)
 
 lemma register_preregister: "register F \<Longrightarrow> clinear F"
   unfolding register_def by simp

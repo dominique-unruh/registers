@@ -43,7 +43,8 @@ axiomatization where
   register_preregister: "register F \<Longrightarrow> preregister F" and
   register_comp: "register F \<Longrightarrow> register G \<Longrightarrow> register (G \<circ> F)"  and
   register_mult: "register F \<Longrightarrow> comp_update (F a) (F b) = F (comp_update a b)" and
-  register_id: \<open>register F \<Longrightarrow> F id_update = id_update\<close>
+  register_of_id: \<open>register F \<Longrightarrow> F id_update = id_update\<close> and
+  register_id: \<open>register (id :: 'a update \<Rightarrow> 'a update)\<close>
 for F :: "'a::domain update \<Rightarrow> 'b::domain update" and G :: "'b update \<Rightarrow> 'c::domain update" 
 
 axiomatization where register_tensor_left: \<open>register (\<lambda>a. tensor_update a id_update)\<close>
