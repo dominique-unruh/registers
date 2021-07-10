@@ -48,7 +48,7 @@ lemma [simp, code]: "mat_of_cblinfun pauliX = matrix_pauliX"
 
 lemma pauliX_adjoint[simp]: "pauliX* = pauliX"
   by eval
-lemma pauliXX[simp]: "pauliX o\<^sub>C\<^sub>L pauliX = idOp"
+lemma pauliXX[simp]: "pauliX o\<^sub>C\<^sub>L pauliX = id_cblinfun"
   by eval
 
 subsubsection \<open>Pauli Z\<close>
@@ -61,7 +61,7 @@ lemma [simp, code]: "mat_of_cblinfun pauliZ = matrix_pauliZ"
   by (auto)
 lemma pauliZ_adjoint[simp]: "pauliZ* = pauliZ"
   by eval
-lemma pauliZZ[simp]: "pauliZ o\<^sub>C\<^sub>L pauliZ = idOp"
+lemma pauliZZ[simp]: "pauliZ o\<^sub>C\<^sub>L pauliZ = id_cblinfun"
   by eval
 
 
@@ -110,17 +110,17 @@ lemma dim_row_Uswap[simp]: "dim_row matrix_Uswap = 4"
   unfolding matrix_Uswap_def by simp
 lemma Uswap_adjoint[simp]: "Uswap* = Uswap"
   by eval
-lemma Uswap_involution[simp]: "Uswap o\<^sub>C\<^sub>L Uswap = idOp"
+lemma Uswap_involution[simp]: "Uswap o\<^sub>C\<^sub>L Uswap = id_cblinfun"
   by eval
 lemma unitary_Uswap[simp]: "unitary Uswap"
   unfolding unitary_def by simp
 
 lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otimes>\<^sub>s s\<close>
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-  apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
+  apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
   apply (simp add: clinear_tensor_ell21)
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-  apply (simp add: cblinfun_apply_add clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
+  apply (simp add: cblinfun.add_right clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
   apply (simp add: clinear_tensor_ell22)
   apply (rule ell2_eq_vec_of_onb_enumI)
   apply (simp add: mat_of_cblinfun_description vec_of_onb_enum_ket)

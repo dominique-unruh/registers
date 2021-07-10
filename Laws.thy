@@ -178,7 +178,9 @@ proof (rule register_eqI[where A=\<open>{(a\<otimes>\<^sub>ub)\<otimes>\<^sub>uc
     using assms(3) by auto
 qed
 
-
+lemma register_tensor_id[simp]: \<open>id \<otimes>\<^sub>r id = id\<close>
+  apply (rule tensor_extensionality)
+  by (auto simp add: register_tensor_is_hom)
 
 subsection \<open>Pairs and compatibility\<close>
 

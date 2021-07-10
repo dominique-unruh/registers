@@ -7,6 +7,9 @@ begin
 no_notation m_inv ("inv\<index> _" [81] 80)
 no_notation Lattice.join (infixl "\<squnion>\<index>" 65)
 
+(* TODO move to BO *)
+declare cblinfun.scaleC_left[simp]
+
 (* TODO move *)
 lemma csubspace_space_as_set[simp]: \<open>csubspace (space_as_set S)\<close>
   by (metis closed_csubspace_def mem_Collect_eq space_as_set)
@@ -53,7 +56,7 @@ lemma surj_isometry_unitary:
   assumes \<open>U *\<^sub>S \<top> = \<top>\<close>
   shows \<open>unitary U\<close>
   using assms
-  by (metis Proj_I Proj_times idOp_adjoint isometry_def times_idOp1 unitary_def unitary_image)
+  by (metis Proj_congruence Proj_on_own_range' cblinfun_compose_id_right id_cblinfun_adjoint isometry_def unitary_def unitary_range)
 
 (* TODO move *)
 lemma ortho_isometry:
@@ -64,18 +67,17 @@ proof -
   have [simp]: \<open>b \<in> closure (cspan B)\<close> for b
     using spanB apply transfer by simp
   have *: \<open>cinner (U* *\<^sub>V U *\<^sub>V \<psi>) \<phi> = cinner \<psi> \<phi>\<close> if \<open>\<psi>\<in>B\<close> and \<open>\<phi>\<in>B\<close> for \<psi> \<phi>
-    by (simp add: adjoint_I orthoU that(1) that(2))
+    by (simp add: cinner_adj_left orthoU that(1) that(2))
   have *: \<open>cinner (U* *\<^sub>V U *\<^sub>V \<psi>) \<phi> = cinner \<psi> \<phi>\<close> if \<open>\<psi>\<in>B\<close> for \<psi> \<phi>
-    apply (rule equal_span_applyOpSpace[where t=\<phi> and G=B])
+    apply (rule bounded_clinear_eq_on[where t=\<phi> and G=B])
     using bounded_clinear_cinner_right *[OF that]
     by auto
   have \<open>U* *\<^sub>V U *\<^sub>V \<phi> = \<phi>\<close> if \<open>\<phi>\<in>B\<close> for \<phi>
-    by (simp add: * cinner_extensionality' that)
-  then have \<open>U* *\<^sub>V U *\<^sub>V \<phi> = \<phi>\<close> for \<phi>
-    by (smt (verit, ccfv_SIG) Bounded_Operators.apply_idOp applyOpSpace_span assms iso_tuple_UNIV_I
-              lift_cblinfun_comp(4) top_ccsubspace.rep_eq)
-  then have \<open>U* o\<^sub>C\<^sub>L U = idOp\<close>
-    by (metis Bounded_Operators.apply_idOp cblinfun_ext lift_cblinfun_comp(4))
+    apply (rule cinner_extensionality)
+    apply (subst cinner_eq_flip)
+    by (simp add: * that)
+  then have \<open>U* o\<^sub>C\<^sub>L U = id_cblinfun\<close>
+    by (metis cblinfun_apply_cblinfun_compose cblinfun_eq_gen_eqI id_cblinfun_apply spanB)
   then show \<open>isometry U\<close>
     using isometry_def by blast
 qed
@@ -197,7 +199,7 @@ proof -
     using 1 by simp
 qed
 
-lemma equal_span_applyOpSpace_antilinear:
+lemma equal_span_cblinfun_image_antilinear:
   fixes A B :: "'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector"
   assumes \<open>bounded_antilinear A\<close> and \<open>bounded_antilinear B\<close> and
     eq: \<open>\<And>x. x \<in> G \<Longrightarrow> A x = B x\<close> and t: \<open>t \<in> closure (cspan G)\<close>
@@ -210,7 +212,7 @@ proof -
     apply (rule bounded_antilinear_o_bounded_antilinear[OF assms(2), unfolded o_def])
     by auto
   have \<open>A (from_conjugate_space u) = B (from_conjugate_space u)\<close> if \<open>u \<in> closure (cspan (to_conjugate_space ` G))\<close> for u
-    using bclA bclB _ that apply (rule equal_span_applyOpSpace[where G=\<open>to_conjugate_space ` G\<close>])
+    using bclA bclB _ that apply (rule bounded_clinear_eq_on[where G=\<open>to_conjugate_space ` G\<close>])
     by (metis eq imageE iso_tuple_UNIV_I to_conjugate_space_inverse)
   moreover have \<open>closure (cspan (to_conjugate_space ` G)) = to_conjugate_space ` closure (cspan G)\<close>
     by (simp add: closure_to_conjugate_space)
@@ -227,10 +229,10 @@ lemma is_orthogonal_closure_cspan:
   shows "is_orthogonal x y"
 proof -
   have *: \<open>cinner x y = 0\<close> if \<open>y \<in> Y\<close> for y
-    using bounded_antilinear_cinner_left apply (rule equal_span_applyOpSpace_antilinear[where G=X])
+    using bounded_antilinear_cinner_left apply (rule equal_span_cblinfun_image_antilinear[where G=X])
     using assms that by auto
   show \<open>cinner x y = 0\<close>
-    using bounded_clinear_cinner_right apply (rule equal_span_applyOpSpace[where G=Y])
+    using bounded_clinear_cinner_right apply (rule bounded_clinear_eq_on[where G=Y])
     using * assms by auto
 qed
 
@@ -323,7 +325,7 @@ lemma register_decomposition:
   fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
   shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
-              (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o idOp))\<close>
+              (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
 proof -
   note [[simproc del: compatibility_warn]]
   fix \<xi>0 :: 'a
@@ -333,14 +335,14 @@ proof -
 
   define P where \<open>P i = Proj (ccspan {ket i})\<close> for i :: 'a
   have P_butter: \<open>P i = selfbutterket i\<close> for i
-    by (simp add: P_def butterfly_proj)
+    by (simp add: P_def butterfly_eq_proj)
 
   define P' where \<open>P' i = \<Phi> (P i)\<close> for i :: 'a
-  have proj_P': \<open>isProjector (P' i)\<close> for i
+  have proj_P': \<open>is_Proj (P' i)\<close> for i
     by (simp add: P_def P'_def register_projector)
-  have \<open>(\<Sum>i\<in>UNIV. P i) = idOp\<close>
+  have \<open>(\<Sum>i\<in>UNIV. P i) = id_cblinfun\<close>
     using sum_butter P_butter by simp
-  then have sumP'id: \<open>(\<Sum>i\<in>UNIV. P' i) = idOp\<close>
+  then have sumP'id: \<open>(\<Sum>i\<in>UNIV. P' i) = id_cblinfun\<close>
     unfolding P'_def 
     apply (subst complex_vector.linear_sum[OF \<open>clinear \<Phi>\<close>, symmetric])
     by auto
@@ -348,7 +350,7 @@ proof -
   define S where \<open>S i = P' i *\<^sub>S \<top>\<close> for i :: 'a
   have P'id: \<open>P' i *\<^sub>V \<psi> = \<psi>\<close> if \<open>\<psi> \<in> space_as_set (S i)\<close> for i \<psi>
     using S_def that proj_P'
-    by (metis apply_left_neutral isProjector_algebraic)
+    by (metis cblinfun_fixes_range is_Proj_algebraic)
 
   obtain B0 where finiteB0: \<open>finite (B0 i)\<close> and cspanB0: \<open>cspan (B0 i) = space_as_set (S i)\<close> for i
   apply atomize_elim apply (simp flip: all_conj_distrib) apply (rule choice)
@@ -371,19 +373,19 @@ proof -
   have orthoBiBj: \<open>is_orthogonal x y\<close> if \<open>x \<in> B i\<close> and \<open>y \<in> B j\<close> and \<open>i \<noteq> j\<close> for x y i j
   proof -
     from \<open>x \<in> B i\<close> obtain x' where x: \<open>x = P' i *\<^sub>V x'\<close>
-      by (metis S_def apply_left_neutral complex_vector.span_base cspanB isProjector_D1 proj_P')
+      by (metis S_def cblinfun_fixes_range complex_vector.span_base cspanB is_Proj_idempotent proj_P')
     from \<open>y \<in> B j\<close> obtain y' where y: \<open>y = P' j *\<^sub>V y'\<close>
-      by (metis S_def apply_left_neutral complex_vector.span_base cspanB isProjector_D1 proj_P')
+      by (metis S_def cblinfun_fixes_range complex_vector.span_base cspanB is_Proj_idempotent proj_P')
     have \<open>cinner x y = cinner (P' i *\<^sub>V x') (P' j *\<^sub>V  y')\<close>
       using x y by simp
     also have \<open>\<dots> = cinner (P' j *\<^sub>V P' i *\<^sub>V x') y'\<close>
-      by (metis adjoint_I' isProjector_algebraic proj_P')
+      by (metis cinner_adj_left is_Proj_algebraic proj_P')
     also have \<open>\<dots> = cinner (\<Phi> (P j o\<^sub>C\<^sub>L P i) *\<^sub>V x') y'\<close>
       unfolding P'_def register_mult[OF \<open>register \<Phi>\<close>, symmetric] by simp
     also have \<open>\<dots> = cinner (\<Phi> (selfbutterket j o\<^sub>C\<^sub>L selfbutterket i) *\<^sub>V x') y'\<close>
       unfolding P_butter by simp
     also have \<open>\<dots> = cinner (\<Phi> 0 *\<^sub>V x') y'\<close>
-      by (metis Bounded_Operators.butterfly_times_right Proj_D1 butterfly_0' butterfly_apply butterfly_proj cblinfun_apply_to_zero cinner_zero_right ell2_ket ket_Kronecker_delta_neq that(3))
+      by (metis butterfly_comp_butterfly complex_vector.scale_eq_0_iff ket_Kronecker_delta_neq that(3))
     also have \<open>\<dots> = 0\<close>
       by (simp add: complex_vector.linear_0)
     finally show ?thesis
@@ -395,7 +397,7 @@ proof -
   
   have P'B: \<open>P' i = Proj (ccspan (B i))\<close> for i
     unfolding ccspanB S_def
-    using proj_P' Proj_I isProjector_algebraic by blast
+    using proj_P' Proj_on_own_range'[symmetric] is_Proj_algebraic by blast
 
   have \<open>(\<Sum>i\<in>UNIV. P' i) = Proj (ccspan B')\<close>
   proof (unfold B'_def, use finite[of UNIV] in induction)
@@ -418,7 +420,7 @@ proof -
 
   with sumP'id 
   have ccspanB': \<open>ccspan B' = \<top>\<close>
-    by (metis applyOpSpace_id imageOp_Proj)
+    by (metis Proj_range cblinfun_image_id)
   hence cspanB': \<open>cspan B' = UNIV\<close>
     by (metis B'_def finiteB ccspan.rep_eq finite_UN_I finite_class.finite_UNIV closure_finite_cspan top_ccsubspace.rep_eq)
 
@@ -442,13 +444,13 @@ proof -
     define Si_to_Sj where \<open>Si_to_Sj i j \<psi> = \<Phi> (butterket j i) *\<^sub>V \<psi>\<close> for i j \<psi>
     have S2S2S: \<open>Si_to_Sj j i (Si_to_Sj i j \<psi>) = \<psi>\<close> if \<open>\<psi> \<in> space_as_set (S i)\<close> for i j \<psi>
       using that P'id
-      by (simp add: Si_to_Sj_def times_applyOp[symmetric] register_mult P_butter P'_def)
+      by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] register_mult P_butter P'_def)
     also have lin[simp]: \<open>clinear (Si_to_Sj i j)\<close> for i j
       unfolding Si_to_Sj_def by simp
     have S2S: \<open>Si_to_Sj i j x \<in> space_as_set (S j)\<close> for i j x
     proof -
       have \<open>Si_to_Sj i j x = P' j *\<^sub>V Si_to_Sj i j x\<close>
-        by (simp add: Si_to_Sj_def times_applyOp[symmetric] register_mult P_butter P'_def)
+        by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] register_mult P_butter P'_def)
       also have \<open>P' j *\<^sub>V Si_to_Sj i j x \<in> space_as_set (S j)\<close>
         by (simp add: S_def)
       finally show ?thesis by -
@@ -486,8 +488,8 @@ proof -
   obtain U where Uapply: \<open>U *\<^sub>V ket \<xi>\<alpha> = u \<xi>\<alpha>\<close> for \<xi>\<alpha>
     apply atomize_elim
     apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>k. u (inv ket k))\<close>])
-    apply (subst cblinfun_extension_exists)
-      apply (rule cblinfun_extension_exists_finite)
+    apply (subst cblinfun_extension_apply)
+      apply (rule cblinfun_extension_exists_finite_dim)
     by (auto simp add: inj_ket cindependent_ket)
 
   define eqa where \<open>eqa a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: 'a
@@ -501,16 +503,16 @@ proof -
     have \<open>cinner (U *\<^sub>V ket (\<xi>,\<alpha>)) (U *\<^sub>V ket (\<xi>', \<alpha>')) = cinner (\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (\<Phi> (butterket \<xi>' \<xi>0) *\<^sub>V f \<alpha>')\<close>
       unfolding Uapply u_def by simp
     also have \<open>\<dots> = cinner ((\<Phi> (butterket \<xi>' \<xi>0))* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      by (simp add: adjoint_I)
+      by (simp add: cinner_adj_left)
     also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>' \<xi>0 *) *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (metis (no_types, lifting) assms register_def)
     also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>0 \<xi>' o\<^sub>C\<^sub>L butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      by (simp add: register_mult times_applyOp[symmetric])
+      by (simp add: register_mult cblinfun_apply_cblinfun_compose[symmetric])
     also have \<open>\<dots> = cinner (\<Phi> (eqa \<xi>' \<xi> *\<^sub>C selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       apply simp
       by (metis eqa_def ket_Kronecker_delta_eq ket_is_orthogonal)
     also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (\<Phi> (selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      by (smt (verit, ccfv_threshold) \<open>clinear \<Phi>\<close> eqa_def applyOp_scaleC1 cinner_commute 
+      by (smt (verit, ccfv_threshold) \<open>clinear \<Phi>\<close> eqa_def cblinfun.scaleC_left cinner_commute 
               cinner_scaleC_left cinner_zero_right complex_cnj_one complex_vector.linear_scale)
     also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (P' \<xi>0 *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       using P_butter P'_def by simp
@@ -529,14 +531,14 @@ proof -
     apply (rule_tac ortho_isometry[where B=\<open>range ket\<close>])
     using eqac_def by auto
 
-  have \<open>U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U = butterket \<xi> \<eta> \<otimes>\<^sub>o idOp\<close> for \<xi> \<eta>
+  have \<open>U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U = butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun\<close> for \<xi> \<eta>
   proof (rule equal_ket, rename_tac \<xi>1\<alpha>)
     fix \<xi>1\<alpha> obtain \<xi>1 :: 'a and \<alpha> :: \<open>('a,'b) complement_domain\<close> where \<xi>1\<alpha>: \<open>\<xi>1\<alpha> = (\<xi>1,\<alpha>)\<close> 
       apply atomize_elim by auto
     have \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta>) *\<^sub>V \<Phi> (butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
-      unfolding times_applyOp \<xi>1\<alpha> Uapply u_def by simp
+      unfolding cblinfun_apply_cblinfun_compose \<xi>1\<alpha> Uapply u_def by simp
     also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta> o\<^sub>C\<^sub>L butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
-      by (metis (no_types, lifting) assms butterfly_times lift_cblinfun_comp(4) register_mult)
+      by (metis (no_types, lifting) assms butterfly_comp_butterfly lift_cblinfun_comp(4) register_mult)
     also have \<open>\<dots> = U* *\<^sub>V \<Phi> (eqa \<eta> \<xi>1 *\<^sub>C butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
       by (simp add: eqa_def ket_Kronecker_delta)
     also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
@@ -544,17 +546,17 @@ proof -
     also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V U *\<^sub>V ket (\<xi>, \<alpha>)\<close>
       unfolding Uapply u_def by simp
     also from \<open>isometry U\<close> have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C ket (\<xi>, \<alpha>)\<close>
-      unfolding times_applyOp[symmetric] by simp
+      unfolding cblinfun_apply_cblinfun_compose[symmetric] by simp
     also have \<open>\<dots> = (butterket \<xi> \<eta> *\<^sub>V ket \<xi>1) \<otimes>\<^sub>s ket \<alpha>\<close>
       by (simp add: eqa_def tensor_ell2_scaleC1)
-    also have \<open>\<dots> = (butterket \<xi> \<eta> \<otimes>\<^sub>o idOp) *\<^sub>V ket \<xi>1\<alpha>\<close>
+    also have \<open>\<dots> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
       by (simp add: \<xi>1\<alpha> tensor_op_ket)
-    finally show \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = (butterket \<xi> \<eta> \<otimes>\<^sub>o idOp) *\<^sub>V ket \<xi>1\<alpha>\<close>
+    finally show \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
       by -
   qed
-  then have 1: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o idOp\<close> for \<theta>
+  then have 1: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> for \<theta>
     apply (rule_tac clinear_eq_butterketI[THEN fun_cong, where x=\<theta>])
-    by (auto intro!: clinearI simp add: cblinfun_apply_dist1 complex_vector.linear_add complex_vector.linear_scale)
+    by (auto intro!: clinearI simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose complex_vector.linear_add complex_vector.linear_scale)
 
   have \<open>unitary U\<close>
   proof -
@@ -566,25 +568,25 @@ proof -
         by (metis Uapply cblinfun_apply_in_image)
 
       have \<open>\<Phi> (butterket \<xi> \<xi>1) *\<^sub>S \<top> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>1) *\<^sub>S \<top>\<close>
-        unfolding cblinfun_apply_assoc_subspace[symmetric] register_mult[OF assms]
+        unfolding cblinfun_compose_image[symmetric] register_mult[OF assms]
         by simp
       also have \<open>\<dots> \<le> \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<top>\<close>
-        by (meson applyOpSpace_mono top_greatest)
+        by (meson cblinfun_image_mono top_greatest)
       also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S S \<xi>0\<close>
         by (simp add: S_def P'_def P_butter)
       also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S ccspan (B \<xi>0)\<close>
         by (simp add: ccspanB)
       also have \<open>\<dots> = ccspan (\<Phi> (butterket \<xi> \<xi>0) ` B \<xi>0)\<close>
-        by (rule applyOpSpace_Span)
+        by (meson cblinfun_image_Span)
       also have \<open>\<dots> \<le> U *\<^sub>S \<top>\<close>
         by (rule ccspan_leqI, use * in auto)
       finally show ?thesis by -
     qed
-    moreover have \<open>\<Phi> idOp *\<^sub>S \<top> \<le> (SUP \<xi>\<in>UNIV. \<Phi> (selfbutterket \<xi>) *\<^sub>S \<top>)\<close>
+    moreover have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> (SUP \<xi>\<in>UNIV. \<Phi> (selfbutterket \<xi>) *\<^sub>S \<top>)\<close>
       unfolding sum_butter[symmetric]
       apply (subst complex_vector.linear_sum, simp)
       by (rule cblinfun_sum_applySpace_distr)
-    ultimately have \<open>\<Phi> idOp *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close>
+    ultimately have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close>
       apply auto by (meson SUP_le_iff order.trans)
     then have \<open>U *\<^sub>S \<top> = \<top>\<close>
       apply auto
@@ -593,14 +595,14 @@ proof -
       by (rule surj_isometry_unitary)
   qed
 
-  have \<open>\<Phi> \<theta> = U o\<^sub>C\<^sub>L (\<theta> \<otimes>\<^sub>o idOp) o\<^sub>C\<^sub>L U*\<close> for \<theta>
+  have \<open>\<Phi> \<theta> = U o\<^sub>C\<^sub>L (\<theta> \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L U*\<close> for \<theta>
   proof -
     from \<open>unitary U\<close>
     have \<open>\<Phi> \<theta> = (U o\<^sub>C\<^sub>L U*) o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L (U o\<^sub>C\<^sub>L U*)\<close>
       by simp
     also have \<open>\<dots> = U o\<^sub>C\<^sub>L (U*  o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U) o\<^sub>C\<^sub>L U*\<close>
-      by (simp add: assoc_left(1))
-    also have \<open>\<dots> = U o\<^sub>C\<^sub>L (\<theta> \<otimes>\<^sub>o idOp) o\<^sub>C\<^sub>L U*\<close>
+      by (simp add: cblinfun_assoc_left)
+    also have \<open>\<dots> = U o\<^sub>C\<^sub>L (\<theta> \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L U*\<close>
       using 1 by simp
     finally show ?thesis
       by -
@@ -612,11 +614,11 @@ qed
 
 lemma register_decomposition_converse: 
   assumes \<open>unitary U\<close>
-  shows \<open>register (\<lambda>x. sandwich U (idOp \<otimes>\<^sub>o x))\<close>
+  shows \<open>register (\<lambda>x. sandwich U (id_cblinfun \<otimes>\<^sub>o x))\<close>
   using _ unitary_sandwich_register apply (rule register_comp[unfolded o_def])
   using assms by auto
 
-lemma idOp_not_0[simp]: \<open>(idOp :: 'a::{complex_normed_vector, not_singleton} \<Rightarrow>\<^sub>C\<^sub>L _) \<noteq> 0\<close>
+lemma id_cblinfun_not_0[simp]: \<open>(id_cblinfun :: 'a::{complex_normed_vector, not_singleton} \<Rightarrow>\<^sub>C\<^sub>L _) \<noteq> 0\<close>
   by (metis ccsubspace_top_not_bot kernel_0 kernel_id zero_ccsubspace_def)
 
 lemma tensor_ell2_nonzero: \<open>a \<otimes>\<^sub>s b \<noteq> 0\<close> if \<open>a \<noteq> 0\<close> and \<open>b \<noteq> 0\<close>
@@ -630,9 +632,9 @@ lemma tensor_op_nonzero:
   shows \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
 proof -
   from \<open>a \<noteq> 0\<close> obtain i where i: \<open>a *\<^sub>V ket i \<noteq> 0\<close>
-    by (metis applyOp0 equal_ket)
+    by (metis cblinfun.zero_left equal_ket)
   from \<open>b \<noteq> 0\<close> obtain j where j: \<open>b *\<^sub>V ket j \<noteq> 0\<close>
-    by (metis applyOp0 equal_ket)
+    by (metis cblinfun.zero_left equal_ket)
   from i j have ijneq0: \<open>(a *\<^sub>V ket i) \<otimes>\<^sub>s (b *\<^sub>V ket j) \<noteq> 0\<close>
     by (simp add: tensor_ell2_nonzero)
   have \<open>(a *\<^sub>V ket i) \<otimes>\<^sub>s (b *\<^sub>V ket j) = (a \<otimes>\<^sub>o b) *\<^sub>V ket (i,j)\<close>
@@ -661,11 +663,11 @@ qed
 lemma register_inj: \<open>inj F\<close> if \<open>register F\<close>
 proof -
   obtain U :: \<open>('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
-    where \<open>unitary U\<close> and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o idOp)\<close> for a
+    where \<open>unitary U\<close> and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o id_cblinfun)\<close> for a
     apply atomize_elim using \<open>register F\<close> by (rule register_decomposition)
   have \<open>inj (sandwich U)\<close>
-    by (smt (verit, best) \<open>unitary U\<close> assoc_left(1) inj_onI sandwich_def times_idOp1 times_idOp2 unitary_def)
-  moreover have \<open>inj (\<lambda>a::'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L _. a \<otimes>\<^sub>o idOp)\<close>
+    by (smt (verit, best) \<open>unitary U\<close> cblinfun_assoc_left inj_onI sandwich_def cblinfun_compose_id_right cblinfun_compose_id_left unitary_def)
+  moreover have \<open>inj (\<lambda>a::'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L _. a \<otimes>\<^sub>o id_cblinfun)\<close>
     by (rule inj_tensor_left, simp)
   ultimately show \<open>inj F\<close>
     unfolding F
@@ -686,19 +688,19 @@ lemma complement_exists:
 proof -
   note [[simproc del: Laws_Quantum.compatibility_warn]]
   obtain U :: \<open>('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
-    where [simp]: "unitary U" and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o idOp)\<close> for a
+    where [simp]: "unitary U" and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o id_cblinfun)\<close> for a
     apply atomize_elim using assms by (rule register_decomposition)
-  define G :: \<open>(('a, 'b) complement_domain) update \<Rightarrow> 'b update\<close> where \<open>G b = sandwich U (idOp \<otimes>\<^sub>o b)\<close> for b
+  define G :: \<open>(('a, 'b) complement_domain) update \<Rightarrow> 'b update\<close> where \<open>G b = sandwich U (id_cblinfun \<otimes>\<^sub>o b)\<close> for b
   have [simp]: \<open>register G\<close>
     unfolding G_def apply (rule register_decomposition_converse) by simp
   have \<open>F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close> for a b
   proof -
     have \<open>F a o\<^sub>C\<^sub>L G b = sandwich U (a \<otimes>\<^sub>o b)\<close>
       apply (auto simp: F G_def sandwich_def)
-      by (metis (no_types, lifting) \<open>unitary U\<close> adjUU assoc_left(1) comp_tensor_op times_idOp1 times_idOp2 unitary_isometry)
+      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
     moreover have \<open>G b o\<^sub>C\<^sub>L F a = sandwich U (a \<otimes>\<^sub>o b)\<close>
       apply (auto simp: F G_def sandwich_def)
-      by (metis (no_types, lifting) \<open>unitary U\<close> adjUU assoc_left(1) comp_tensor_op times_idOp1 times_idOp2 unitary_isometry)
+      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
     ultimately show ?thesis by simp
   qed
   then have [simp]: \<open>compatible F G\<close>
@@ -707,17 +709,17 @@ proof -
   proof -
     have \<open>(F;G) (a \<otimes>\<^sub>o b) = sandwich U (a \<otimes>\<^sub>o b)\<close> for a b
       apply (auto simp: register_pair_apply F G_def sandwich_def)
-      by (metis (no_types, lifting) \<open>unitary U\<close> adjUU assoc_left(1) comp_tensor_op times_idOp1 times_idOp2 unitary_isometry)
+      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
     then have FG: \<open>(F;G) = sandwich U\<close>
       apply (rule tensor_extensionality[rotated -1])
-      by (simp_all add: cblinfun_apply_dist1 cblinfun_apply_dist2 clinearI)
+      by (simp_all add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right clinearI)
     define I where \<open>I = sandwich (U*)\<close> for x
     have [simp]: \<open>register I\<close>
       by (simp add: I_def unitary_sandwich_register)
     have \<open>I o (F;G) = id\<close> and FGI: \<open>(F;G) o I = id\<close>
       apply (auto intro!:ext simp: I_def[abs_def] FG sandwich_def)
-      apply (metis (no_types, hide_lams) \<open>unitary U\<close> adjUU assoc_left(1) times_idOp1 times_idOp2 unitary_isometry)
-      by (metis (no_types, lifting) UadjU \<open>unitary U\<close> assoc_left(1) times_idOp1 times_idOp2)
+      apply (metis (no_types, hide_lams) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
+      by (metis (no_types, lifting) \<open>unitary U\<close> cblinfun_assoc_left(1) cblinfun_compose_id_left cblinfun_compose_id_right unitaryD2)
     then show \<open>iso_register (F;G)\<close>
       by (auto intro!: iso_registerI)
   qed
@@ -755,18 +757,19 @@ qed
 lemma cinner_ket_equal:
   assumes \<open>\<And>i. cinner (ket i) \<psi> = cinner (ket i) \<phi>\<close>
   shows \<open>\<psi> = \<phi>\<close>
-  apply (rule cinner_extensionality')
-  apply (rule equal_span_applyOpSpace[where A="cinner \<psi>" and G="range ket"])
+  apply (rule cinner_extensionality)
+    apply (subst cinner_eq_flip)
+  apply (rule bounded_clinear_eq_on[where A="cinner \<psi>" and G="range ket"])
   apply (auto simp: ket_ell2_span bounded_clinear_cinner_right)
   by (metis assms cinner_commute)
 
-lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o idOp)) = range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
+lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)) = range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
 proof (rule Set.set_eqI, rule iffI)
   fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
   fix \<gamma> :: 'a
-  assume \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o idOp))\<close>
-  then have comm: \<open>(a \<otimes>\<^sub>o idOp) *\<^sub>V x *\<^sub>V \<psi> = x *\<^sub>V (a \<otimes>\<^sub>o idOp) *\<^sub>V \<psi>\<close> for a \<psi>
-    by (metis (mono_tags, lifting) commutant_def mem_Collect_eq rangeI times_applyOp)
+  assume \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun))\<close>
+  then have comm: \<open>(a \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V \<psi> = x *\<^sub>V (a \<otimes>\<^sub>o id_cblinfun) *\<^sub>V \<psi>\<close> for a \<psi>
+    by (metis (mono_tags, lifting) commutant_def mem_Collect_eq rangeI cblinfun_apply_cblinfun_compose)
 
   obtain x' where x': \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close> for j l
   proof atomize_elim
@@ -777,8 +780,8 @@ proof (rule Set.set_eqI, rule iffI)
     obtain x' where \<open>x' *\<^sub>V ket l = \<psi> l\<close> for l
       apply atomize_elim
       apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>l. \<psi> (inv ket l))\<close>])
-      apply (subst cblinfun_extension_exists)
-        apply (rule cblinfun_extension_exists_finite)
+      apply (subst cblinfun_extension_apply)
+        apply (rule cblinfun_extension_exists_finite_dim)
       by (auto simp add: inj_ket cindependent_ket)
     with \<psi> have \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l))\<close> for j l
       by auto
@@ -786,35 +789,35 @@ proof (rule Set.set_eqI, rule iffI)
       by auto
   qed
 
-  have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l)) = cinner (ket (i,j)) ((idOp \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close> for i j k l
+  have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l)) = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close> for i j k l
   proof -
     (* fix i k :: 'a and j l :: 'b *)
     have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l))
-        = cinner ((butterket i \<gamma> \<otimes>\<^sub>o idOp) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o idOp) *\<^sub>V ket (\<gamma>,l))\<close>
+        = cinner ((butterket i \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
       by (auto simp: tensor_op_ket)
-    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) ((butterket \<gamma> i \<otimes>\<^sub>o idOp) *\<^sub>V x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o idOp) *\<^sub>V ket (\<gamma>,l))\<close>
-      by (metis (no_types, lifting) adjoint_I butterfly_adjoint idOp_adjoint tensor_op_adjoint)
-    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterket \<gamma> i \<otimes>\<^sub>o idOp o\<^sub>C\<^sub>L butterket k \<gamma> \<otimes>\<^sub>o idOp) *\<^sub>V ket (\<gamma>,l))\<close>
-      unfolding comm by (simp add: times_applyOp)
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) ((butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+      by (metis (no_types, lifting) cinner_adj_left butterfly_adjoint id_cblinfun_adjoint tensor_op_adjoint)
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun o\<^sub>C\<^sub>L butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+      unfolding comm by (simp add: cblinfun_apply_cblinfun_compose)
     also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close>
       by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left)
     also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket j) (x' *\<^sub>V ket l)\<close>
       by (simp add: x')
-    also have \<open>\<dots> = cinner (ket (i,j)) ((idOp \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close>
+    also have \<open>\<dots> = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close>
       apply (simp add: tensor_op_ket)
       by (simp flip: tensor_ell2_ket)
     finally show ?thesis by -
   qed
-  then have \<open>x = (idOp \<otimes>\<^sub>o x')\<close>
+  then have \<open>x = (id_cblinfun \<otimes>\<^sub>o x')\<close>
     by (auto intro!: equal_ket cinner_ket_equal)
-  then show \<open>x \<in> range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
+  then show \<open>x \<in> range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
     by auto
 next
   fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
-  assume \<open>x \<in> range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
-  then obtain b where x: \<open>x = idOp \<otimes>\<^sub>o b\<close>
+  assume \<open>x \<in> range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
+  then obtain b where x: \<open>x = id_cblinfun \<otimes>\<^sub>o b\<close>
     by auto
-  then show \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o idOp))\<close>
+  then show \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun))\<close>
     by (auto simp: x commutant_def comp_tensor_op)
 qed
 
@@ -826,9 +829,9 @@ proof -
     using assms compatible_def by metis+
   have [simp]: \<open>(F;G) (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close> for a b
     using Laws_Quantum.register_pair_apply assms by blast
-  have [simp]: \<open>range F = (F;G) ` range (\<lambda>a. a \<otimes>\<^sub>o idOp)\<close>
+  have [simp]: \<open>range F = (F;G) ` range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
     by force
-  have [simp]: \<open>range G = (F;G) ` range (\<lambda>b. idOp \<otimes>\<^sub>o b)\<close>
+  have [simp]: \<open>range G = (F;G) ` range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
     by force
   show \<open>range G = commutant (range F)\<close>
     by (simp add: commutant_exchange commutant_tensor1)
@@ -876,13 +879,13 @@ proof -
     apply (subst complex_vector.linear_scale[OF \<open>clinear G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
     by (simp add: complex_vector.linear_scale)
-  have unitalI: \<open>I idOp = idOp\<close>
+  have unitalI: \<open>I id_cblinfun = id_cblinfun\<close>
     unfolding I_def
     apply (rule injD[OF \<open>inj F\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=F])
      apply auto
     by (metis register_of_id G_rangeF assms(2))
-  have unitalJ: \<open>J idOp = idOp\<close>
+  have unitalJ: \<open>J id_cblinfun = id_cblinfun\<close>
     unfolding J_def
     apply (rule injD[OF \<open>inj G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G])
@@ -950,10 +953,6 @@ lemma tensor_register_distrib: \<open>(F \<otimes>\<^sub>r G) o (F' \<otimes>\<^
   if [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
   apply (rule tensor_extensionality)
   by (auto simp: register_tensor_is_hom)
-
-lemma register_tensor_id[simp]: \<open>id \<otimes>\<^sub>r id = id\<close>
-  apply (rule tensor_extensionality)
-  by (auto simp add: register_tensor_is_hom)
 
 lemma iso_register_tensor[simp]: \<open>iso_register (F \<otimes>\<^sub>r G)\<close> if \<open>iso_register F\<close> and \<open>iso_register G\<close>
 proof -

@@ -219,13 +219,13 @@ proof  (rule mat_eq_iff[THEN iffD2], intro conjI allI impI)
     by auto
 qed
 
-lemma assoc_ell2'_inv: "assoc_ell2 o\<^sub>C\<^sub>L assoc_ell2' = idOp"
+lemma assoc_ell2'_inv: "assoc_ell2 o\<^sub>C\<^sub>L assoc_ell2' = id_cblinfun"
   apply (rule equal_ket, case_tac x, hypsubst)
-  by (simp flip: tensor_ell2_ket add: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor)
+  by (simp flip: tensor_ell2_ket add: cblinfun_apply_cblinfun_compose assoc_ell2'_tensor assoc_ell2_tensor)
 
-lemma assoc_ell2_inv: "assoc_ell2' o\<^sub>C\<^sub>L assoc_ell2 = idOp"
+lemma assoc_ell2_inv: "assoc_ell2' o\<^sub>C\<^sub>L assoc_ell2 = id_cblinfun"
   apply (rule equal_ket, case_tac x, hypsubst)
-  by (simp flip: tensor_ell2_ket add: times_applyOp assoc_ell2'_tensor assoc_ell2_tensor)
+  by (simp flip: tensor_ell2_ket add: cblinfun_apply_cblinfun_compose assoc_ell2'_tensor assoc_ell2_tensor)
 
 lemma mat_of_cblinfun_assoc_ell2[simp]: 
   \<open>mat_of_cblinfun (assoc_ell2 :: ((('a::enum\<times>'b::enum)\<times>'c::enum) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) = one_mat (CARD('a)*CARD('b)*CARD('c))\<close>

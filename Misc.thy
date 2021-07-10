@@ -29,29 +29,28 @@ lemma linfun_cspan: \<open>cspan {butterket i j| (i::'b::finite) (j::'a::finite)
 proof (rule, simp, rule)
   fix f :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
   have frep: \<open>f = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i))\<close>
-  proof (rule cblinfun_ext)
+  proof (rule cblinfun_eqI)
     fix \<phi> :: \<open>'a ell2\<close>
     have \<open>f *\<^sub>V \<phi> = f *\<^sub>V (\<Sum>i\<in>UNIV. butterket i i) *\<^sub>V \<phi>\<close>
       by auto
     also have \<open>\<dots> = (\<Sum>i\<in>UNIV. f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       apply (subst (2) complex_vector.linear_sum)
-       apply (simp add: cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
+      apply (metis bounded_clinear.clinear bounded_clinear_apply_cblinfun bounded_clinear_compose cBlinfun_cases cBlinfun_inverse cblinfun.bounded_clinear_right)
       by simp
     also have \<open>\<dots> = (\<Sum>i\<in>UNIV. (\<Sum>j\<in>UNIV. butterket j j) *\<^sub>V f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       by simp
     also have \<open>\<dots> = (\<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV. butterket j j *\<^sub>V f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       apply (subst (5) complex_vector.linear_sum)
-       apply (auto intro!: clinearI simp add: cblinfun_apply_add plus_cblinfun.rep_eq)
-      by (metis (no_types, hide_lams) applyOp_scaleC2 plus_cblinfun.rep_eq)
+       apply (auto intro!: clinearI simp add: cblinfun.add_right plus_cblinfun.rep_eq)
+      by (meson scaleC_cblinfun.rep_eq)
     also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. butterket j j *\<^sub>V f *\<^sub>V butterket i i *\<^sub>V \<phi>)\<close>
       by (simp add: sum.cartesian_product)
     also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i *\<^sub>V \<phi>))\<close>
-      by (simp add: butterfly_def' times_applyOp mult.commute)
+      by (simp add: butterfly_def mult.commute cblinfun.scaleC_right)
     also have \<open>\<dots> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i)) *\<^sub>V \<phi>\<close>
-      unfolding applyOp_scaleC1[symmetric] case_prod_beta
-      thm complex_vector.linear_sum
+      unfolding cblinfun.scaleC_left[symmetric] case_prod_beta
       apply (subst complex_vector.linear_sum[where f=\<open>\<lambda>x. x *\<^sub>V \<phi>\<close>])
-       apply (simp add: apply_cblinfun_distr_left clinearI)
+      using bounded_clinear_def apply blast
       by simp
     finally show \<open>f *\<^sub>V \<phi> = (\<Sum>(i,j)\<in>UNIV. \<langle>ket j, f *\<^sub>V ket i\<rangle> *\<^sub>C (butterket j i)) *\<^sub>V \<phi>\<close>
       by -
@@ -90,11 +89,11 @@ proof (rule complex_vector.independent_if_scalars_zero)
     proof cases
       case i
       then show ?thesis 
-        unfolding g by (auto simp: butterfly_def' times_applyOp ket_Kronecker_delta_neq)
+        unfolding g by (auto simp: butterfly_def ket_Kronecker_delta_neq scaleC_cblinfun.rep_eq)
     next
       case j
       then show ?thesis
-        unfolding g by (auto simp: butterfly_def' times_applyOp ket_Kronecker_delta_neq)
+        unfolding g by (auto simp: butterfly_def ket_Kronecker_delta_neq scaleC_cblinfun.rep_eq)
     qed
   qed
 
@@ -103,7 +102,7 @@ proof (rule complex_vector.independent_if_scalars_zero)
   also have \<open>\<dots> = (\<Sum>g\<in>{butterket i j |i j. True}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
     unfolding lin_def
     apply (rule complex_vector.linear_sum)
-    by (smt (z3) applyOp_scaleC1 applyOp_scaleC2 cblinfun_apply_add clinearI plus_cblinfun.rep_eq)
+    by (smt (z3) cblinfun.scaleC_left cblinfun.scaleC_right cblinfun.add_right clinearI plus_cblinfun.rep_eq)
   also have \<open>\<dots> = (\<Sum>g\<in>{butterket i j}. bra i *\<^sub>V (f g *\<^sub>C g) *\<^sub>V ket j)\<close>
     apply (rule sum.mono_neutral_right)
     using finite * by auto
@@ -111,7 +110,7 @@ proof (rule complex_vector.independent_if_scalars_zero)
     by (simp add: g)
   also have \<open>\<dots> = f g\<close>
     unfolding g 
-    by (auto simp: butterfly_def' times_applyOp ket_Kronecker_delta_eq)
+    by (auto simp: butterfly_def scaleC_cblinfun.rep_eq)
   finally show \<open>f g = 0\<close>
     by simp
 qed
@@ -178,14 +177,14 @@ lemma mat_of_rows_list_carrier[simp]:
 
 
 lemma butterfly_times_right: "butterfly \<psi> \<phi> o\<^sub>C\<^sub>L a = butterfly \<psi> (a* *\<^sub>V \<phi>)"
-  unfolding butterfly_def'
-  by (simp add: cblinfun_apply_assoc vector_to_cblinfun_applyOp)  
+  unfolding butterfly_def
+  by (metis butterfly_comp_cblinfun butterfly_def_one_dim)
 
-lemma butterfly_isProjector:
-  \<open>norm x = 1 \<Longrightarrow> isProjector (selfbutter x)\<close>
-  by (subst butterfly_proj, simp_all)
+lemma butterfly_is_Proj:
+  \<open>norm x = 1 \<Longrightarrow> is_Proj (selfbutter x)\<close>
+  by (subst butterfly_eq_proj, simp_all)
 
-lemma apply_idOp[simp]: \<open>(*\<^sub>V) idOp = id\<close>
+lemma apply_id_cblinfun[simp]: \<open>(*\<^sub>V) id_cblinfun = id\<close>
   by auto
 
 definition "sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L (a*)"
@@ -197,11 +196,11 @@ lemma mat_of_cblinfun_sandwich:
 
 lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
   apply (rule clinearI)
-  apply (simp add: cblinfun_apply_dist1 cblinfun_apply_dist2 sandwich_def)
+  apply (simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right sandwich_def)
   by (simp add: sandwich_def)
 
-lemma sandwich_id: "sandwich idOp = idOp"
-  by (metis eq_id_iff idOp.rep_eq idOp_adjoint sandwich_def times_idOp1 times_idOp2)
+lemma sandwich_id: "sandwich id_cblinfun = id_cblinfun"
+  by (metis eq_id_iff id_cblinfun.rep_eq id_cblinfun_adjoint sandwich_def cblinfun_compose_id_right cblinfun_compose_id_left)
 
 lemma prod_cases3' [cases type]:
   obtains (fields) a b c where "y = ((a, b), c)"
@@ -214,9 +213,9 @@ lemma lift_cblinfun_comp:
     and \<open>a *\<^sub>S (b *\<^sub>S S) = c *\<^sub>S S\<close>
     and \<open>a *\<^sub>V (b *\<^sub>V x) = c *\<^sub>V x\<close>
   apply (fact assms)
-  apply (metis assms cblinfun_apply_assoc)
-  using assms assoc_left(2) apply blast
-  by (metis assms times_applyOp)
+  apply (simp add: assms cblinfun_assoc_left(1))
+  using assms cblinfun_assoc_left(2) apply force
+  using assms by force
 
 
 
