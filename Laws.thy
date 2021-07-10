@@ -128,6 +128,12 @@ proof (unfold separating_def, intro allI impI)
     by auto
 qed
 
+lemma register_tensor_distrib:
+  assumes [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register H\<close> \<open>register L\<close>
+  shows \<open>(F \<otimes>\<^sub>r G) o (H \<otimes>\<^sub>r L) = (F o H) \<otimes>\<^sub>r (G o L)\<close>
+  apply (rule tensor_extensionality)
+  by (auto intro!: register_comp register_preregister register_tensor_is_hom)
+
 (* Easier to apply using 'rule' than separating_tensor *)
 lemma separating_tensor':
   fixes A :: \<open>'a::domain update set\<close> and B :: \<open>'b::domain update set\<close>
@@ -468,6 +474,41 @@ lemma iso_register_inv_comp1: \<open>iso_register F \<Longrightarrow> inv F o F 
 lemma iso_register_inv_comp2: \<open>iso_register F \<Longrightarrow> F o inv F = id\<close>
   using inv_unique_comp iso_register_def by blast
 
+
+lemma iso_register_id[simp]: \<open>iso_register id\<close>
+  by (simp add: iso_register_def)
+
+lemma iso_register_is_register: \<open>iso_register F \<Longrightarrow> register F\<close>
+  using iso_register_def by blast
+
+lemma iso_register_comp[simp]:
+  assumes [simp]: \<open>iso_register F\<close> \<open>iso_register G\<close>
+  shows \<open>iso_register (F o G)\<close>
+proof -
+  from assms obtain F' G' where [simp]: \<open>register F'\<close> \<open>register G'\<close> \<open>F o F' = id\<close> \<open>F' o F = id\<close>
+    \<open>G o G' = id\<close> \<open>G' o G = id\<close>
+    by (meson iso_register_def)
+  show ?thesis
+    apply (rule iso_registerI[where G=\<open>G' o F'\<close>])
+       apply (auto simp: register_tensor_is_hom iso_register_is_register register_tensor_distrib)
+     apply (metis \<open>F \<circ> F' = id\<close> \<open>G \<circ> G' = id\<close> fcomp_assoc fcomp_comp id_fcomp)
+    by (metis (no_types, lifting) \<open>F \<circ> F' = id\<close> \<open>F' \<circ> F = id\<close> \<open>G' \<circ> G = id\<close> fun.map_comp inj_iff inv_unique_comp o_inv_o_cancel)
+qed
+
+
+lemma iso_register_tensor_is_iso_register[simp]:
+  assumes [simp]: \<open>iso_register F\<close> \<open>iso_register G\<close>
+  shows \<open>iso_register (F \<otimes>\<^sub>r G)\<close>
+proof -
+  from assms obtain F' G' where [simp]: \<open>register F'\<close> \<open>register G'\<close> \<open>F o F' = id\<close> \<open>F' o F = id\<close>
+    \<open>G o G' = id\<close> \<open>G' o G = id\<close>
+    by (meson iso_register_def)
+  show ?thesis
+    apply (rule iso_registerI[where G=\<open>F' \<otimes>\<^sub>r G'\<close>])
+    by (auto simp: register_tensor_is_hom iso_register_is_register register_tensor_distrib)
+qed
+
+  
 definition \<open>equivalent_registers F G \<longleftrightarrow> (register F \<and> (\<exists>I. iso_register I \<and> F o I = G))\<close>
   for F G :: \<open>_::domain update \<Rightarrow> _::domain update\<close>
 

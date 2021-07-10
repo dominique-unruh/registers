@@ -45,17 +45,19 @@ lemma complement_unique:
 
 definition unit_register where \<open>unit_register = complement id\<close>
 
-lemma register_unit_register[simp]: \<open>register unit_register\<close>
-  unfolding unit_register_def
-  by (auto intro: register_complement)
+definition is_unit_register where
+  \<open>is_unit_register U \<longleftrightarrow> compatible U id \<and> equivalent_registers id (U; id)\<close>
 
-lemma unit_register_compatible[simp]: \<open>compatible unit_register X\<close> if \<open>register X\<close>
-proof -
-  have \<open>compatible unit_register (id o X)\<close>
-    by (metis compatible_comp_left compatible_sym complement_is_complement complements_def register_id that unit_register_def)
-  then show ?thesis
-    by simp
-qed
+lemma unit_register_is_unit_register[simp]: \<open>is_unit_register unit_register\<close>
+  apply (auto simp: is_unit_register_def unit_register_def)
+  using complement_is_complement complements_def complements_sym register_id apply blast
+  by (metis complement_is_complement complements_def complements_sym equivalent_registers_def fcomp_comp fcomp_id register_id)
+
+lemma register_unit_register[simp]: \<open>is_unit_register U \<Longrightarrow> register U\<close>
+  by (simp add: compatible_def is_unit_register_def)
+
+lemma unit_register_compatible[simp]: \<open>compatible U X\<close> if \<open>is_unit_register U\<close> \<open>register X\<close>
+  by (metis compatible_comp_right id_comp is_unit_register_def that(1) that(2))
 
 lemma equivalent_registers_trans[trans]: 
   assumes \<open>equivalent_registers F G\<close> and \<open>equivalent_registers G H\<close>
@@ -69,35 +71,17 @@ lemma equivalent_registersI:
   shows \<open>equivalent_registers F G\<close>
   using assms unfolding equivalent_registers_def by blast
 
-lemma iso_register_is_register: \<open>iso_register F \<Longrightarrow> register F\<close>
-  using iso_register_def by blast
-
-lemma register_tensor_distrib:
-  assumes [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register H\<close> \<open>register L\<close>
-  shows \<open>(F \<otimes>\<^sub>r G) o (H \<otimes>\<^sub>r L) = (F o H) \<otimes>\<^sub>r (G o L)\<close>
-  apply (rule tensor_extensionality)
-  by (auto intro!: register_comp register_preregister register_tensor_is_hom)
-
 lemma register_tensor_id_id[simp]: \<open>id \<otimes>\<^sub>r id = id\<close>
   by (simp add: register_tensor_is_hom tensor_extensionality)
 
-lemma iso_register_tensor_is_iso_register:
-  assumes [simp]: \<open>iso_register F\<close> \<open>iso_register G\<close>
-  shows \<open>iso_register (F \<otimes>\<^sub>r G)\<close>
-proof -
-  from assms obtain F' G' where [simp]: \<open>register F'\<close> \<open>register G'\<close> \<open>F o F' = id\<close> \<open>F' o F = id\<close>
-    \<open>G o G' = id\<close> \<open>G' o G = id\<close>
-    by (meson iso_register_def)
-  show ?thesis
-    apply (rule iso_registerI[where G=\<open>F' \<otimes>\<^sub>r G'\<close>])
-    by (auto simp: register_tensor_is_hom iso_register_is_register register_tensor_distrib)
-qed
-
-lemma iso_register_id[simp]: \<open>iso_register id\<close>
-  by (simp add: iso_register_def)
+(* lemma equivalent_registers_compatible_right:
+  assumes \<open>compatible F G\<close>
+  assumes eq: \<open>equivalent_registers G H\<close>
+  shows \<open>compatible F H\<close>
+  sorry *)
 
 lemma equivalent_registers_pair_right:
-  assumes [simp]: \<open>compatible F G\<close> \<open>compatible F H\<close>
+  assumes [simp]: \<open>compatible F G\<close>
   assumes eq: \<open>equivalent_registers G H\<close>
   shows \<open>equivalent_registers (F;G) (F;H)\<close>
 proof -
@@ -108,6 +92,21 @@ proof -
         simp:  register_pair_apply iso_register_is_register)
   show ?thesis
     apply (rule equivalent_registersI[where I=\<open>id \<otimes>\<^sub>r I\<close>])
+    using * by (auto intro!: iso_register_tensor_is_iso_register)
+qed
+
+lemma equivalent_registers_pair_left:
+  assumes [simp]: \<open>compatible F G\<close>
+  assumes eq: \<open>equivalent_registers F H\<close>
+  shows \<open>equivalent_registers (F;G) (H;G)\<close>
+proof -
+  from eq obtain I where [simp]: \<open>iso_register I\<close> and \<open>F o I = H\<close>
+    by (metis equivalent_registers_def)
+  then have *: \<open>(F;G) \<circ> (I \<otimes>\<^sub>r id) = (H;G)\<close>
+    by (auto intro!: tensor_extensionality register_comp register_preregister register_tensor_is_hom 
+        simp:  register_pair_apply iso_register_is_register)
+  show ?thesis
+    apply (rule equivalent_registersI[where I=\<open>I \<otimes>\<^sub>r id\<close>])
     using * by (auto intro!: iso_register_tensor_is_iso_register)
 qed
 
@@ -127,18 +126,18 @@ lemma compatible_complement_left[simp]: \<open>register X \<Longrightarrow> comp
 lemma compatible_complement_right[simp]: \<open>register X \<Longrightarrow> compatible X (complement X)\<close>
   using complement_is_complement complements_def by blast
 
-lemma unit_register_pair[simp]: \<open>equivalent_registers X (unit_register; X)\<close> if [simp]: \<open>register X\<close>
+lemma unit_register_pair[simp]: \<open>equivalent_registers X (U; X)\<close> if [simp]: \<open>is_unit_register U\<close> \<open>register X\<close>
 proof -
-  have \<open>equivalent_registers id (unit_register; id)\<close>
-    by (metis complement_is_complement complements_def complements_sym equivalent_registers_def id_comp register_id unit_register_def)
-  also have \<open>equivalent_registers \<dots> (unit_register; (X; complement X))\<close>
+  have \<open>equivalent_registers id (U; id)\<close>
+    using is_unit_register_def that(1) by blast
+  also have \<open>equivalent_registers \<dots> (U; (X; complement X))\<close>
     apply (rule equivalent_registers_pair_right)
     apply (auto intro!: unit_register_compatible)
-    by (metis complement_is_complement complements_def equivalent_registers_def equivalent_registers_sym iso_register_def that)
-  also have \<open>equivalent_registers \<dots> ((unit_register; X); complement X)\<close>
+    using complement_is_complement complements_def equivalent_registersI id_comp register_id that(2) by blast
+  also have \<open>equivalent_registers \<dots> ((U; X); complement X)\<close>
     apply (rule equivalent_registers_assoc)
     by auto
-  finally have \<open>complements (unit_register; X) (complement X)\<close>
+  finally have \<open>complements (U; X) (complement X)\<close>
     by (auto simp: equivalent_registers_def complements_def)
   moreover have \<open>equivalent_registers (X; complement X) id\<close>
     by (metis complement_is_complement complements_def equivalent_registers_def iso_register_def that)
@@ -146,18 +145,84 @@ proof -
     by (meson complement_unique complement_is_complement complements_sym equivalent_registers_sym equivalent_registers_trans that)
 qed
 
-(* TODO: Do we have an iso between [in-space of unit_register] \<otimes> A and A? (Where A is an update monoid) 
-   The <- direction would be (\<lambda>x. id_update \<otimes> x). 
-  It follows from unit_register_pair, but not for all possible instantiations of the types.
+lemma equivalent_registers_comp:
+  assumes \<open>equivalent_registers F G\<close>
+  assumes \<open>register H\<close>
+  shows \<open>equivalent_registers (H o F) (H o G)\<close>
+  by (metis (no_types, lifting) assms(1) assms(2) comp_assoc equivalent_registers_def register_comp)
 
-Maybe a first step would be to show that unit_register o unit_register -equiv- unit_register.
-Or better unit_register o A -equiv- unit_register.
-*)
+lemma unit_register_compose:
+  assumes [simp]: \<open>is_unit_register U\<close>
+  assumes [simp]: \<open>register A\<close>
+  shows \<open>is_unit_register (A o U)\<close>
+proof -
+  have \<open>compatible (A o U) (A; complement A)\<close>
+    apply (auto intro!: compatible3')
+    by (metis assms(1) assms(2) comp_id compatible_comp_inner is_unit_register_def)
+  then have compat[simp]: \<open>compatible (A o U) id\<close>
+    by (metis assms(2) compatible_comp_right complement_is_complement complements_def iso_register_def)
+  have \<open>equivalent_registers (A o U; id) (A o U; (A; complement A))\<close>
+    apply (auto intro!: equivalent_registers_pair_right)
+    using assms(2) complement_is_complement complements_def equivalent_registers_def id_comp register_id by blast
+  also have \<open>equivalent_registers \<dots> ((A o U; A o id); complement A)\<close>
+    apply auto
+    by (metis (no_types, hide_lams) compat assms(1) assms(2) compatible_comp_left compatible_def compatible_register1 complement_is_complement complements_def equivalent_registers_assoc id_apply register_unit_register)
+  also have \<open>equivalent_registers \<dots> (A o (U; id); complement A)\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) calculation equivalent_registers_sym equivalent_registers_trans is_unit_register_def register_comp_pair)
+  also have \<open>equivalent_registers \<dots> (A o id; complement A)\<close>
+    apply (intro equivalent_registers_pair_left equivalent_registers_comp)
+    apply (auto simp: assms)
+    using assms(1) equivalent_registers_sym register_id unit_register_pair by blast
+  also have \<open>equivalent_registers \<dots> id\<close>
+    by (metis assms(2) comp_id complement_is_complement complements_def equivalent_registers_def iso_register_inv iso_register_inv_comp2 pair_is_register)
+  finally show ?thesis
+    using compat equivalent_registers_sym is_unit_register_def by blast
+qed
 
 lemma unit_register_unique:
-  assumes \<open>compatible F id\<close>
-  assumes \<open>equivalent_registers id (F; id)\<close>
-  shows \<open>equivalent_registers F unit_register\<close>
-  using assms by (metis complement_unique complements_def complements_sym equivalent_registers_def id_comp unit_register_def)
+  assumes \<open>is_unit_register F\<close>
+  assumes \<open>is_unit_register G\<close>
+  shows \<open>equivalent_registers F G\<close>
+proof -
+  have \<open>complements F id\<close> \<open>complements G id\<close>
+    using assms by (metis complements_def equivalent_registers_def id_comp is_unit_register_def)+
+  then show ?thesis
+    by (meson complement_unique complements_sym equivalent_registers_sym equivalent_registers_trans)
+qed
+
+lemma unit_register_domains_isomorphic:
+  fixes F :: \<open>'a::domain update \<Rightarrow> 'c::domain update\<close>
+  fixes G :: \<open>'b::domain update \<Rightarrow> 'd::domain update\<close>
+  assumes \<open>is_unit_register F\<close>
+  assumes \<open>is_unit_register G\<close>
+  shows \<open>\<exists>I :: 'a update \<Rightarrow> 'b update. iso_register I\<close>
+proof -
+  have \<open>is_unit_register ((\<lambda>d. tensor_update id_update d) o G)\<close>
+    by (simp add: assms(2) unit_register_compose)
+  moreover have \<open>is_unit_register ((\<lambda>c. tensor_update c id_update) o F)\<close>
+    using assms(1) register_tensor_left unit_register_compose by blast
+  ultimately have \<open>equivalent_registers ((\<lambda>d. tensor_update id_update d) o G) ((\<lambda>c. tensor_update c id_update) o F)\<close>
+    using unit_register_unique by blast
+  then show ?thesis
+    unfolding equivalent_registers_def by auto
+qed
+
+lemma unit_register_domain_tensor_unit:
+  fixes U :: \<open>'a::domain update \<Rightarrow> _\<close>
+  assumes \<open>is_unit_register U\<close>
+  shows \<open>\<exists>I :: 'b::domain update \<Rightarrow> ('a*'b) update. iso_register I\<close>
+       (* Can we show that I = (\<lambda>x. tensor_update id_update x) ? *)
+proof -
+  have \<open>equivalent_registers (id :: 'b update \<Rightarrow> _) (unit_register; id)\<close>
+    by auto
+  then obtain J :: \<open>'b update \<Rightarrow> ((('b, 'b) complement_domain * 'b) update)\<close> where \<open>iso_register J\<close>
+    using equivalent_registers_def iso_register_inv by blast
+  moreover obtain K :: \<open>('b, 'b) complement_domain update \<Rightarrow> 'a update\<close> where \<open>iso_register K\<close>
+    using assms unit_register_domains_isomorphic unit_register_is_unit_register by blast
+  ultimately have \<open>iso_register ((K \<otimes>\<^sub>r id) o J)\<close>
+    by auto
+  then show ?thesis   
+    by auto
+qed
 
 end
