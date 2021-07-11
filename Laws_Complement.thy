@@ -59,10 +59,6 @@ lemma register_unit_register[simp]: \<open>is_unit_register U \<Longrightarrow> 
 lemma unit_register_compatible[simp]: \<open>compatible U X\<close> if \<open>is_unit_register U\<close> \<open>register X\<close>
   by (metis compatible_comp_right id_comp is_unit_register_def that(1) that(2))
 
-lemma equivalent_registers_trans[trans]: 
-  assumes \<open>equivalent_registers F G\<close> and \<open>equivalent_registers G H\<close>
-  shows \<open>equivalent_registers F H\<close>
-  sorry
 
 lemma equivalent_registersI:
   assumes \<open>register F\<close>
@@ -71,14 +67,28 @@ lemma equivalent_registersI:
   shows \<open>equivalent_registers F G\<close>
   using assms unfolding equivalent_registers_def by blast
 
+lemma equivalent_registers_trans[trans]: 
+  assumes \<open>equivalent_registers F G\<close> and \<open>equivalent_registers G H\<close>
+  shows \<open>equivalent_registers F H\<close>
+proof -
+  from assms have [simp]: \<open>register F\<close> \<open>register G\<close>
+    by (auto simp: equivalent_registers_def)
+  from assms(1) obtain I where [simp]: \<open>iso_register I\<close> and \<open>F o I = G\<close>
+    using equivalent_registers_def by blast
+  from assms(2) obtain J where [simp]: \<open>iso_register J\<close> and \<open>G o J = H\<close>
+    using equivalent_registers_def by blast
+  have \<open>register F\<close>
+    by (auto simp: equivalent_registers_def)
+  moreover have \<open>iso_register (I o J)\<close>
+    using \<open>iso_register I\<close> \<open>iso_register J\<close> iso_register_comp by blast
+  moreover have \<open>F o (I o J) = H\<close>
+    by (simp add: \<open>F \<circ> I = G\<close> \<open>G \<circ> J = H\<close> o_assoc)
+  ultimately show ?thesis
+    by (rule equivalent_registersI)
+qed
+
 lemma register_tensor_id_id[simp]: \<open>id \<otimes>\<^sub>r id = id\<close>
   by (simp add: register_tensor_is_hom tensor_extensionality)
-
-(* lemma equivalent_registers_compatible_right:
-  assumes \<open>compatible F G\<close>
-  assumes eq: \<open>equivalent_registers G H\<close>
-  shows \<open>compatible F H\<close>
-  sorry *)
 
 lemma equivalent_registers_pair_right:
   assumes [simp]: \<open>compatible F G\<close>

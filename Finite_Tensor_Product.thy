@@ -185,7 +185,75 @@ instance prod :: (CARD_1, CARD_1) CARD_1
 
 (* TODO move to BO library *)
 instance cblinfun :: (\<open>{cfinite_dim,complex_normed_vector}\<close>, \<open>{cfinite_dim,complex_normed_vector}\<close>) cfinite_dim
-  sorry
+proof intro_classes
+  obtain basisA :: \<open>'a set\<close> where [simp]: \<open>cspan basisA = UNIV\<close> \<open>cindependent basisA\<close> \<open>finite basisA\<close>
+    using finite_basis by blast
+  obtain basisB :: \<open>'b set\<close> where [simp]: \<open>cspan basisB = UNIV\<close> \<open>cindependent basisB\<close> \<open>finite basisB\<close>
+    using finite_basis by blast
+  term cconstruct
+  define f where \<open>f a b = cconstruct basisA (\<lambda>x. if x=a then b else 0)\<close> for a :: 'a and b :: 'b
+  have f_a: \<open>f a b a = b\<close> if \<open>a : basisA\<close> for a b
+    by (simp add: complex_vector.construct_basis f_def that)
+  have f_not_a: \<open>f a b c = 0\<close> if \<open>a : basisA\<close> and \<open>c : basisA\<close> and \<open>a \<noteq> c\<close>for a b c
+    using that by (simp add: complex_vector.construct_basis f_def)
+  define F where \<open>F a b = cBlinfun (f a b)\<close> for a b
+  have \<open>clinear (f a b)\<close> for a b
+    by (auto intro: complex_vector.linear_construct simp: f_def)
+  then have \<open>bounded_clinear (f a b)\<close> for a b
+    by auto
+  then have F_apply: \<open>cblinfun_apply (F a b) = f a b\<close> for a b
+    by (simp add: F_def bounded_clinear_cBlinfun_apply)
+  have b_span: \<open>{F a b|b. True} \<subseteq> cspan {F a b|b. b\<in>basisB}\<close> if \<open>a \<in> basisA\<close> for a
+  proof auto
+    fix b :: 'b
+    from \<open>cspan basisB = UNIV\<close>
+    obtain r t where \<open>finite t\<close> and \<open>t \<subseteq> basisB\<close> and b_lincom: \<open>b = (\<Sum>a\<in>t. r a *\<^sub>C a)\<close>
+      unfolding complex_vector.span_alt apply atomize_elim by blast
+    have *: \<open>f a b s = (\<Sum>i\<in>t. r i *\<^sub>C f a i s)\<close> if \<open>s \<in> basisA\<close> for s
+      apply (cases \<open>a=s\<close>)
+      using \<open>a \<in> basisA\<close> that by (auto simp: F_apply f_a f_not_a b_lincom)
+    have \<open>F a b = (\<Sum>i\<in>t. r i *\<^sub>C (F a i))\<close>
+      apply (rule cblinfun_eq_on_UNIV_span[where basis=basisA])
+      by (auto simp: cblinfun.sum_left F_apply cblinfun.scaleC_left *)
+    with \<open>t \<subseteq> basisB\<close> and \<open>finite t\<close>
+    show \<open>F a b \<in> cspan {F a b |b. b \<in> basisB}\<close>
+      by (smt (z3) Collect_mono_iff complex_vector.span_explicit complex_vector.span_scale complex_vector.span_sum complex_vector.span_superset subset_iff)
+  qed
+  moreover have a_span: \<open>UNIV \<subseteq> cspan {F a b|a b. a \<in> basisA}\<close>
+  proof (rule subsetI)
+    fix G 
+    define G' where \<open>G' = (\<Sum>a\<in>basisA. F a (G *\<^sub>V a))\<close>
+    have \<open>G *\<^sub>V a = G' *\<^sub>V a\<close> if \<open>a \<in> basisA\<close> for a
+      apply (auto simp: cblinfun.sum_left G'_def) 
+      apply (subst sum_single[where i=a])
+      by (auto simp: F_apply f_a f_not_a that) 
+    then have \<open>G = G'\<close>
+      by (meson \<open>cspan basisA = UNIV\<close> cblinfun_eq_on_UNIV_span)
+    then show \<open>G \<in> cspan {F a b|a b. a \<in> basisA}\<close>
+      by (metis (mono_tags, lifting) G'_def complex_vector.span_base complex_vector.span_sum mem_Collect_eq)
+  qed
+  have \<open>cspan {F a b|a b. a \<in> basisA \<and> b \<in> basisB} = UNIV\<close>
+  proof -
+    note a_span
+    also have \<open>cspan {F a b |a b. a \<in> basisA} = cspan (\<Union>a\<in>basisA. {F a b| b. True})\<close>
+      by (smt (verit, del_insts) Collect_cong Sup_set_def UN_iff mem_Collect_eq)
+    also have \<open>\<dots> \<subseteq> cspan (\<Union>a\<in>basisA. cspan {F a b|b. b\<in>basisB})\<close>
+      apply (rule complex_vector.span_mono, rule UN_mono)
+       apply simp
+      by (rule b_span)
+    also have \<open>\<dots> \<subseteq> cspan (\<Union>a\<in>basisA. {F a b|b. b\<in>basisB})\<close>
+      by (metis (mono_tags, lifting) UN_subset_iff complex_vector.span_minimal complex_vector.span_superset complex_vector.subspace_span)
+    also have \<open>\<dots> = cspan {F a b |a b. a \<in> basisA \<and> b \<in> basisB}\<close>
+      apply (rule arg_cong[where f=cspan])
+      by auto
+    finally show ?thesis
+      by auto
+  qed
+  moreover have \<open>finite {F a b|a b. a \<in> basisA \<and> b \<in> basisB}\<close>
+    apply (rule finite_image_set2) by auto
+  ultimately show \<open>\<exists>S :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set. finite S \<and> cspan S = UNIV\<close>
+    by auto
+qed
 
 definition tensor_lift :: \<open>(('a1::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a2::finite ell2) \<Rightarrow> ('b1::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b2::finite ell2) \<Rightarrow> 'c)
                         \<Rightarrow> ((('a1\<times>'b1) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a2\<times>'b2) ell2) \<Rightarrow> 'c::complex_vector)\<close> where
