@@ -453,4 +453,43 @@ lemma clinear_tensor_right[simp]: \<open>clinear (\<lambda>b. a \<otimes>\<^sub>
    apply (rule tensor_op_right_add)
   by (rule tensor_op_scaleC_right)
 
+lemma tensor_ell2_nonzero: \<open>a \<otimes>\<^sub>s b \<noteq> 0\<close> if \<open>a \<noteq> 0\<close> and \<open>b \<noteq> 0\<close>
+  apply (use that in transfer)
+  apply auto
+  by (metis mult_eq_0_iff old.prod.case)
+
+lemma tensor_op_nonzero:
+  fixes a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+  assumes \<open>a \<noteq> 0\<close> and \<open>b \<noteq> 0\<close>
+  shows \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
+proof -
+  from \<open>a \<noteq> 0\<close> obtain i where i: \<open>a *\<^sub>V ket i \<noteq> 0\<close>
+    by (metis cblinfun.zero_left equal_ket)
+  from \<open>b \<noteq> 0\<close> obtain j where j: \<open>b *\<^sub>V ket j \<noteq> 0\<close>
+    by (metis cblinfun.zero_left equal_ket)
+  from i j have ijneq0: \<open>(a *\<^sub>V ket i) \<otimes>\<^sub>s (b *\<^sub>V ket j) \<noteq> 0\<close>
+    by (simp add: tensor_ell2_nonzero)
+  have \<open>(a *\<^sub>V ket i) \<otimes>\<^sub>s (b *\<^sub>V ket j) = (a \<otimes>\<^sub>o b) *\<^sub>V ket (i,j)\<close>
+    by (simp add: tensor_op_ket)
+  with ijneq0 show \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
+    by force
+qed
+
+lemma inj_tensor_left: \<open>inj (\<lambda>a::'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2. a \<otimes>\<^sub>o b)\<close> if \<open>b \<noteq> 0\<close> for b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+proof (rule injI, rule ccontr)
+  fix x y :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close>
+  assume eq: \<open>x \<otimes>\<^sub>o b = y \<otimes>\<^sub>o b\<close>
+  assume neq: \<open>x \<noteq> y\<close>
+  define a where \<open>a = x - y\<close>
+  from neq a_def have neq0: \<open>a \<noteq> 0\<close>
+    by auto
+  with \<open>b \<noteq> 0\<close> have \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
+    by (simp add: tensor_op_nonzero)
+  then have \<open>x \<otimes>\<^sub>o b \<noteq> y \<otimes>\<^sub>o b\<close>
+    unfolding a_def
+    by (metis add_cancel_left_left diff_add_cancel tensor_op_left_add) 
+  with eq show False
+    by auto
+qed
+
 end
