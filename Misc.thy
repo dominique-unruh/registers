@@ -22,9 +22,7 @@ unbundle jnf_notation
 abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
 abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)"
 
-term "x::_::onb_enum == y::(_ \<Rightarrow>\<^sub>C\<^sub>L _)"
-
-(* TODO: generalize for any onb instead of ket *)
+(* TODO: generalize for any onb instead of ket, should be easy using cblinfun_Hamel_basis *)
 lemma linfun_cspan: \<open>cspan {butterket i j| (i::'b::finite) (j::'a::finite). True} = UNIV\<close>
 proof (rule, simp, rule)
   fix f :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
@@ -62,6 +60,8 @@ qed
 
 (* definition bra :: "'a \<Rightarrow> (_,complex) cblinfun" where "bra i = vector_to_cblinfun (ket i)*" for i *)
 
+(* TODO: generalize for any onb instead of ket *)
+(* TODO: could be easier if we instantiate cblinfun as Hilbert-Schmidt space (for finite-dim). But we don't have trace! *)
 lemma linfun_cindependent: \<open>cindependent {butterket i j| (i::'b::finite) (j::'a::finite). True}\<close>
 proof (rule complex_vector.independent_if_scalars_zero)
   show finite: \<open>finite {butterket (i::'b) (j::'a) |i j. True}\<close>
