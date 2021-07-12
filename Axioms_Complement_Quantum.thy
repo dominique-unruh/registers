@@ -7,81 +7,6 @@ begin
 no_notation m_inv ("inv\<index> _" [81] 80)
 no_notation Lattice.join (infixl "\<squnion>\<index>" 65)
 
-(* TODO move to BO *)
-declare cblinfun.scaleC_left[simp]
-
-(* TODO move *)
-lemma csubspace_space_as_set[simp]: \<open>csubspace (space_as_set S)\<close>
-  by (metis closed_csubspace_def mem_Collect_eq space_as_set)
-
-(* TODO move *)
-lemma cdim_UNIV_basis_enum: \<open>cdim (UNIV::'a::basis_enum set) = length (canonical_basis::'a list)\<close>
-  apply (subst is_generator_set[symmetric])
-  apply (subst complex_vector.dim_span_eq_card_independent)
-   apply (rule is_cindependent_set)
-  using distinct_canonical_basis distinct_card by blast
-
-(* TODO move *)
-lemma cdim_UNIV_ell2: \<open>cdim (UNIV::'a::finite ell2 set) = CARD('a)\<close>
-  apply (subst cspan_ket_finite[symmetric])
-  apply (subst complex_vector.dim_span_eq_card_independent)
-  using cindependent_ket apply blast
-  using card_image inj_ket by blast
-
-(* TODO move *)
-lemma finite_basis_subspace:
-  assumes \<open>csubspace X\<close>
-  shows "\<exists>basis::'a::cfinite_dim set. finite basis \<and> cindependent basis \<and> cspan basis = X"
-proof -
-  from cfinitely_spanned
-  obtain S :: \<open>'a set\<close> where \<open>finite S\<close> and \<open>cspan S = UNIV\<close>
-    by auto
-  from complex_vector.maximal_independent_subset
-  obtain B :: \<open>'a set\<close> where \<open>B \<subseteq> X\<close> and \<open>cindependent B\<close> and \<open>X \<subseteq> cspan B\<close>
-    by metis
-  moreover have \<open>finite B\<close>
-    using \<open>cindependent B\<close> cfinitely_spanned complex_vector.independent_span_bound by auto
-  moreover have \<open>cspan B \<subseteq> X\<close>
-    using \<open>csubspace X\<close> \<open>B \<subseteq> X\<close>
-    by (simp add: complex_vector.span_minimal)
-  with \<open>X \<subseteq> cspan B\<close> have \<open>cspan B = X\<close>
-    by auto
-  ultimately show ?thesis
-    by auto
-qed
-
-(* TODO move *)
-lemma surj_isometry_unitary:
-  assumes \<open>isometry U\<close>
-  assumes \<open>U *\<^sub>S \<top> = \<top>\<close>
-  shows \<open>unitary U\<close>
-  using assms
-  by (metis Proj_congruence Proj_on_own_range' cblinfun_compose_id_right id_cblinfun_adjoint isometry_def unitary_def unitary_range)
-
-(* TODO move *)
-lemma ortho_isometry:
-  assumes spanB: \<open>ccspan B = \<top>\<close>
-  assumes orthoU: \<open>\<And>b c. b\<in>B \<Longrightarrow> c\<in>B \<Longrightarrow> cinner (U *\<^sub>V b) (U *\<^sub>V c) = cinner b c\<close>
-  shows \<open>isometry U\<close>
-proof -
-  have [simp]: \<open>b \<in> closure (cspan B)\<close> for b
-    using spanB apply transfer by simp
-  have *: \<open>cinner (U* *\<^sub>V U *\<^sub>V \<psi>) \<phi> = cinner \<psi> \<phi>\<close> if \<open>\<psi>\<in>B\<close> and \<open>\<phi>\<in>B\<close> for \<psi> \<phi>
-    by (simp add: cinner_adj_left orthoU that(1) that(2))
-  have *: \<open>cinner (U* *\<^sub>V U *\<^sub>V \<psi>) \<phi> = cinner \<psi> \<phi>\<close> if \<open>\<psi>\<in>B\<close> for \<psi> \<phi>
-    apply (rule bounded_clinear_eq_on[where t=\<phi> and G=B])
-    using bounded_clinear_cinner_right *[OF that]
-    by auto
-  have \<open>U* *\<^sub>V U *\<^sub>V \<phi> = \<phi>\<close> if \<open>\<phi>\<in>B\<close> for \<phi>
-    apply (rule cinner_extensionality)
-    apply (subst cinner_eq_flip)
-    by (simp add: * that)
-  then have \<open>U* o\<^sub>C\<^sub>L U = id_cblinfun\<close>
-    by (metis cblinfun_apply_cblinfun_compose cblinfun_eq_gen_eqI id_cblinfun_apply spanB)
-  then show \<open>isometry U\<close>
-    using isometry_def by blast
-qed
-
 typedef ('a::finite,'b::finite) complement_domain = \<open>{..< if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1}\<close>
   by auto
 
@@ -110,96 +35,7 @@ proof -
     by (metis card_image)
 qed
 
-(* TODO: closure_is_closed_csubspace[simp] *)
-
-(* TODO: Improve closed_sum_zero_right/left: remove closed A assm, replace rhs by closure A *)
-
-lemma \<open>closure (\<Union>i\<in>I. X) \<supseteq> (\<Union>i\<in>I. closure X)\<close>
-  by auto
-
-(* TODO move *)
-lemma closed_sum_closure_right[simp]:
-  fixes A B :: \<open>'a::real_normed_vector set\<close>
-  shows \<open>A +\<^sub>M closure B = A +\<^sub>M B\<close>
-proof
-  show \<open>A +\<^sub>M B \<subseteq> A +\<^sub>M closure B\<close>
-    by (simp add: closed_sum_mono_right closure_subset)
-  have \<open>A +\<^sub>M B = closure (\<Union>a\<in>A. plus a ` B)\<close>
-    unfolding closed_sum_def set_plus_def
-    apply (rule arg_cong[where f=closure]) by auto
-  also have \<open>\<dots> = closure (closure (\<Union>a\<in>A. plus a ` B))\<close>
-    by simp
-  also have \<open>\<dots> \<supseteq> closure (\<Union>a\<in>A. closure (plus a ` B))\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
-    apply (rule closure_mono)
-    by (simp add: Sup_upper UN_least closure_mono)
-  also have \<open>\<dots>  = closure (\<Union>a\<in>A. plus a ` closure B)\<close>
-    by (simp add: closure_translation)
-  also have \<open>\<dots> = A +\<^sub>M closure B\<close>
-    unfolding closed_sum_def set_plus_def
-    apply (rule arg_cong[where f=closure]) by auto
-  finally show \<open>A +\<^sub>M closure B \<subseteq> A +\<^sub>M B\<close>
-    by -
-qed
-
-lemma closed_sum_closure_left[simp]:
-  fixes A B :: \<open>'a::real_normed_vector set\<close>
-  shows \<open>closure A +\<^sub>M B = A +\<^sub>M B\<close>
-  by (simp add: closed_sum_comm)
-
-lemma closed_sum_cspan[simp]:
-  shows \<open>cspan X +\<^sub>M cspan Y = closure (cspan (X \<union> Y))\<close>
-  by (smt (verit, best) Collect_cong closed_sum_def complex_vector.span_Un set_plus_def)
-
-lemma norm_to_conjugate_space[simp]: \<open>norm (to_conjugate_space x) = norm x\<close>
-  by (fact norm_conjugate_space.abs_eq)
-
-lemma norm_from_conjugate_space[simp]: \<open>norm (from_conjugate_space x) = norm x\<close>
-  by (simp add: norm_conjugate_space.rep_eq)
-
-lemma bounded_antilinear_to_conjugate_space[simp]: \<open>bounded_antilinear to_conjugate_space\<close>
-  apply (simp add: bounded_antilinear_def bounded_antilinear_axioms_def)
-  by (rule exI[of _ 1], simp)
-
-
-lemma bounded_antilinear_from_conjugate_space[simp]: \<open>bounded_antilinear from_conjugate_space\<close>
-  apply (simp add: bounded_antilinear_def bounded_antilinear_axioms_def)
-  by (rule exI[of _ 1], simp)
-
-lemma closure_to_conjugate_space: \<open>closure (to_conjugate_space ` X) = to_conjugate_space ` closure X\<close>
-proof -
-  have 1: \<open>to_conjugate_space ` closure X \<subseteq> closure (to_conjugate_space ` X)\<close>
-    apply (rule closure_bounded_linear_image_subset)
-    by (simp add: bounded_antilinear.bounded_linear)
-  have \<open>\<dots> = to_conjugate_space ` from_conjugate_space ` closure (to_conjugate_space ` X)\<close>
-    by (simp add: from_conjugate_space_inverse image_image)
-  also have \<open>\<dots> \<subseteq> to_conjugate_space ` closure (from_conjugate_space ` to_conjugate_space ` X)\<close>
-    apply (rule image_mono)
-    apply (rule closure_bounded_linear_image_subset)
-    by (simp add: bounded_antilinear.bounded_linear)
-  also have \<open>\<dots> = to_conjugate_space ` closure X\<close>
-    by (simp add: to_conjugate_space_inverse image_image)
-  finally show ?thesis
-    using 1 by simp
-qed
-
-lemma closure_from_conjugate_space: \<open>closure (from_conjugate_space ` X) = from_conjugate_space ` closure X\<close>
-proof -
-  have 1: \<open>from_conjugate_space ` closure X \<subseteq> closure (from_conjugate_space ` X)\<close>
-    apply (rule closure_bounded_linear_image_subset)
-    by (simp add: bounded_antilinear.bounded_linear)
-  have \<open>\<dots> = from_conjugate_space ` to_conjugate_space ` closure (from_conjugate_space ` X)\<close>
-    by (simp add: to_conjugate_space_inverse image_image)
-  also have \<open>\<dots> \<subseteq> from_conjugate_space ` closure (to_conjugate_space ` from_conjugate_space ` X)\<close>
-    apply (rule image_mono)
-    apply (rule closure_bounded_linear_image_subset)
-    by (simp add: bounded_antilinear.bounded_linear)
-  also have \<open>\<dots> = from_conjugate_space ` closure X\<close>
-    by (simp add: from_conjugate_space_inverse image_image)
-  finally show ?thesis
-    using 1 by simp
-qed
-
-lemma equal_span_cblinfun_image_antilinear:
+(* lemma equal_span_cblinfun_image_antilinear:
   fixes A B :: "'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector"
   assumes \<open>bounded_antilinear A\<close> and \<open>bounded_antilinear B\<close> and
     eq: \<open>\<And>x. x \<in> G \<Longrightarrow> A x = B x\<close> and t: \<open>t \<in> closure (cspan G)\<close>
@@ -218,47 +54,9 @@ proof -
     by (simp add: closure_to_conjugate_space)
   ultimately show \<open>A t = B t\<close>
     by (metis imageI iso_tuple_UNIV_I t to_conjugate_space_inverse)
-qed
-
-lemma bounded_antilinear_0[simp]: \<open>bounded_antilinear (\<lambda>_. 0)\<close>
-  by (rule bounded_antilinear_intro[where K=0], auto)
-
-lemma is_orthogonal_closure_cspan:
-  assumes "\<And>x y. x \<in> X \<Longrightarrow> y \<in> Y \<Longrightarrow> is_orthogonal x y"
-  assumes \<open>x \<in> closure (cspan X)\<close> \<open>y \<in> closure (cspan Y)\<close>
-  shows "is_orthogonal x y"
-proof -
-  have *: \<open>cinner x y = 0\<close> if \<open>y \<in> Y\<close> for y
-    using bounded_antilinear_cinner_left apply (rule equal_span_cblinfun_image_antilinear[where G=X])
-    using assms that by auto
-  show \<open>cinner x y = 0\<close>
-    using bounded_clinear_cinner_right apply (rule bounded_clinear_eq_on[where G=Y])
-    using * assms by auto
-qed
+qed *)
 
 (* TODO move *)
-lemma Proj_plus:
-  assumes "\<And>x y. x \<in> X \<Longrightarrow> y \<in> Y \<Longrightarrow> is_orthogonal x y"
-  shows \<open>Proj (ccspan X) + Proj (ccspan Y) = Proj (ccspan (X \<union> Y))\<close>
-proof -
-  have \<open>x \<in> cspan X \<Longrightarrow> y \<in> cspan Y \<Longrightarrow> is_orthogonal x y\<close> for x y
-    apply (rule is_orthogonal_closure_cspan[where X=X and Y=Y])
-    using closure_subset assms by auto
-  then have \<open>x \<in> closure (cspan X) \<Longrightarrow> y \<in> closure (cspan Y) \<Longrightarrow> is_orthogonal x y\<close> for x y
-    by (metis orthogonal_complementI orthogonal_complement_of_closure orthogonal_complement_orthoI')
-  then show ?thesis
-    apply (transfer fixing: X Y)
-    apply (subst projection_plus[symmetric])
-    by (auto simp add: closure_is_closed_csubspace)
-qed
-
-(* TODO move *)
-lemma ccspan_leqI:
-  assumes \<open>M \<subseteq> space_as_set S\<close>
-  shows \<open>ccspan M \<le> S\<close>
-  using assms apply transfer
-  by (simp add: closed_csubspace.closed closure_minimal complex_vector.span_minimal)
-
 (* TODO move *)
 lemma cblinfun_plus_applySpace_distr:
   \<open>(A + B) *\<^sub>S S \<le> A *\<^sub>S S \<squnion> B *\<^sub>S S\<close>
@@ -354,7 +152,7 @@ proof -
 
   obtain B0 where finiteB0: \<open>finite (B0 i)\<close> and cspanB0: \<open>cspan (B0 i) = space_as_set (S i)\<close> for i
   apply atomize_elim apply (simp flip: all_conj_distrib) apply (rule choice)
-    by (metis closed_csubspace_def finite_basis_subspace mem_Collect_eq space_as_set) 
+    by (meson cfinite_dim_finite_subspace_basis csubspace_space_as_set)
 
   obtain B where orthoB: \<open>is_ortho_set (B i)\<close>
     and normalB: \<open>\<And>b. b \<in> B i \<Longrightarrow> norm b = 1\<close>
@@ -528,7 +326,7 @@ proof -
       by (simp add: eqa_def eqac_def eqc_def \<xi>'\<alpha>' \<xi>\<alpha>)
   qed
   then have \<open>isometry U\<close>
-    apply (rule_tac ortho_isometry[where B=\<open>range ket\<close>])
+    apply (rule_tac orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
     using eqac_def by auto
 
   have \<open>U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U = butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun\<close> for \<xi> \<eta>
@@ -592,7 +390,7 @@ proof -
       apply auto
       using top.extremum_unique by blast
     with \<open>isometry U\<close> show \<open>unitary U\<close>
-      by (rule surj_isometry_unitary)
+      by (rule surj_isometry_is_unitary)
   qed
 
   have \<open>\<Phi> \<theta> = U o\<^sub>C\<^sub>L (\<theta> \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L U*\<close> for \<theta>
@@ -618,48 +416,7 @@ lemma register_decomposition_converse:
   using _ unitary_sandwich_register apply (rule register_comp[unfolded o_def])
   using assms by auto
 
-lemma id_cblinfun_not_0[simp]: \<open>(id_cblinfun :: 'a::{complex_normed_vector, not_singleton} \<Rightarrow>\<^sub>C\<^sub>L _) \<noteq> 0\<close>
-  by (metis ccsubspace_top_not_bot kernel_0 kernel_id zero_ccsubspace_def)
-
-lemma tensor_ell2_nonzero: \<open>a \<otimes>\<^sub>s b \<noteq> 0\<close> if \<open>a \<noteq> 0\<close> and \<open>b \<noteq> 0\<close>
-  apply (use that in transfer)
-  apply auto
-  by (metis mult_eq_0_iff old.prod.case)
-
-lemma tensor_op_nonzero:
-  fixes a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2\<close> and b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
-  assumes \<open>a \<noteq> 0\<close> and \<open>b \<noteq> 0\<close>
-  shows \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
-proof -
-  from \<open>a \<noteq> 0\<close> obtain i where i: \<open>a *\<^sub>V ket i \<noteq> 0\<close>
-    by (metis cblinfun.zero_left equal_ket)
-  from \<open>b \<noteq> 0\<close> obtain j where j: \<open>b *\<^sub>V ket j \<noteq> 0\<close>
-    by (metis cblinfun.zero_left equal_ket)
-  from i j have ijneq0: \<open>(a *\<^sub>V ket i) \<otimes>\<^sub>s (b *\<^sub>V ket j) \<noteq> 0\<close>
-    by (simp add: tensor_ell2_nonzero)
-  have \<open>(a *\<^sub>V ket i) \<otimes>\<^sub>s (b *\<^sub>V ket j) = (a \<otimes>\<^sub>o b) *\<^sub>V ket (i,j)\<close>
-    by (simp add: tensor_op_ket)
-  with ijneq0 show \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
-    by force
-qed
-
-lemma inj_tensor_left: \<open>inj (\<lambda>a::'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2. a \<otimes>\<^sub>o b)\<close> if \<open>b \<noteq> 0\<close> for b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
-proof (rule injI, rule ccontr)
-  fix x y :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close>
-  assume eq: \<open>x \<otimes>\<^sub>o b = y \<otimes>\<^sub>o b\<close>
-  assume neq: \<open>x \<noteq> y\<close>
-  define a where \<open>a = x - y\<close>
-  from neq a_def have neq0: \<open>a \<noteq> 0\<close>
-    by auto
-  with \<open>b \<noteq> 0\<close> have \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
-    by (simp add: tensor_op_nonzero)
-  then have \<open>x \<otimes>\<^sub>o b \<noteq> y \<otimes>\<^sub>o b\<close>
-    unfolding a_def
-    by (metis add_cancel_left_left diff_add_cancel tensor_op_left_add) 
-  with eq show False
-    by auto
-qed
-
+(* TODO move *)
 lemma register_inj: \<open>inj F\<close> if \<open>register F\<close>
 proof -
   obtain U :: \<open>('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
@@ -754,15 +511,6 @@ proof (rule Set.set_eqI)
     by -
 qed
 
-lemma cinner_ket_equal:
-  assumes \<open>\<And>i. cinner (ket i) \<psi> = cinner (ket i) \<phi>\<close>
-  shows \<open>\<psi> = \<phi>\<close>
-  apply (rule cinner_extensionality)
-    apply (subst cinner_eq_flip)
-  apply (rule bounded_clinear_eq_on[where A="cinner \<psi>" and G="range ket"])
-  apply (auto simp: ket_ell2_span bounded_clinear_cinner_right)
-  by (metis assms cinner_commute)
-
 lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)) = range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
 proof (rule Set.set_eqI, rule iffI)
   fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
@@ -809,7 +557,7 @@ proof (rule Set.set_eqI, rule iffI)
     finally show ?thesis by -
   qed
   then have \<open>x = (id_cblinfun \<otimes>\<^sub>o x')\<close>
-    by (auto intro!: equal_ket cinner_ket_equal)
+    by (auto intro!: equal_ket cinner_ket_eqI)
   then show \<open>x \<in> range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
     by auto
 next
@@ -837,6 +585,7 @@ proof -
     by (simp add: commutant_exchange commutant_tensor1)
 qed
 
+(* TODO move *)
 lemma register_adjoint: "F (a*) = (F a)*" if \<open>register F\<close>
   using register_def that by blast
 
