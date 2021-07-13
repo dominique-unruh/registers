@@ -4,7 +4,10 @@ section \<open>Quantum instantiation of registers\<close>
 
     # Type classes
     domain \<rightarrow> finite
-    
+
+    # Types
+    some_domain \<rightarrow> unit
+
     # Constants
     comp_update \<rightarrow> timesOp
     id_update \<rightarrow> id_cblinfun

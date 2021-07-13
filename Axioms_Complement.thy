@@ -7,6 +7,10 @@ begin
 typedecl ('a, 'b) complement_domain
 instance complement_domain :: (domain, domain) domain..
 
+(* We need that there is at least one object in our category *)
+typedecl some_domain
+instance some_domain :: domain..
+
 axiomatization where 
   complement_exists: \<open>register F \<Longrightarrow> \<exists>G :: ('a, 'b) complement_domain update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close> for F :: \<open>'a::domain update \<Rightarrow> 'b::domain update\<close>
 

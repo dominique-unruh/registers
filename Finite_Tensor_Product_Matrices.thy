@@ -245,5 +245,4 @@ proof -
     by simp
 qed
 
-
 end

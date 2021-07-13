@@ -208,7 +208,7 @@ proof -
     also have \<open>\<dots> = Proj (ccspan (B j)) + Proj (ccspan (\<Union>i\<in>M. B i))\<close>
       unfolding P'B insert.IH[symmetric] by simp
     also have \<open>\<dots> = Proj (ccspan (B j \<union> (\<Union>i\<in>M. B i)))\<close>
-      apply (rule Proj_plus)
+      apply (rule Proj_orthog_ccspan_plus)
       using orthoBiBj insert.hyps(2) by auto
     also have \<open>\<dots> = Proj (ccspan (\<Union>i\<in>insert j M. B i))\<close>
       by auto
@@ -695,15 +695,15 @@ proof -
     unfolding equivalent_registers_def by auto
 qed
 
-lemma iso_register_id[simp]: \<open>iso_register id\<close>
-  by (simp add: iso_register_def)
+(* lemma iso_register_id[simp]: \<open>iso_register id\<close>
+  by (simp add: iso_register_def) *)
 
 lemma tensor_register_distrib: \<open>(F \<otimes>\<^sub>r G) o (F' \<otimes>\<^sub>r G') = (F o F') \<otimes>\<^sub>r (G o G')\<close> 
   if [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
   apply (rule tensor_extensionality)
   by (auto simp: register_tensor_is_hom)
 
-lemma iso_register_tensor[simp]: \<open>iso_register (F \<otimes>\<^sub>r G)\<close> if \<open>iso_register F\<close> and \<open>iso_register G\<close>
+(* lemma iso_register_tensor[simp]: \<open>iso_register (F \<otimes>\<^sub>r G)\<close> if \<open>iso_register F\<close> and \<open>iso_register G\<close>
 proof -
   from that have [simp]: \<open>register F\<close> \<open>register G\<close>
     using iso_register_def by blast+
@@ -716,7 +716,7 @@ proof -
   show ?thesis
     apply (rule iso_registerI[where G=\<open>F' \<otimes>\<^sub>r G'\<close>])
     by (auto simp add: register_tensor_is_hom tensor_register_distrib)
-qed
+qed *)
 
 lemma complement_unique:
   assumes "compatible F G" and \<open>iso_register (F;G)\<close>
