@@ -87,11 +87,6 @@ lemma cbilinear_F_comp_G[simp]: \<open>clinear F \<Longrightarrow> clinear G \<L
   unfolding cbilinear_def
   by (auto simp add: clinear_iff bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right)
 
-(* TODO move to BO *)
-lemma antilinear_adj[simp]: \<open>antilinear adj\<close>
-  apply (rule antilinearI)
-  by (auto simp add: adj_plus)
-
 lemma register_pair_apply: 
   assumes \<open>register F\<close> and \<open>register G\<close>
   assumes \<open>\<And>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close>

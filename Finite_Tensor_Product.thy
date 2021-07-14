@@ -140,12 +140,12 @@ lemma tensor_butter: \<open>tensor_op (butterket i j) (butterket k l) = butterke
 
 lemma cspan_tensor_op: \<open>cspan {tensor_op (butterket i j) (butterket k l)| i (j::_::finite) k (l::_::finite). True} = UNIV\<close>
   unfolding tensor_butter
-  apply (subst linfun_cspan[symmetric])
+  apply (subst cspan_butterfly_ket_UNIV[symmetric])
   by (metis surj_pair)
 
 lemma cindependent_tensor_op: \<open>cindependent {tensor_op (butterket i j) (butterket k l)| i (j::_::finite) k (l::_::finite). True}\<close>
   unfolding tensor_butter
-  using linfun_cindependent
+  using cindependent_butterfly_ket
   by (smt (z3) Collect_mono_iff complex_vector.independent_mono)
 
 
@@ -177,112 +177,6 @@ lemma tensor_butterfly[simp]: "tensor_op (butterfly \<psi> \<psi>') (butterfly \
   apply (rule equal_ket, rename_tac x, case_tac x)
   by (simp flip: tensor_ell2_ket add: tensor_op_ell2 butterfly_def
       cblinfun_apply_cblinfun_compose tensor_ell2_scaleC1 tensor_ell2_scaleC2)
-
-(* TODO move to BO library misc *)
-instance prod :: (CARD_1, CARD_1) CARD_1
-  apply intro_classes
-  by (simp add: CARD_1)
-
-lemma cblinfun_Hamel_basis:
-  fixes basis :: \<open>('a::{complex_normed_vector,cfinite_dim} \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector) set\<close>
-    and basisA :: \<open>'a set\<close> and basisB :: \<open>'b set\<close>
-  assumes \<open>cspan basisA = UNIV\<close> and \<open>cindependent basisA\<close> and \<open>cspan basisB = UNIV\<close>
-  assumes basis: \<open>\<And>a b. a\<in>basisA \<Longrightarrow> b\<in>basisB \<Longrightarrow> \<exists>F\<in>basis. \<forall>a'\<in>basisA. F *\<^sub>V a' = (if a'=a then b else 0)\<close>
-  shows \<open>cspan basis = UNIV\<close>
-proof -
-  have [simp]: \<open>finite basisA\<close>
-    by (simp add: assms(2) cindependent_cfinite_dim_finite)
-
-  obtain F where F: \<open>F a b \<in> basis \<and> F a b *\<^sub>V a' = (if a'=a then b else 0)\<close> 
-    if \<open>a\<in>basisA\<close> \<open>b\<in>basisB\<close> \<open>a'\<in>basisA\<close> for a b a'
-    apply atomize_elim apply (intro choice allI)
-    using basis by metis
-  then have F_apply: \<open>F a b *\<^sub>V a' = (if a'=a then b else 0)\<close>
-    if \<open>a\<in>basisA\<close> \<open>b\<in>basisB\<close> \<open>a'\<in>basisA\<close> for a b a'
-    using that by auto
-  have F_basis: \<open>F a b \<in> basis\<close> 
-    if \<open>a\<in>basisA\<close> \<open>b\<in>basisB\<close> for a b
-    using that F by auto
-  have b_span: \<open>\<exists>G\<in>cspan {F a b|b. b\<in>basisB}. \<forall>a'\<in>basisA. G *\<^sub>V a' = (if a'=a then b else 0)\<close> if \<open>a\<in>basisA\<close> for a b
-  proof -
-    from \<open>cspan basisB = UNIV\<close>
-    obtain r t where \<open>finite t\<close> and \<open>t \<subseteq> basisB\<close> and b_lincom: \<open>b = (\<Sum>a\<in>t. r a *\<^sub>C a)\<close>
-      unfolding complex_vector.span_alt apply atomize_elim by blast
-    define G where \<open>G = (\<Sum>i\<in>t. r i *\<^sub>C F a i)\<close>
-    have \<open>G \<in> cspan {F a b|b. b\<in>basisB}\<close>
-      using \<open>finite t\<close> \<open>t \<subseteq> basisB\<close> unfolding G_def
-      by (smt (verit, ccfv_threshold) complex_vector.span_base complex_vector.span_scale complex_vector.span_sum mem_Collect_eq subset_eq)
-    moreover have \<open>G *\<^sub>V a' = (if a'=a then b else 0)\<close> if \<open>a'\<in>basisA\<close> for a'
-      apply (cases \<open>a'=a\<close>)
-      using \<open>t \<subseteq> basisB\<close> \<open>a\<in>basisA\<close> \<open>a'\<in>basisA\<close>
-      by (auto simp: b_lincom G_def cblinfun.sum_left F_apply intro!: sum.neutral sum.cong) 
-    ultimately show ?thesis
-      by blast
-  qed
-
-  have a_span: \<open>cspan (\<Union>a\<in>basisA. cspan {F a b|b. b\<in>basisB}) = UNIV\<close>
-  proof (intro equalityI subset_UNIV subsetI, rename_tac H)
-    fix H
-    obtain G where G: \<open>G a b \<in> cspan {F a b|b. b\<in>basisB} \<and> G a b *\<^sub>V a' = (if a'=a then b else 0)\<close> if \<open>a\<in>basisA\<close> and \<open>a'\<in>basisA\<close> for a b a'
-      apply atomize_elim apply (intro choice allI)
-      using b_span by blast
-    then have G_cspan: \<open>G a b \<in> cspan {F a b|b. b\<in>basisB}\<close> if \<open>a\<in>basisA\<close> for a b
-      using that by auto
-    from G have G: \<open>G a b *\<^sub>V a' = (if a'=a then b else 0)\<close> if \<open>a\<in>basisA\<close> and \<open>a'\<in>basisA\<close> for a b a'
-      using that by auto
-    define H' where \<open>H' = (\<Sum>a\<in>basisA. G a (H *\<^sub>V a))\<close>
-    have \<open>H' \<in> cspan (\<Union>a\<in>basisA. cspan {F a b|b. b\<in>basisB})\<close>
-      unfolding H'_def using G_cspan
-      by (smt (verit, del_insts) UN_iff complex_vector.span_clauses(1) complex_vector.span_sum) 
-    moreover have \<open>H' = H\<close>
-      using \<open>cspan basisA = UNIV\<close> apply (rule cblinfun_eq_on_UNIV_span)
-      apply (auto simp: H'_def cblinfun.sum_left)
-      apply (subst sum_single)
-      by (auto simp: G)
-    ultimately show \<open>H \<in> cspan (\<Union>a\<in>basisA. cspan {F a b |b. b \<in> basisB})\<close>
-      by simp
-  qed
-
-  moreover have \<open>cspan basis \<supseteq> cspan (\<Union>a\<in>basisA. cspan {F a b|b. b\<in>basisB})\<close>
-    using F_basis
-    by (smt (z3) UN_subset_iff complex_vector.span_alt complex_vector.span_minimal complex_vector.subspace_span mem_Collect_eq subset_iff)
-
-  ultimately show \<open>cspan basis = UNIV\<close>
-    by auto
-qed
-
-(* TODO move to BO library *)
-instance cblinfun :: (\<open>{cfinite_dim,complex_normed_vector}\<close>, \<open>{cfinite_dim,complex_normed_vector}\<close>) cfinite_dim
-proof intro_classes
-  obtain basisA :: \<open>'a set\<close> where [simp]: \<open>cspan basisA = UNIV\<close> \<open>cindependent basisA\<close> \<open>finite basisA\<close>
-    using finite_basis by blast
-  obtain basisB :: \<open>'b set\<close> where [simp]: \<open>cspan basisB = UNIV\<close> \<open>cindependent basisB\<close> \<open>finite basisB\<close>
-    using finite_basis by blast
-  define f where \<open>f a b = cconstruct basisA (\<lambda>x. if x=a then b else 0)\<close> for a :: 'a and b :: 'b
-  have f_a: \<open>f a b a = b\<close> if \<open>a : basisA\<close> for a b
-    by (simp add: complex_vector.construct_basis f_def that)
-  have f_not_a: \<open>f a b c = 0\<close> if \<open>a : basisA\<close> and \<open>c : basisA\<close> and \<open>a \<noteq> c\<close>for a b c
-    using that by (simp add: complex_vector.construct_basis f_def)
-  define F where \<open>F a b = cBlinfun (f a b)\<close> for a b
-  have \<open>clinear (f a b)\<close> for a b
-    by (auto intro: complex_vector.linear_construct simp: f_def)
-  then have \<open>bounded_clinear (f a b)\<close> for a b
-    by auto
-  then have F_apply: \<open>cblinfun_apply (F a b) = f a b\<close> for a b
-    by (simp add: F_def bounded_clinear_cBlinfun_apply)
-  define basis where \<open>basis = {F a b| a b. a\<in>basisA \<and> b\<in>basisB}\<close>
-  have \<open>cspan basis = UNIV\<close>
-    apply (rule cblinfun_Hamel_basis[where basisA=basisA and basisB=basisB])
-    apply (auto simp: basis_def)
-    by (metis F_apply f_a f_not_a)
-
-  moreover have \<open>finite basis\<close>
-    unfolding basis_def apply (rule finite_image_set2) by auto
-
-  ultimately show \<open>\<exists>S :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set. finite S \<and> cspan S = UNIV\<close>
-    by auto
-qed  
-
 
 definition tensor_lift :: \<open>(('a1::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a2::finite ell2) \<Rightarrow> ('b1::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b2::finite ell2) \<Rightarrow> 'c)
                         \<Rightarrow> ((('a1\<times>'b1) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a2\<times>'b2) ell2) \<Rightarrow> 'c::complex_vector)\<close> where
@@ -342,14 +236,13 @@ proof -
     using G by (auto simp: t4_def)
   have *: \<open>G *\<^sub>V tensor_op a (butterket k l) = F2 a (butterket k l)\<close> for a k l
     apply (rule complex_vector.linear_eq_on_span[where g=\<open>\<lambda>a. F2 a _\<close> and B=\<open>{butterket k l|k l. True}\<close>])
-    unfolding linfun_cspan
+    unfolding cspan_butterfly_ket_UNIV
     using * apply (auto intro!: clinear_compose[unfolded o_def, where f=\<open>\<lambda>a. tensor_op a _\<close> and g=\<open>(*\<^sub>V) G\<close>])
      apply (metis cbilinear_def tensor_op_cbilinear)
-    using bounded_clinear.axioms(1) cblinfun_apply apply blast
     using assms unfolding cbilinear_def by blast
   have G_F2: \<open>G *\<^sub>V tensor_op a b = F2 a b\<close> for a b
     apply (rule complex_vector.linear_eq_on_span[where g=\<open>F2 a\<close> and B=\<open>{butterket k l|k l. True}\<close>])
-    unfolding linfun_cspan
+    unfolding cspan_butterfly_ket_UNIV
     using * apply (auto simp: cblinfun.add_right clinearI
                         intro!: clinear_compose[unfolded o_def, where f=\<open>tensor_op a\<close> and g=\<open>(*\<^sub>V) G\<close>])
     apply (meson cbilinear_def tensor_op_cbilinear)

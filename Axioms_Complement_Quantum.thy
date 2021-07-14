@@ -56,68 +56,6 @@ proof -
     by (metis imageI iso_tuple_UNIV_I t to_conjugate_space_inverse)
 qed *)
 
-(* TODO move *)
-(* TODO move *)
-lemma cblinfun_plus_applySpace_distr:
-  \<open>(A + B) *\<^sub>S S \<le> A *\<^sub>S S \<squnion> B *\<^sub>S S\<close>
-  apply transfer
-  by (smt (verit, ccfv_threshold) closed_closure closed_sum_def closure_minimal closure_subset image_subset_iff set_plus_intro subset_eq)
-
-(* TODO move *)
-lemma cblinfun_sum_applySpace_distr:
-  \<open>(\<Sum>i\<in>I. A i) *\<^sub>S S \<le> (SUP i\<in>I. A i *\<^sub>S S)\<close>
-proof (cases \<open>finite I\<close>)
-  case True
-  then show ?thesis
-  proof induction
-    case empty
-    then show ?case
-      by auto
-  next
-    case (insert x F)
-    then show ?case
-      using cblinfun_plus_applySpace_distr apply auto
-      by (smt (z3) cblinfun_plus_applySpace_distr inf_sup_aci(6) le_iff_sup)
-  qed
-next
-  case False
-  then show ?thesis 
-    by auto
-qed
-
-(* TODO move *)
-lemma cblinfun_apply_clinear[simp]: \<open>clinear ((*\<^sub>V) A)\<close>
-  using bounded_clinear.axioms(1) cblinfun_apply by blast
-
-(* TODO move  *)
-lemma isomorphism_cdim_eqI:
-  assumes lin_f: \<open>clinear f\<close>
-  (* assumes bij_f: \<open>bij_betw f S T\<close> *)
-  assumes inj_f: \<open>inj_on f (cspan S)\<close>
-  (* assumes \<open>csubspace S\<close> *)
-  assumes im_S: \<open>f ` S = T\<close>
-  shows \<open>cdim S = cdim T\<close>
-proof -
-  obtain SB where SB_span: "cspan SB = cspan S" and indep_SB: \<open>cindependent SB\<close> (*  and \<open>SB \<subseteq> S\<close> *)
-    by (metis complex_vector.basis_exists complex_vector.span_mono complex_vector.span_span subset_antisym)
-  with lin_f inj_f have indep_fSB: \<open>cindependent (f ` SB)\<close>
-    apply (rule_tac complex_vector.linear_independent_injective_image)
-    by auto
-  from lin_f have \<open>cspan (f ` SB) = f ` cspan SB\<close>
-    by (meson complex_vector.linear_span_image)
-  also from SB_span lin_f have \<open>\<dots> = cspan T\<close>
-    by (metis complex_vector.linear_span_image im_S)
-  finally have \<open>cdim T = card (f ` SB)\<close>
-    using indep_fSB complex_vector.dim_eq_card by blast
-  also have \<open>\<dots> = card SB\<close>
-    apply (rule card_image) using inj_f
-    by (metis SB_span complex_vector.linear_inj_on_span_iff_independent_image indep_fSB lin_f)
-  also have \<open>\<dots> = cdim S\<close>
-    using indep_SB SB_span
-    by (metis complex_vector.dim_eq_card)
-  finally show ?thesis by simp
-qed
-
 (* https://mathoverflow.net/a/390180/101775 *)
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
@@ -257,7 +195,7 @@ proof -
       apply (rule bij_betwI[where g=\<open>Si_to_Sj j i\<close>])
       using S2S S2S2S by (auto intro!: funcsetI)
     have \<open>cdim (space_as_set (S i)) = cdim (space_as_set (S j))\<close>
-      using lin apply (rule isomorphism_cdim_eqI[where f=\<open>Si_to_Sj i j\<close>])
+      using lin apply (rule isomorphic_equal_cdim[where f=\<open>Si_to_Sj i j\<close>])
       using bij apply (auto simp: bij_betw_def)
       by (metis complex_vector.span_span cspanB)
     then show ?thesis
@@ -353,7 +291,7 @@ proof -
       by -
   qed
   then have 1: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> for \<theta>
-    apply (rule_tac clinear_eq_butterketI[THEN fun_cong, where x=\<theta>])
+    apply (rule_tac clinear_eq_butterfly_ketI[THEN fun_cong, where x=\<theta>])
     by (auto intro!: clinearI simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose complex_vector.linear_add complex_vector.linear_scale)
 
   have \<open>unitary U\<close>
@@ -383,7 +321,7 @@ proof -
     moreover have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> (SUP \<xi>\<in>UNIV. \<Phi> (selfbutterket \<xi>) *\<^sub>S \<top>)\<close>
       unfolding sum_butter[symmetric]
       apply (subst complex_vector.linear_sum, simp)
-      by (rule cblinfun_sum_applySpace_distr)
+      by (rule cblinfun_sum_image_distr)
     ultimately have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close>
       apply auto by (meson SUP_le_iff order.trans)
     then have \<open>U *\<^sub>S \<top> = \<top>\<close>
@@ -539,7 +477,6 @@ proof (rule Set.set_eqI, rule iffI)
 
   have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l)) = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close> for i j k l
   proof -
-    (* fix i k :: 'a and j l :: 'b *)
     have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l))
         = cinner ((butterket i \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
       by (auto simp: tensor_op_ket)
