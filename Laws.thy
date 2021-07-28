@@ -59,7 +59,7 @@ lemma register_tensor_id_update[simp]:
   using assms apply (rule register_comp[unfolded o_def])
   by simp
 
-subsection \<open>Tensor product of homs\<close>
+subsection \<open>Tensor product of registers\<close>
 
 definition register_tensor  (infixr "\<otimes>\<^sub>r" 70) where
   "register_tensor F G = register_pair (\<lambda>a. tensor_update (F a) id_update) (\<lambda>b. tensor_update id_update (G b))"
@@ -182,6 +182,11 @@ lemma register_tensor_id[simp]: \<open>id \<otimes>\<^sub>r id = id\<close>
   apply (rule tensor_extensionality)
   by (auto simp add: register_tensor_is_hom)
 
+lemma tensor_register_distrib: \<open>(F \<otimes>\<^sub>r G) o (F' \<otimes>\<^sub>r G') = (F o F') \<otimes>\<^sub>r (G o G')\<close> 
+  if [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
+  apply (rule tensor_extensionality)
+  by (auto simp: register_tensor_is_hom)
+
 subsection \<open>Pairs and compatibility\<close>
 
 definition compatible :: \<open>('a::domain update \<Rightarrow> 'c::domain update)
@@ -287,6 +292,18 @@ proof (rule tensor_extensionality)
     by (auto simp: register_pair_apply register_mult tensor_update_mult)
 qed
 
+lemma swap_registers_left:
+  assumes "compatible R S"
+  shows "R a *\<^sub>u S b *\<^sub>u c = S b *\<^sub>u R a *\<^sub>u c"
+  using assms unfolding compatible_def by metis
+
+lemma swap_registers_right:
+  assumes "compatible R S"
+  shows "c *\<^sub>u R a *\<^sub>u S b = c *\<^sub>u S b *\<^sub>u R a"
+  by (metis assms comp_update_assoc compatible_def)
+
+lemmas compatible_ac_rules = swap_registers comp_update_assoc[symmetric] swap_registers_right
+
 subsection \<open>Fst and Snd\<close>
 
 definition Fst where \<open>Fst a = a \<otimes>\<^sub>u id_update\<close>
@@ -322,12 +339,11 @@ lemma pair_Fst_Snd: \<open>(Fst; Snd) = id\<close>
   apply (rule tensor_extensionality)
   by (simp_all add: register_pair_apply Fst_def Snd_def tensor_update_mult)
 
-(* lemma pair_Snd_Fst: \<open>(Snd; Fst) = swap\<close>
-  apply (rule tensor_extensionality)
-  by (simp_all add: register_pair_apply Fst_def Snd_def tensor_update_mult) *)
-
-lemma swap_swap: \<open>swap o swap = id\<close>
+lemma swap_o_swap[simp]: \<open>swap o swap = id\<close>
   by (metis swap_def compatible_Snd_Fst pair_Fst_Snd register_comp_pair register_swap swap_o_Fst swap_o_Snd)
+
+lemma swap_swap[simp]: \<open>swap (swap x) = x\<close>
+  by (simp add: pointfree_idE)
 
 lemma register_Fst_register_Snd[simp]: 
   assumes \<open>register F\<close>
@@ -413,7 +429,7 @@ definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain) up
 lemma assoc_is_hom[simp]: \<open>preregister assoc\<close>
   by (auto simp: assoc_def)
 
-lemma assoc_apply: \<open>assoc ((a \<otimes>\<^sub>u b) \<otimes>\<^sub>u c) = (a \<otimes>\<^sub>u (b \<otimes>\<^sub>u c))\<close>
+lemma assoc_apply[simp]: \<open>assoc ((a \<otimes>\<^sub>u b) \<otimes>\<^sub>u c) = (a \<otimes>\<^sub>u (b \<otimes>\<^sub>u c))\<close>
   by (auto simp: assoc_def register_pair_apply Fst_def Snd_def tensor_update_mult)
 
 definition assoc' :: \<open>('a\<times>('b\<times>'c)) update \<Rightarrow> (('a::domain\<times>'b::domain)\<times>'c::domain) update\<close> where 
@@ -422,7 +438,7 @@ definition assoc' :: \<open>('a\<times>('b\<times>'c)) update \<Rightarrow> (('a
 lemma assoc'_is_hom[simp]: \<open>preregister assoc'\<close>
   by (auto simp: assoc'_def)
 
-lemma assoc'_apply: \<open>assoc' (a \<otimes>\<^sub>u (b \<otimes>\<^sub>u c)) =  ((a \<otimes>\<^sub>u b) \<otimes>\<^sub>u c)\<close>
+lemma assoc'_apply[simp]: \<open>assoc' (a \<otimes>\<^sub>u (b \<otimes>\<^sub>u c)) =  ((a \<otimes>\<^sub>u b) \<otimes>\<^sub>u c)\<close>
   by (auto simp: assoc'_def register_pair_apply Fst_def Snd_def tensor_update_mult)
 
 lemma register_assoc[simp]: \<open>register assoc\<close>
@@ -456,6 +472,26 @@ proof (rule tensor_extensionality3)
   show \<open>(((F; G); H) \<circ> assoc') (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h) = (F; (G; H)) (f \<otimes>\<^sub>u g \<otimes>\<^sub>u h)\<close> for f g h
     by (simp add: register_pair_apply assoc'_apply comp_update_assoc)
 qed
+
+lemma assoc'_o_assoc[simp]: \<open>assoc' o assoc = id\<close>
+  apply (rule tensor_extensionality3')
+  by auto
+
+lemma assoc'_assoc[simp]: \<open>assoc' (assoc x) = x\<close>
+  by (simp add: pointfree_idE)
+
+lemma assoc_o_assoc'[simp]: \<open>assoc o assoc' = id\<close>
+  apply (rule tensor_extensionality3)
+  by auto
+
+lemma assoc_assoc'[simp]: \<open>assoc (assoc' x) = x\<close>
+  by (simp add: pointfree_idE)
+
+lemma inv_assoc[simp]: \<open>inv assoc = assoc'\<close>
+  using assoc'_o_assoc assoc_o_assoc' inv_unique_comp by blast
+
+lemma inv_assoc'[simp]: \<open>inv assoc' = assoc\<close>
+  by (simp add: inv_equality)
 
 subsection \<open>Iso-registers\<close>
 
@@ -510,9 +546,41 @@ proof -
     by (auto simp: register_tensor_is_hom iso_register_is_register register_tensor_distrib)
 qed
 
-  
+lemma iso_register_bij: \<open>iso_register F \<Longrightarrow> bij F\<close>
+  using iso_register_def o_bij by auto
+
+lemma inv_register_tensor[simp]: 
+  assumes [simp]: \<open>iso_register F\<close> \<open>iso_register G\<close>
+  shows \<open>inv (F \<otimes>\<^sub>r G) = inv F \<otimes>\<^sub>r inv G\<close>
+  apply (auto intro!: inj_imp_inv_eq bij_is_inj iso_register_bij 
+              simp: tensor_register_distrib[unfolded o_def, THEN fun_cong] iso_register_is_register
+                    iso_register_inv bij_is_surj iso_register_bij surj_f_inv_f)
+  by (metis eq_id_iff register_tensor_id)
+
+lemma iso_register_swap[simp]: \<open>iso_register swap\<close>
+  apply (rule iso_registerI[of _ swap])
+  by auto
+
+lemma iso_register_assoc[simp]: \<open>iso_register assoc\<close>
+  apply (rule iso_registerI[of _ assoc'])
+  by auto
+
+lemma iso_register_assoc'[simp]: \<open>iso_register assoc'\<close>
+  apply (rule iso_registerI[of _ assoc])
+  by auto
+
 definition \<open>equivalent_registers F G \<longleftrightarrow> (register F \<and> (\<exists>I. iso_register I \<and> F o I = G))\<close>
   for F G :: \<open>_::domain update \<Rightarrow> _::domain update\<close>
+
+lemma iso_register_equivalent_id[simp]: \<open>equivalent_registers id F \<longleftrightarrow> iso_register F\<close>
+  by (simp add: equivalent_registers_def)
+
+lemma equivalent_registersI:
+  assumes \<open>register F\<close>
+  assumes \<open>iso_register I\<close>
+  assumes \<open>F o I = G\<close>
+  shows \<open>equivalent_registers F G\<close>
+  using assms unfolding equivalent_registers_def by blast
 
 lemma equivalent_registers_register_left: \<open>equivalent_registers F G \<Longrightarrow> register F\<close>
   using equivalent_registers_def by auto
@@ -524,6 +592,68 @@ lemma equivalent_registers_sym:
   assumes \<open>equivalent_registers F G\<close>
   shows \<open>equivalent_registers G F\<close>
   by (smt (verit) assms comp_id equivalent_registers_def equivalent_registers_register_right fun.map_comp iso_register_def)
+
+lemma equivalent_registers_trans[trans]: 
+  assumes \<open>equivalent_registers F G\<close> and \<open>equivalent_registers G H\<close>
+  shows \<open>equivalent_registers F H\<close>
+proof -
+  from assms have [simp]: \<open>register F\<close> \<open>register G\<close>
+    by (auto simp: equivalent_registers_def)
+  from assms(1) obtain I where [simp]: \<open>iso_register I\<close> and \<open>F o I = G\<close>
+    using equivalent_registers_def by blast
+  from assms(2) obtain J where [simp]: \<open>iso_register J\<close> and \<open>G o J = H\<close>
+    using equivalent_registers_def by blast
+  have \<open>register F\<close>
+    by (auto simp: equivalent_registers_def)
+  moreover have \<open>iso_register (I o J)\<close>
+    using \<open>iso_register I\<close> \<open>iso_register J\<close> iso_register_comp by blast
+  moreover have \<open>F o (I o J) = H\<close>
+    by (simp add: \<open>F \<circ> I = G\<close> \<open>G \<circ> J = H\<close> o_assoc)
+  ultimately show ?thesis
+    by (rule equivalent_registersI)
+qed
+
+lemma equivalent_registers_assoc[simp]:
+  assumes [simp]: \<open>compatible F G\<close> \<open>compatible F H\<close> \<open>compatible G H\<close>
+  shows \<open>equivalent_registers (F;(G;H)) ((F;G);H)\<close>
+  apply (rule equivalent_registersI[where I=assoc])
+  by auto
+
+lemma equivalent_registers_pair_right:
+  assumes [simp]: \<open>compatible F G\<close>
+  assumes eq: \<open>equivalent_registers G H\<close>
+  shows \<open>equivalent_registers (F;G) (F;H)\<close>
+proof -
+  from eq obtain I where [simp]: \<open>iso_register I\<close> and \<open>G o I = H\<close>
+    by (metis equivalent_registers_def)
+  then have *: \<open>(F;G) \<circ> (id \<otimes>\<^sub>r I) = (F;H)\<close>
+    by (auto intro!: tensor_extensionality register_comp register_preregister register_tensor_is_hom 
+        simp:  register_pair_apply iso_register_is_register)
+  show ?thesis
+    apply (rule equivalent_registersI[where I=\<open>id \<otimes>\<^sub>r I\<close>])
+    using * by (auto intro!: iso_register_tensor_is_iso_register)
+qed
+
+lemma equivalent_registers_pair_left:
+  assumes [simp]: \<open>compatible F G\<close>
+  assumes eq: \<open>equivalent_registers F H\<close>
+  shows \<open>equivalent_registers (F;G) (H;G)\<close>
+proof -
+  from eq obtain I where [simp]: \<open>iso_register I\<close> and \<open>F o I = H\<close>
+    by (metis equivalent_registers_def)
+  then have *: \<open>(F;G) \<circ> (I \<otimes>\<^sub>r id) = (H;G)\<close>
+    by (auto intro!: tensor_extensionality register_comp register_preregister register_tensor_is_hom 
+        simp:  register_pair_apply iso_register_is_register)
+  show ?thesis
+    apply (rule equivalent_registersI[where I=\<open>I \<otimes>\<^sub>r id\<close>])
+    using * by (auto intro!: iso_register_tensor_is_iso_register)
+qed
+
+lemma equivalent_registers_comp:
+  assumes \<open>register H\<close>
+  assumes \<open>equivalent_registers F G\<close>
+  shows \<open>equivalent_registers (H o F) (H o G)\<close>
+  by (metis (no_types, lifting) assms(1) assms(2) comp_assoc equivalent_registers_def register_comp)
 
 subsection \<open>Compatibility simplification\<close>
 

@@ -635,11 +635,6 @@ qed
 (* lemma iso_register_id[simp]: \<open>iso_register id\<close>
   by (simp add: iso_register_def) *)
 
-lemma tensor_register_distrib: \<open>(F \<otimes>\<^sub>r G) o (F' \<otimes>\<^sub>r G') = (F o F') \<otimes>\<^sub>r (G o G')\<close> 
-  if [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
-  apply (rule tensor_extensionality)
-  by (auto simp: register_tensor_is_hom)
-
 (* lemma iso_register_tensor[simp]: \<open>iso_register (F \<otimes>\<^sub>r G)\<close> if \<open>iso_register F\<close> and \<open>iso_register G\<close>
 proof -
   from that have [simp]: \<open>register F\<close> \<open>register G\<close>

@@ -142,4 +142,11 @@ lemma [simp]: "dim_col (mat_adjoint m) = dim_row m"
 lemma [simp]: "dim_row (mat_adjoint m) = dim_col m"
   unfolding mat_adjoint_def by simp
 
+lemma invI: 
+  assumes \<open>inj f\<close>
+  assumes \<open>x = f y\<close>
+  shows \<open>inv f x = y\<close>
+  by (simp add: assms(1) assms(2))
+
+
 end
