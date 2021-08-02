@@ -148,5 +148,26 @@ lemma invI:
   shows \<open>inv f x = y\<close>
   by (simp add: assms(1) assms(2))
 
+instantiation prod :: (default,default) default begin
+definition \<open>default_prod = (default, default)\<close>
+instance..
+end
+
+instance bit :: default..
+
+lemma surj_from_comp:
+  assumes \<open>surj (g o f)\<close>
+  assumes \<open>inj g\<close>
+  shows \<open>surj f\<close>
+  by (metis assms(1) assms(2) f_inv_into_f fun.set_map inj_image_mem_iff iso_tuple_UNIV_I surj_iff_all)
+
+
+(* TODO to BO *)
+lemma ccspan_mono:
+  assumes \<open>A \<subseteq> B\<close>
+  shows \<open>ccspan A \<le> ccspan B\<close>
+  apply (transfer fixing: A B)
+  by (simp add: assms closure_mono complex_vector.span_mono)
+
 
 end

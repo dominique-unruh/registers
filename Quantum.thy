@@ -92,6 +92,10 @@ lemma [simp, code]: "mat_of_cblinfun CNOT = matrix_CNOT"
 lemma [simp]: "CNOT* = CNOT"
   by eval
 
+lemma cnot_apply[simp]: \<open>CNOT *\<^sub>V ket (i,j) = ket (i,j+i)\<close>
+  apply (rule spec[where x=i], rule spec[where x=j])
+  by eval
+
 subsubsection \<open>Qubit swap\<close>
 
 

@@ -327,6 +327,49 @@ qed
 lemma adjoint_assoc_ell2'[simp]: \<open>assoc_ell2'* = assoc_ell2\<close>
   by (simp flip: adjoint_assoc_ell2)
 
+
+lift_definition swap_ell20 :: \<open>('a::finite\<times>'b::finite) ell2 \<Rightarrow> ('b\<times>'a) ell2\<close> is
+  \<open>\<lambda>f (a,b). f (b,a)\<close>
+  by auto
+
+lift_definition swap_ell2 :: \<open>('a::finite\<times>'b::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'a) ell2\<close>
+  is swap_ell20
+  apply (subst bounded_clinear_finite_dim)
+  apply (rule clinearI; transfer)
+  by auto
+
+lemma swap_ell2_tensor: \<open>swap_ell2 *\<^sub>V tensor_ell2 a b = tensor_ell2 b a\<close>
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=a])
+    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
+   apply (simp add: clinear_tensor_ell21)
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=b])
+    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_add2 tensor_ell2_scaleC1 tensor_ell2_scaleC2)
+   apply (simp add: clinearI tensor_ell2_add1 tensor_ell2_add2 tensor_ell2_scaleC1 tensor_ell2_scaleC2)
+  unfolding swap_ell2.rep_eq
+  apply transfer
+  by auto
+
+lemma adjoint_swap_ell2[simp]: \<open>swap_ell2* = swap_ell2\<close>
+proof (rule adjoint_eqI[symmetric])
+  have [simp]: \<open>clinear (cinner (swap_ell2 *\<^sub>V x))\<close> for x :: \<open>('a \<times> 'b) ell2\<close>
+    by (metis (no_types, lifting) cblinfun.add_right cinner_scaleC_right clinearI complex_scaleC_def mult.comm_neutral of_complex_def vector_to_cblinfun_adj_apply)
+  have [simp]: \<open>clinear (\<lambda>a. \<langle>x, swap_ell2 *\<^sub>V a\<rangle>)\<close> for x :: \<open>('a \<times> 'b) ell2\<close>
+    by (simp add: cblinfun.add_right cinner_add_right clinearI)
+  have [simp]: \<open>antilinear (\<lambda>a. \<langle>a, y\<rangle>)\<close> for y :: \<open>('a \<times> 'b) ell2\<close>
+    using bounded_antilinear_cinner_left bounded_antilinear_def by blast
+  have [simp]: \<open>antilinear (\<lambda>a. \<langle>swap_ell2 *\<^sub>V a, y\<rangle>)\<close> for y :: \<open>('b \<times> 'a) ell2\<close>
+    by (simp add: cblinfun.add_right cinner_add_left antilinearI)
+  have \<open>\<langle>swap_ell2 *\<^sub>V (ket x), ket y\<rangle> = \<langle>ket x, swap_ell2 *\<^sub>V ket y\<rangle>\<close> for x :: \<open>'a \<times> 'b\<close> and y
+    apply (cases x, cases y)
+    by (simp flip: tensor_ell2_ket add: swap_ell2_tensor)
+  then have \<open>\<langle>swap_ell2 *\<^sub>V (ket x), y\<rangle> = \<langle>ket x, swap_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>'a \<times> 'b\<close> and y
+    by (rule clinear_equal_ket[THEN fun_cong, rotated 2], simp_all)
+  then show \<open>\<langle>swap_ell2 *\<^sub>V x, y\<rangle> = \<langle>x, swap_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>('a \<times> 'b) ell2\<close> and y
+    apply (rule antilinear_equal_ket[THEN fun_cong, rotated 2])
+    by simp_all
+qed
+
+
 lemma tensor_ell2_extensionality:
   assumes "(\<And>s t. a *\<^sub>V (s \<otimes>\<^sub>s t) = b *\<^sub>V (s \<otimes>\<^sub>s t))"
   shows "a = b"
@@ -413,5 +456,85 @@ proof (rule injI, rule ccontr)
   with eq show False
     by auto
 qed
+
+lemma tensor_ell2_almost_injective:
+  assumes \<open>tensor_ell2 a b = tensor_ell2 c d\<close>
+  assumes \<open>a \<noteq> 0\<close>
+  shows \<open>\<exists>\<gamma>. b = \<gamma> *\<^sub>C d\<close>
+proof -
+  from \<open>a \<noteq> 0\<close> obtain i where i: \<open>cinner (ket i) a \<noteq> 0\<close>
+    by (metis cinner_eq_zero_iff cinner_ket_left ell2_ortho)
+  have \<open>cinner (ket i \<otimes>\<^sub>s ket j) (a \<otimes>\<^sub>s b) = cinner (ket i \<otimes>\<^sub>s ket j) (c \<otimes>\<^sub>s d)\<close> for j
+    using assms by simp
+  then have eq2: \<open>(cinner (ket i) a) * (cinner (ket j) b) = (cinner (ket i) c) * (cinner (ket j) d)\<close> for j
+    by (metis tensor_ell2_inner_prod)
+  then obtain \<gamma> where \<open>cinner (ket i) c = \<gamma> * cinner (ket i) a\<close>
+    by (metis i eq_divide_eq)
+  with eq2 have \<open>(cinner (ket i) a) * (cinner (ket j) b) = (cinner (ket i) a) * (\<gamma> * cinner (ket j) d)\<close> for j
+    by simp
+  then have \<open>cinner (ket j) b = cinner (ket j) (\<gamma> *\<^sub>C d)\<close> for j
+    using i by force
+  then have \<open>b = \<gamma> *\<^sub>C d\<close>
+    by (simp add: cinner_ket_eqI)
+  then show ?thesis
+    by auto
+qed
+
+
+lemma tensor_op_almost_injective:
+  fixes a c :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2\<close>
+    and b d :: \<open>'c::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+  assumes \<open>tensor_op a b = tensor_op c d\<close>
+  assumes \<open>a \<noteq> 0\<close>
+  shows \<open>\<exists>\<gamma>. b = \<gamma> *\<^sub>C d\<close>
+proof (cases \<open>d = 0\<close>)
+  case False
+  from \<open>a \<noteq> 0\<close> obtain \<psi> where \<psi>: \<open>a *\<^sub>V \<psi> \<noteq> 0\<close>
+    by (metis cblinfun.zero_left cblinfun_eqI)
+  have \<open>(a \<otimes>\<^sub>o b) (\<psi> \<otimes>\<^sub>s \<phi>) = (c \<otimes>\<^sub>o d) (\<psi> \<otimes>\<^sub>s \<phi>)\<close> for \<phi>
+    using assms by simp
+  then have eq2: \<open>(a \<psi>) \<otimes>\<^sub>s (b \<phi>) = (c \<psi>) \<otimes>\<^sub>s (d \<phi>)\<close> for \<phi>
+    by (simp add: tensor_op_ell2)
+  then have eq2': \<open>(d \<phi>) \<otimes>\<^sub>s (c \<psi>) = (b \<phi>) \<otimes>\<^sub>s (a \<psi>)\<close> for \<phi>
+    by (metis swap_ell2_tensor)
+  from False obtain \<phi>0 where \<phi>0: \<open>d \<phi>0 \<noteq> 0\<close>
+    by (metis cblinfun.zero_left cblinfun_eqI)
+  obtain \<gamma> where \<open>c \<psi> = \<gamma> *\<^sub>C a \<psi>\<close>
+    apply atomize_elim
+    using eq2' \<phi>0 by (rule tensor_ell2_almost_injective)
+  with eq2 have \<open>(a \<psi>) \<otimes>\<^sub>s (b \<phi>) = (a \<psi>) \<otimes>\<^sub>s (\<gamma> *\<^sub>C d \<phi>)\<close> for \<phi>
+    by (simp add: tensor_ell2_scaleC1 tensor_ell2_scaleC2)
+  then have \<open>b \<phi> = \<gamma> *\<^sub>C d \<phi>\<close> for \<phi>
+    by (smt (verit, best) \<psi> complex_vector.scale_cancel_right tensor_ell2_almost_injective tensor_ell2_nonzero tensor_ell2_scaleC2)
+  then have \<open>b = \<gamma> *\<^sub>C d\<close>
+    by (simp add: cblinfun_eqI)
+  then show ?thesis
+    by auto
+next
+  case True
+  then have \<open>c \<otimes>\<^sub>o d = 0\<close>
+    by (metis add_cancel_right_left tensor_op_right_add)
+  then have \<open>a \<otimes>\<^sub>o b = 0\<close>
+    using assms(1) by presburger
+  with \<open>a \<noteq> 0\<close> have \<open>b = 0\<close>
+    by (meson tensor_op_nonzero)
+  then show ?thesis
+    by auto
+qed
+
+
+lemma tensor_ell2_0_left[simp]: \<open>tensor_ell2 0 x = 0\<close>
+  apply transfer by auto
+
+lemma tensor_ell2_0_right[simp]: \<open>tensor_ell2 x 0 = 0\<close>
+  apply transfer by auto
+
+lemma tensor_op_0_left[simp]: \<open>tensor_op 0 x = (0 :: ('a::finite*'b::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('c::finite*'d::finite) ell2)\<close>
+  apply (rule equal_ket)
+  by (auto simp flip: tensor_ell2_ket simp: tensor_op_ell2)
+
+lemma tensor_op_0_right[simp]: \<open>tensor_op x 0 = (0 :: ('a::finite*'b::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('c::finite*'d::finite) ell2)\<close>
+  apply (rule equal_ket)
+  by (auto simp flip: tensor_ell2_ket simp: tensor_op_ell2)
 
 end

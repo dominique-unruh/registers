@@ -9,7 +9,7 @@ section \<open>Quantum instantiation of registers\<close>
     some_domain \<rightarrow> unit
 
     # Constants
-    comp_update \<rightarrow> timesOp
+    comp_update \<rightarrow> cblinfun_compose
     id_update \<rightarrow> id_cblinfun
     preregister \<rightarrow> clinear
     tensor_update \<rightarrow> tensor_op
@@ -67,7 +67,7 @@ lemma register_comp: "register F \<Longrightarrow> register G \<Longrightarrow> 
   apply auto
   using clinear_compose by blast
 
-lemma register_mult: "register F \<Longrightarrow> timesOp (F a) (F b) = F (timesOp a b)"
+lemma register_mult: "register F \<Longrightarrow> cblinfun_compose (F a) (F b) = F (cblinfun_compose a b)"
   unfolding register_def
   by auto
 

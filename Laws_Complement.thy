@@ -191,4 +191,101 @@ proof -
     by auto
 qed
 
+lemma compatible_complement_pair1:
+  assumes \<open>compatible F G\<close>
+  shows \<open>compatible F (complement (F;G))\<close>
+  by (metis assms compatible_comp_left compatible_complement_right pair_is_register register_Fst register_pair_Fst)
+
+lemma compatible_complement_pair2:
+  assumes [simp]: \<open>compatible F G\<close>
+  shows \<open>compatible G (complement (F;G))\<close>
+proof -
+  have \<open>compatible (F;G) (complement (F;G))\<close>
+    by simp
+  then have \<open>compatible ((F;G) o Snd) (complement (F;G))\<close>
+    by auto
+  then show ?thesis
+    by (auto simp: register_pair_Snd)
+qed
+
+lemma equivalent_complements:
+  assumes \<open>complements F G\<close>
+  assumes \<open>equivalent_registers G G'\<close>
+  shows \<open>complements F G'\<close>
+  apply (rule complementsI)
+   apply (metis assms(1) assms(2) compatible_comp_right complements_def equivalent_registers_def iso_register_is_register)
+  by (metis assms(1) assms(2) complements_def equivalent_registers_def equivalent_registers_pair_right iso_register_comp)
+
+lemma complements_complement_pair:
+  assumes [simp]: \<open>compatible F G\<close>
+  shows \<open>complements F (G; complement (F;G))\<close>
+proof (rule complementsI)
+  have \<open>equivalent_registers (F; (G; complement (F;G))) ((F;G); complement (F;G))\<close>
+    apply (rule equivalent_registers_assoc)
+    by (auto simp add: compatible_complement_pair1 compatible_complement_pair2)
+  also have \<open>equivalent_registers \<dots> id\<close>
+    by (meson assms complement_is_complement complements_def equivalent_registers_sym iso_register_equivalent_id pair_is_register)
+  finally show \<open>iso_register (F;(G;complement (F;G)))\<close>
+    using equivalent_registers_sym iso_register_equivalent_id by blast
+  show \<open>compatible F (G;complement (F;G))\<close>
+    using assms compatible3' compatible_complement_pair1 compatible_complement_pair2 by blast
+qed
+
+lemma equivalent_registers_complement:
+  assumes \<open>equivalent_registers F G\<close>
+  shows \<open>equivalent_registers (complement F) (complement G)\<close>
+proof -
+  have \<open>complements F (complement F)\<close>
+    using assms complement_is_complement equivalent_registers_register_left by blast
+  with assms have \<open>complements G (complement F)\<close>
+    by (meson complements_sym equivalent_complements)
+  then show ?thesis
+    by (rule complement_unique)
+qed
+
+
+lemma complements_complement_pair':
+  assumes [simp]: \<open>compatible F G\<close>
+  shows \<open>complements G (F; complement (F;G))\<close>
+proof -
+  have \<open>equivalent_registers (F;G) (G;F)\<close>
+    apply (rule equivalent_registersI[where I=swap])
+    by auto
+  then have \<open>equivalent_registers (complement (F;G)) (complement (G;F))\<close>
+    by (rule equivalent_registers_complement)
+  then have \<open>equivalent_registers (F; (complement (F;G))) (F; (complement (G;F)))\<close>
+    apply (rule equivalent_registers_pair_right[rotated])
+    using assms compatible_complement_pair1 by blast
+  moreover have \<open>complements G (F; complement (G;F))\<close>
+    apply (rule complements_complement_pair)
+    using assms compatible_sym by blast
+  ultimately show ?thesis
+    by (meson equivalent_complements equivalent_registers_sym)
+qed
+
+lemma complements_chain: 
+  assumes [simp]: \<open>register F\<close> \<open>register G\<close>
+  shows \<open>complements (F o G) (complement F; F o complement G)\<close>
+proof (rule complementsI)
+  show \<open>compatible (F o G) (complement F; F o complement G)\<close>
+    by auto
+  have \<open>equivalent_registers (F \<circ> G;(complement F;F \<circ> complement G)) (F \<circ> G;(F \<circ> complement G;complement F))\<close>
+    apply (rule equivalent_registersI[where I=\<open>id \<otimes>\<^sub>r swap\<close>])
+    by (auto intro!: iso_register_tensor_is_iso_register simp: pair_o_tensor)
+  also have \<open>equivalent_registers \<dots> ((F \<circ> G;F \<circ> complement G);complement F)\<close>
+    apply (rule equivalent_registersI[where I=assoc])
+    by (auto intro!: iso_register_tensor_is_iso_register simp: pair_o_tensor)
+  also have \<open>equivalent_registers \<dots> (F o (G; complement G);complement F)\<close>
+    by (metis (no_types, lifting) assms(1) assms(2) calculation compatible_complement_right
+        equivalent_registers_sym equivalent_registers_trans register_comp_pair)
+  also have \<open>equivalent_registers \<dots> (F o id;complement F)\<close>
+    apply (rule equivalent_registers_pair_left, simp)
+    apply (rule equivalent_registers_comp, simp)
+    by (metis assms(2) complement_is_complement complements_def equivalent_registers_def iso_register_def)
+  also have \<open>equivalent_registers \<dots> id\<close>
+    by (metis assms(1) comp_id complement_is_complement complements_def equivalent_registers_def iso_register_def)
+  finally show \<open>iso_register (F \<circ> G;(complement F;F \<circ> complement G))\<close>
+    using equivalent_registers_sym iso_register_equivalent_id by blast
+qed
+
 end
