@@ -94,6 +94,7 @@ lemmas to_X\<Phi>2_AB = XAB_to_X\<Phi>2_AB X\<Phi>2_to_X\<Phi>2_AB \<Phi>2AB_to_
 lemma teleport:
   assumes [simp]: "norm \<psi> = 1"
   shows "hoare (XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) (teleport a b) (\<Phi>2AB =\<^sub>q \<psi>)"
+  (* shows "hoare (XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) (teleport a b) (\<Phi>2AB =\<^sub>q \<psi>)" *)
 proof -
   define XZ :: \<open>bit update\<close> where "XZ = (if a=1 then (if b=1 then pauliZ o\<^sub>C\<^sub>L pauliX else pauliX) else (if b=1 then pauliZ else id_cblinfun))"
 

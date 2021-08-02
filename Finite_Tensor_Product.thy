@@ -327,6 +327,49 @@ qed
 lemma adjoint_assoc_ell2'[simp]: \<open>assoc_ell2'* = assoc_ell2\<close>
   by (simp flip: adjoint_assoc_ell2)
 
+
+lift_definition swap_ell20 :: \<open>('a::finite\<times>'b::finite) ell2 \<Rightarrow> ('b\<times>'a) ell2\<close> is
+  \<open>\<lambda>f (a,b). f (b,a)\<close>
+  by auto
+
+lift_definition swap_ell2 :: \<open>('a::finite\<times>'b::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'a) ell2\<close>
+  is swap_ell20
+  apply (subst bounded_clinear_finite_dim)
+  apply (rule clinearI; transfer)
+  by auto
+
+lemma swap_ell2_tensor: \<open>swap_ell2 *\<^sub>V tensor_ell2 a b = tensor_ell2 b a\<close>
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=a])
+    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
+   apply (simp add: clinear_tensor_ell21)
+  apply (rule clinear_equal_ket[THEN fun_cong, where x=b])
+    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_add2 tensor_ell2_scaleC1 tensor_ell2_scaleC2)
+   apply (simp add: clinearI tensor_ell2_add1 tensor_ell2_add2 tensor_ell2_scaleC1 tensor_ell2_scaleC2)
+  unfolding swap_ell2.rep_eq
+  apply transfer
+  by auto
+
+lemma adjoint_swap_ell2[simp]: \<open>swap_ell2* = swap_ell2\<close>
+proof (rule adjoint_eqI[symmetric])
+  have [simp]: \<open>clinear (cinner (swap_ell2 *\<^sub>V x))\<close> for x :: \<open>('a \<times> 'b) ell2\<close>
+    by (metis (no_types, lifting) cblinfun.add_right cinner_scaleC_right clinearI complex_scaleC_def mult.comm_neutral of_complex_def vector_to_cblinfun_adj_apply)
+  have [simp]: \<open>clinear (\<lambda>a. \<langle>x, swap_ell2 *\<^sub>V a\<rangle>)\<close> for x :: \<open>('a \<times> 'b) ell2\<close>
+    by (simp add: cblinfun.add_right cinner_add_right clinearI)
+  have [simp]: \<open>antilinear (\<lambda>a. \<langle>a, y\<rangle>)\<close> for y :: \<open>('a \<times> 'b) ell2\<close>
+    using bounded_antilinear_cinner_left bounded_antilinear_def by blast
+  have [simp]: \<open>antilinear (\<lambda>a. \<langle>swap_ell2 *\<^sub>V a, y\<rangle>)\<close> for y :: \<open>('b \<times> 'a) ell2\<close>
+    by (simp add: cblinfun.add_right cinner_add_left antilinearI)
+  have \<open>\<langle>swap_ell2 *\<^sub>V (ket x), ket y\<rangle> = \<langle>ket x, swap_ell2 *\<^sub>V ket y\<rangle>\<close> for x :: \<open>'a \<times> 'b\<close> and y
+    apply (cases x, cases y)
+    by (simp flip: tensor_ell2_ket add: swap_ell2_tensor)
+  then have \<open>\<langle>swap_ell2 *\<^sub>V (ket x), y\<rangle> = \<langle>ket x, swap_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>'a \<times> 'b\<close> and y
+    by (rule clinear_equal_ket[THEN fun_cong, rotated 2], simp_all)
+  then show \<open>\<langle>swap_ell2 *\<^sub>V x, y\<rangle> = \<langle>x, swap_ell2 *\<^sub>V y\<rangle>\<close> for x :: \<open>('a \<times> 'b) ell2\<close> and y
+    apply (rule antilinear_equal_ket[THEN fun_cong, rotated 2])
+    by simp_all
+qed
+
+
 lemma tensor_ell2_extensionality:
   assumes "(\<And>s t. a *\<^sub>V (s \<otimes>\<^sub>s t) = b *\<^sub>V (s \<otimes>\<^sub>s t))"
   shows "a = b"

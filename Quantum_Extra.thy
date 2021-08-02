@@ -150,5 +150,10 @@ lemma empty_var_compatible[simp]: \<open>register X \<Longrightarrow> compatible
 lemma empty_var_compatible'[simp]: \<open>register X \<Longrightarrow> compatible X empty_var\<close>
   using compatible_sym empty_var_compatible by blast
 
+lemma register_mult':
+  assumes \<open>register F\<close>
+  shows \<open>F a *\<^sub>V F b *\<^sub>V c = F (a o\<^sub>C\<^sub>L b) *\<^sub>V c\<close>
+  by (simp add: assms lift_cblinfun_comp(4) register_mult)
+
 end
 

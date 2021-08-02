@@ -182,6 +182,7 @@ lemma register_tensor_id[simp]: \<open>id \<otimes>\<^sub>r id = id\<close>
   apply (rule tensor_extensionality)
   by (auto simp add: register_tensor_is_hom)
 
+(* TODO duplicated: register_tensor_distrib *)
 lemma tensor_register_distrib: \<open>(F \<otimes>\<^sub>r G) o (F' \<otimes>\<^sub>r G') = (F o F') \<otimes>\<^sub>r (G o G')\<close> 
   if [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
   apply (rule tensor_extensionality)
@@ -345,7 +346,10 @@ lemma swap_o_swap[simp]: \<open>swap o swap = id\<close>
 lemma swap_swap[simp]: \<open>swap (swap x) = x\<close>
   by (simp add: pointfree_idE)
 
-lemma register_Fst_register_Snd[simp]: 
+lemma inv_swap[simp]: \<open>inv swap = swap\<close>
+  by (meson inv_unique_comp swap_o_swap)
+
+lemma register_Fst_register_Snd[simp]:
   assumes \<open>register F\<close>
   shows \<open>(F o Fst; F o Snd) = F\<close>
   apply (rule tensor_extensionality)
@@ -709,10 +713,12 @@ fun add (thm:thm) results =
   Net.insert_term (K true) (Thm.concl_of thm, thm) results
   handle Net.INSERT => results
 fun collect thm results = case Thm.concl_of thm of
+(* TODO: Also extract from iso_register, from complements *)
   Const(\<^const_name>\<open>Trueprop\<close>,_) $ (Const(\<^const_name>\<open>conj\<close>,_) $ _ $ _) => 
     collect (@{thm conjunct1} OF [thm]) (collect (@{thm conjunct2} OF [thm]) results)
   | Const(\<^const_name>\<open>Trueprop\<close>,_) $ (Const(\<^const_name>\<open>compatible\<close>,_) $ _ $ _) =>
-    collect (@{thm compatible_register1} OF [thm]) (collect (@{thm compatible_register2} OF [thm]) (add thm results))
+    fold add [thm, @{thm compatible_sym} OF [thm], @{thm compatible_register1} OF [thm], @{thm compatible_register2} OF [thm]] results
+    (* collect (@{thm compatible_register1} OF [thm]) (collect (@{thm compatible_register2} OF [thm]) (add thm results)) *)
   | _ => add thm results
 fun declare thm context = let
   val thms = collect thm (Net.empty) |> Net.entries
