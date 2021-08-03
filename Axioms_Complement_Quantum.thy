@@ -354,7 +354,7 @@ lemma register_decomposition_converse:
   using _ unitary_sandwich_register apply (rule register_comp[unfolded o_def])
   using assms by auto
 
-(* TODO move *)
+
 lemma register_inj: \<open>inj F\<close> if \<open>register F\<close>
 proof -
   obtain U :: \<open>('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
@@ -368,6 +368,109 @@ proof -
     unfolding F
     by (smt (z3) inj_def) 
 qed
+
+lemma iso_register_decomposition:
+  assumes [simp]: \<open>iso_register F\<close>
+  shows \<open>\<exists>U. unitary U \<and> F = sandwich U\<close>
+proof -
+  have [simp]: \<open>register F\<close>
+    using assms iso_register_is_register by blast 
+  
+  let ?ida = \<open>id_cblinfun :: ('a, 'b) complement_domain ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close>
+
+  from register_decomposition[OF \<open>register F\<close>]
+  obtain V :: \<open>('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> where \<open>unitary V\<close>
+    and FV: \<open>F \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o ?ida)\<close> for \<theta>
+    by auto
+
+  have \<open>surj F\<close>
+    by (meson assms iso_register_inv_comp2 surj_iff)
+  have surj_tensor: \<open>surj (\<lambda>a::'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2. a \<otimes>\<^sub>o ?ida)\<close>
+    apply (rule surj_from_comp[where g=\<open>sandwich V\<close>])
+    using \<open>surj F\<close> apply (auto simp: FV)
+    by (meson \<open>unitary V\<close> register_inj unitary_sandwich_register)
+  then obtain a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close> 
+    where a: \<open>a \<otimes>\<^sub>o ?ida = selfbutterket undefined \<otimes>\<^sub>o selfbutterket undefined\<close>
+    by (smt (verit, best) surjD)
+
+  then have \<open>a \<noteq> 0\<close>
+    apply auto
+    by (metis butterfly_apply cblinfun.zero_left complex_vector.scale_eq_0_iff ket_is_orthogonal ket_nonzero)
+
+  obtain \<gamma> where \<gamma>: \<open>?ida = \<gamma> *\<^sub>C selfbutterket undefined\<close>
+    apply atomize_elim
+    using a \<open>a \<noteq> 0\<close> by (rule tensor_op_almost_injective)
+  then have \<open>?ida (ket undefined) = \<gamma> *\<^sub>C (selfbutterket undefined *\<^sub>V ket undefined)\<close>
+    by (simp add: \<open>id_cblinfun = \<gamma> *\<^sub>C selfbutterket undefined\<close> scaleC_cblinfun.rep_eq)
+  then have \<open>ket undefined = \<gamma> *\<^sub>C ket undefined\<close>
+    by (metis butterfly_apply cinner_scaleC_right id_cblinfun_apply ket_Kronecker_delta_eq mult.right_neutral scaleC_one)
+  then have \<open>\<gamma> = 1\<close>
+    by (smt (z3) \<gamma> butterfly_apply butterfly_scaleC_left cblinfun_id_cblinfun_apply complex_vector.scale_cancel_right ket_Kronecker_delta_eq ket_nonzero)
+
+  define T U where \<open>T = cBlinfun (\<lambda>\<psi>. \<psi> \<otimes>\<^sub>s ket undefined)\<close> and \<open>U = V o\<^sub>C\<^sub>L T\<close>
+  have T: \<open>T \<psi> = \<psi> \<otimes>\<^sub>s ket undefined\<close> for \<psi>
+    unfolding T_def
+    apply (subst bounded_clinear_cBlinfun_apply)
+    by (auto intro!: bounded_clinear_finite_dim clinear_tensor_ell22)
+  have sandwich_T: \<open>sandwich T a = a \<otimes>\<^sub>o ?ida\<close> for a
+    apply (rule fun_cong[where x=a])
+    apply (rule clinear_eq_butterfly_ketI)
+      apply auto
+    by (metis (no_types, hide_lams) Misc.sandwich_def T \<gamma> \<open>\<gamma> = 1\<close> adj_cblinfun_compose butterfly_adjoint cblinfun_comp_butterfly scaleC_one tensor_butterfly)
+
+  have \<open>F (butterfly x y) = V o\<^sub>C\<^sub>L (butterfly x y \<otimes>\<^sub>o ?ida) o\<^sub>C\<^sub>L V*\<close> for x y
+    by (simp add: Misc.sandwich_def FV)
+  also have \<open>\<dots> x y = V o\<^sub>C\<^sub>L (butterfly (T x) (T y)) o\<^sub>C\<^sub>L V*\<close> for x y
+    by (simp add: T \<gamma> \<open>\<gamma> = 1\<close>)
+  also have \<open>\<dots> x y = U o\<^sub>C\<^sub>L (butterfly x y) o\<^sub>C\<^sub>L U*\<close> for x y
+    by (simp add: U_def butterfly_comp_cblinfun cblinfun_comp_butterfly)
+  finally have F_rep:  \<open>F a = U o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L U*\<close> for a
+    apply (rule_tac fun_cong[where x=a])
+    apply (rule_tac clinear_eq_butterfly_ketI)
+    apply auto
+    by (metis (no_types, lifting) cblinfun_apply_clinear clinear_iff sandwich_apply)
+
+  have \<open>isometry T\<close>
+    apply (rule orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
+    by (auto simp: T)
+  moreover have \<open>T *\<^sub>S \<top> = \<top>\<close>
+  proof -
+    have 1: \<open>\<phi> \<otimes>\<^sub>s \<xi> \<in> range ((*\<^sub>V) T)\<close> for \<phi> \<xi>
+    proof -
+      have \<open>T *\<^sub>V (cinner (ket undefined) \<xi> *\<^sub>C \<phi>) = \<phi> \<otimes>\<^sub>s (cinner (ket undefined) \<xi> *\<^sub>C ket undefined)\<close>
+        by (simp add: T tensor_ell2_scaleC2)
+      also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s (selfbutterket undefined *\<^sub>V \<xi>)\<close>
+        by simp
+      also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s (?ida *\<^sub>V \<xi>)\<close>
+        by (simp add: \<gamma> \<open>\<gamma> = 1\<close>)
+      also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s \<xi>\<close>
+        by simp
+      finally show ?thesis
+        by (metis range_eqI)
+    qed
+
+    have \<open>\<top> \<le> ccspan {ket x | x. True}\<close>
+      by (simp add: full_SetCompr_eq)
+    also have \<open>\<dots> \<le> ccspan {\<phi> \<otimes>\<^sub>s \<xi> | \<phi> \<xi>. True}\<close>
+      apply (rule ccspan_mono)
+      by (auto simp flip: tensor_ell2_ket)
+    also from 1 have \<open>\<dots> \<le> ccspan (range ((*\<^sub>V) T))\<close>
+      by (auto intro!: ccspan_mono)
+    also have \<open>\<dots> = T *\<^sub>S \<top>\<close>
+      by (metis (mono_tags, hide_lams) calculation cblinfun_image_Span cblinfun_image_mono eq_iff top_greatest)
+    finally show \<open>T *\<^sub>S \<top> = \<top>\<close>
+      using top.extremum_uniqueI by blast
+  qed
+
+  ultimately have \<open>unitary T\<close>
+    by (rule surj_isometry_is_unitary)
+  then have \<open>unitary U\<close>
+    by (simp add: U_def \<open>unitary V\<close>)
+
+  from F_rep \<open>unitary U\<close> show ?thesis
+    by (auto simp: sandwich_def[abs_def])
+qed
+
 
 (* definition \<open>equivalent_registers F G \<longleftrightarrow> (register F \<and> (\<exists>I. iso_register I \<and> F o I = G))\<close>
 

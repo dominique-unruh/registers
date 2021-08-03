@@ -338,7 +338,7 @@ lift_definition swap_ell2 :: \<open>('a::finite\<times>'b::finite) ell2 \<Righta
   apply (rule clinearI; transfer)
   by auto
 
-lemma swap_ell2_tensor: \<open>swap_ell2 *\<^sub>V tensor_ell2 a b = tensor_ell2 b a\<close>
+lemma swap_ell2_tensor[simp]: \<open>swap_ell2 *\<^sub>V tensor_ell2 a b = tensor_ell2 b a\<close>
   apply (rule clinear_equal_ket[THEN fun_cong, where x=a])
     apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
    apply (simp add: clinear_tensor_ell21)
@@ -440,6 +440,42 @@ proof -
     by force
 qed
 
+lemma inj_tensor_ell2_left: \<open>inj (\<lambda>a::'a::finite ell2. a \<otimes>\<^sub>s b)\<close> if \<open>b \<noteq> 0\<close> for b :: \<open>'b::finite ell2\<close>
+proof (rule injI, rule ccontr)
+  fix x y :: \<open>'a ell2\<close>
+  assume eq: \<open>x \<otimes>\<^sub>s b = y \<otimes>\<^sub>s b\<close>
+  assume neq: \<open>x \<noteq> y\<close>
+  define a where \<open>a = x - y\<close>
+  from neq a_def have neq0: \<open>a \<noteq> 0\<close>
+    by auto
+  with \<open>b \<noteq> 0\<close> have \<open>a \<otimes>\<^sub>s b \<noteq> 0\<close>
+    by (simp add: tensor_ell2_nonzero)
+  then have \<open>x \<otimes>\<^sub>s b \<noteq> y \<otimes>\<^sub>s b\<close>
+    unfolding a_def
+    by (metis add_cancel_left_left diff_add_cancel tensor_ell2_add1)
+  with eq show False
+    by auto
+qed
+
+lemma inj_tensor_ell2_right: \<open>inj (\<lambda>b::'b::finite ell2. a \<otimes>\<^sub>s b)\<close> if \<open>a \<noteq> 0\<close> for a :: \<open>'a::finite ell2\<close>
+proof (rule injI, rule ccontr)
+  fix x y :: \<open>'b ell2\<close>
+  assume eq: \<open>a \<otimes>\<^sub>s x = a \<otimes>\<^sub>s y\<close>
+  assume neq: \<open>x \<noteq> y\<close>
+  define b where \<open>b = x - y\<close>
+  from neq b_def have neq0: \<open>b \<noteq> 0\<close>
+    by auto
+  with \<open>a \<noteq> 0\<close> have \<open>a \<otimes>\<^sub>s b \<noteq> 0\<close>
+    by (simp add: tensor_ell2_nonzero)
+  then have \<open>a \<otimes>\<^sub>s x \<noteq> a \<otimes>\<^sub>s y\<close>
+    unfolding b_def
+    by (metis add_cancel_left_left diff_add_cancel tensor_ell2_add2)
+  with eq show False
+    by auto
+qed
+
+
+
 lemma inj_tensor_left: \<open>inj (\<lambda>a::'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2. a \<otimes>\<^sub>o b)\<close> if \<open>b \<noteq> 0\<close> for b :: \<open>'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
 proof (rule injI, rule ccontr)
   fix x y :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close>
@@ -453,6 +489,23 @@ proof (rule injI, rule ccontr)
   then have \<open>x \<otimes>\<^sub>o b \<noteq> y \<otimes>\<^sub>o b\<close>
     unfolding a_def
     by (metis add_cancel_left_left diff_add_cancel tensor_op_left_add) 
+  with eq show False
+    by auto
+qed
+
+lemma inj_tensor_right: \<open>inj (\<lambda>b::'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2. a \<otimes>\<^sub>o b)\<close> if \<open>a \<noteq> 0\<close> for a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2\<close>
+proof (rule injI, rule ccontr)
+  fix x y :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close>
+  assume eq: \<open>a \<otimes>\<^sub>o x = a \<otimes>\<^sub>o y\<close>
+  assume neq: \<open>x \<noteq> y\<close>
+  define b where \<open>b = x - y\<close>
+  from neq b_def have neq0: \<open>b \<noteq> 0\<close>
+    by auto
+  with \<open>a \<noteq> 0\<close> have \<open>a \<otimes>\<^sub>o b \<noteq> 0\<close>
+    by (simp add: tensor_op_nonzero)
+  then have \<open>a \<otimes>\<^sub>o x \<noteq> a \<otimes>\<^sub>o y\<close>
+    unfolding b_def
+    by (metis add_cancel_left_left diff_add_cancel tensor_op_right_add) 
   with eq show False
     by auto
 qed
@@ -536,5 +589,182 @@ lemma tensor_op_0_left[simp]: \<open>tensor_op 0 x = (0 :: ('a::finite*'b::finit
 lemma tensor_op_0_right[simp]: \<open>tensor_op x 0 = (0 :: ('a::finite*'b::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('c::finite*'d::finite) ell2)\<close>
   apply (rule equal_ket)
   by (auto simp flip: tensor_ell2_ket simp: tensor_op_ell2)
+
+lemma bij_tensor_ell2_one_dim_left:
+  assumes \<open>\<psi> \<noteq> 0\<close>
+  shows \<open>bij (\<lambda>x::'b::finite ell2. (\<psi> :: 'a::CARD_1 ell2) \<otimes>\<^sub>s x)\<close>
+proof (rule bijI)
+  show \<open>inj (\<lambda>x::'b::finite ell2. (\<psi> :: 'a::CARD_1 ell2) \<otimes>\<^sub>s x)\<close>
+    using assms by (rule inj_tensor_ell2_right)
+  have \<open>\<exists>x. \<psi> \<otimes>\<^sub>s x = \<phi>\<close> for \<phi> :: \<open>('a*'b) ell2\<close>
+  proof (use assms in transfer)
+    fix \<psi> :: \<open>'a \<Rightarrow> complex\<close> and \<phi> :: \<open>'a*'b \<Rightarrow> complex\<close>
+    assume \<open>has_ell2_norm \<phi>\<close> and \<open>\<psi> \<noteq> (\<lambda>_. 0)\<close>
+    define c where \<open>c = \<psi> undefined\<close>
+    then have \<open>\<psi> a = c\<close> for a 
+      apply (subst everything_the_same[of _ undefined])
+      by simp
+    with \<open>\<psi> \<noteq> (\<lambda>_. 0)\<close> have \<open>c \<noteq> 0\<close>
+      by auto
+
+    define x where \<open>x j = \<phi> (undefined, j) / c\<close> for j
+    have \<open>(\<lambda>(i, j). \<psi> i * x j) = \<phi>\<close>
+      apply (auto intro!: ext simp: x_def \<open>\<psi> _ = c\<close> \<open>c \<noteq> 0\<close>)
+      apply (subst (2) everything_the_same[of _ undefined])
+      by simp
+    then show \<open>\<exists>x\<in>Collect has_ell2_norm. (\<lambda>(i, j). \<psi> i * x j) = \<phi>\<close>
+      apply (rule bexI[where x=x])
+      by simp
+  qed
+
+  then show \<open>surj (\<lambda>x::'b::finite ell2. (\<psi> :: 'a::CARD_1 ell2) \<otimes>\<^sub>s x)\<close>
+    by (metis surj_def)
+qed
+
+lemma bij_tensor_op_one_dim_left:
+  assumes \<open>a \<noteq> 0\<close>
+  shows \<open>bij (\<lambda>x::'c::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2. (a :: 'a::{CARD_1,enum} ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::{CARD_1,enum} ell2) \<otimes>\<^sub>o x)\<close>
+proof (rule bijI)
+  define t where \<open>t = (\<lambda>x::'c ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd ell2. (a :: 'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<otimes>\<^sub>o x)\<close>
+  define i where
+    \<open>i = tensor_lift (\<lambda>(x::'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) (y::'c ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd ell2). (one_dim_iso x / one_dim_iso a) *\<^sub>C y)\<close>
+
+  have [simp]: \<open>clinear i\<close>
+    by (auto intro!: tensor_lift_clinear simp: i_def cbilinear_def clinearI scaleC_add_left add_divide_distrib)
+  have [simp]: \<open>clinear t\<close>
+    by (simp add: t_def)
+  have \<open>i (x \<otimes>\<^sub>o y) = (one_dim_iso x / one_dim_iso a) *\<^sub>C y\<close> for x y
+    by (auto intro!: clinearI tensor_lift_correct[THEN fun_cong, THEN fun_cong] simp: t_def i_def cbilinear_def  scaleC_add_left add_divide_distrib)
+  then have \<open>t (i (x \<otimes>\<^sub>o y)) = x \<otimes>\<^sub>o y\<close> for x y
+    apply (simp add: t_def)
+    by (smt (z3) assms complex_vector.scale_eq_0_iff nonzero_mult_div_cancel_right one_dim_scaleC_1 scaleC_scaleC tensor_op_scaleC_left tensor_op_scaleC_right times_divide_eq_left)
+  then have \<open>t (i x) = x\<close> for x
+    apply (rule_tac fun_cong[where x=x])
+    apply (rule tensor_extensionality)
+    by (auto intro: clinear_compose complex_vector.module_hom_ident simp flip: o_def[of t i])
+  then show \<open>surj t\<close> 
+    by (rule surjI)
+
+  show \<open>inj t\<close>
+    unfolding t_def using assms by (rule inj_tensor_right)
+qed
+
+lemma swap_ell2_selfinv[simp]: \<open>swap_ell2 o\<^sub>C\<^sub>L swap_ell2 = id_cblinfun\<close>
+  apply (rule tensor_ell2_extensionality)
+  by auto
+
+lemma bij_tensor_op_one_dim_right:
+  assumes \<open>b \<noteq> 0\<close>
+  shows \<open>bij (\<lambda>x::'c::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2. x \<otimes>\<^sub>o (b :: 'a::{CARD_1,enum} ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::{CARD_1,enum} ell2))\<close>
+    (is \<open>bij ?f\<close>)
+proof -
+  let ?sf = \<open>(\<lambda>x. swap_ell2 o\<^sub>C\<^sub>L (?f x) o\<^sub>C\<^sub>L swap_ell2)\<close>
+  let ?s = \<open>(\<lambda>x. swap_ell2 o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L swap_ell2)\<close>
+  let ?g = \<open>(\<lambda>x::'c::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2. (b :: 'a::{CARD_1,enum} ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::{CARD_1,enum} ell2) \<otimes>\<^sub>o x)\<close>
+  have \<open>?sf = ?g\<close>
+    by (auto intro!: ext tensor_ell2_extensionality simp add: swap_ell2_tensor tensor_op_ell2)
+  have \<open>bij ?g\<close>
+    using assms by (rule bij_tensor_op_one_dim_left)
+  have \<open>?s o ?sf = ?f\<close>
+    apply (auto intro!: ext simp: cblinfun_assoc_left)
+    by (auto simp: cblinfun_assoc_right)
+  also have \<open>bij ?s\<close>
+    apply (rule o_bij[where g=\<open>(\<lambda>x. swap_ell2 o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L swap_ell2)\<close>])
+    apply (auto intro!: ext simp: cblinfun_assoc_left)
+    by (auto simp: cblinfun_assoc_right)
+  show \<open>bij ?f\<close>
+    apply (subst \<open>?s o ?sf = ?f\<close>[symmetric], subst \<open>?sf = ?g\<close>)
+    using \<open>bij ?g\<close> \<open>bij ?s\<close> by (rule bij_comp)
+qed
+
+lemma overlapping_tensor:
+  fixes a23 :: \<open>('a2::finite*'a3::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b2::finite*'b3::finite) ell2\<close>
+    and b12 :: \<open>('a1::finite*'a2) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b1::finite*'b2) ell2\<close>
+  assumes eq: \<open>butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23 = assoc_ell2 o\<^sub>C\<^sub>L (b12 \<otimes>\<^sub>o butterfly \<phi> \<phi>') o\<^sub>C\<^sub>L assoc_ell2'\<close>
+  assumes \<open>\<psi> \<noteq> 0\<close> \<open>\<psi>' \<noteq> 0\<close> \<open>\<phi> \<noteq> 0\<close> \<open>\<phi>' \<noteq> 0\<close>
+  shows \<open>\<exists>c. butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23 = butterfly \<psi> \<psi>' \<otimes>\<^sub>o c \<otimes>\<^sub>o butterfly \<phi> \<phi>'\<close>
+proof -
+  note [[show_types]]
+  let ?id1 = \<open>id_cblinfun :: unit ell2 \<Rightarrow>\<^sub>C\<^sub>L unit ell2\<close>
+  note id_cblinfun_eq_1[simp del]
+  define d where \<open>d = butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23\<close>
+  
+  define \<psi>\<^sub>n \<psi>\<^sub>n' a23\<^sub>n where \<open>\<psi>\<^sub>n = \<psi> /\<^sub>C norm \<psi>\<close> and \<open>\<psi>\<^sub>n' = \<psi>' /\<^sub>C norm \<psi>'\<close> and \<open>a23\<^sub>n = norm \<psi> *\<^sub>C norm \<psi>' *\<^sub>C a23\<close>
+  have [simp]: \<open>norm \<psi>\<^sub>n = 1\<close> \<open>norm \<psi>\<^sub>n' = 1\<close>
+    using \<open>\<psi> \<noteq> 0\<close> \<open>\<psi>' \<noteq> 0\<close> by (auto simp: \<psi>\<^sub>n_def \<psi>\<^sub>n'_def norm_inverse)
+  have n1: \<open>butterfly \<psi>\<^sub>n \<psi>\<^sub>n' \<otimes>\<^sub>o a23\<^sub>n = butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23\<close>
+    apply (auto simp: \<psi>\<^sub>n_def \<psi>\<^sub>n'_def a23\<^sub>n_def tensor_op_scaleC_left tensor_op_scaleC_right)
+    by (metis (no_types, lifting) assms(2) assms(3) inverse_mult_distrib mult.commute no_zero_divisors norm_eq_zero of_real_eq_0_iff right_inverse scaleC_one)
+
+  define \<phi>\<^sub>n \<phi>\<^sub>n' b12\<^sub>n where \<open>\<phi>\<^sub>n = \<phi> /\<^sub>C norm \<phi>\<close> and \<open>\<phi>\<^sub>n' = \<phi>' /\<^sub>C norm \<phi>'\<close> and \<open>b12\<^sub>n = norm \<phi> *\<^sub>C norm \<phi>' *\<^sub>C b12\<close>
+  have [simp]: \<open>norm \<phi>\<^sub>n = 1\<close> \<open>norm \<phi>\<^sub>n' = 1\<close>
+    using \<open>\<phi> \<noteq> 0\<close> \<open>\<phi>' \<noteq> 0\<close> by (auto simp: \<phi>\<^sub>n_def \<phi>\<^sub>n'_def norm_inverse)
+  have n2: \<open>b12\<^sub>n \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n' = b12 \<otimes>\<^sub>o butterfly \<phi> \<phi>'\<close>
+    apply (auto simp: \<phi>\<^sub>n_def \<phi>\<^sub>n'_def b12\<^sub>n_def tensor_op_scaleC_left tensor_op_scaleC_right)
+    by (metis (no_types, lifting) assms(4) assms(5) field_class.field_inverse inverse_mult_distrib mult.commute no_zero_divisors norm_eq_zero of_real_hom.hom_0 scaleC_one)
+
+  define c' :: \<open>(unit*'a2*unit) ell2 \<Rightarrow>\<^sub>C\<^sub>L (unit*'b2*unit) ell2\<close> 
+    where \<open>c' = (vector_to_cblinfun \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o vector_to_cblinfun \<phi>\<^sub>n)* o\<^sub>C\<^sub>L d
+            o\<^sub>C\<^sub>L (vector_to_cblinfun \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o vector_to_cblinfun \<phi>\<^sub>n')\<close>
+
+  define c'' :: \<open>'a2 ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b2 ell2\<close>
+    where \<open>c'' = inv (\<lambda>c''. id_cblinfun \<otimes>\<^sub>o c'' \<otimes>\<^sub>o id_cblinfun) c'\<close>
+
+  have *: \<open>bij (\<lambda>c''::'a2 ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b2 ell2. ?id1 \<otimes>\<^sub>o c'' \<otimes>\<^sub>o ?id1)\<close>
+    apply (subst asm_rl[of \<open>_ = (\<lambda>x. id_cblinfun \<otimes>\<^sub>o x) o (\<lambda>c''. c'' \<otimes>\<^sub>o id_cblinfun)\<close>])
+    using [[show_consts]]
+    by (auto intro!: bij_comp bij_tensor_op_one_dim_left bij_tensor_op_one_dim_right)
+
+  have c'_c'': \<open>c' = ?id1 \<otimes>\<^sub>o c'' \<otimes>\<^sub>o ?id1\<close>
+    unfolding c''_def 
+    apply (rule surj_f_inv_f[where y=c', symmetric])
+    using * by (rule bij_is_surj)
+
+  define c :: \<open>'a2 ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b2 ell2\<close>
+    where \<open>c = c'' /\<^sub>C norm \<psi> /\<^sub>C norm \<psi>' /\<^sub>C norm \<phi> /\<^sub>C norm \<phi>'\<close>
+
+  have aux: \<open>assoc_ell2' o\<^sub>C\<^sub>L (assoc_ell2 o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L assoc_ell2') o\<^sub>C\<^sub>L assoc_ell2 = x\<close> for x
+    apply (simp add: cblinfun_assoc_left)
+    by (simp add: cblinfun_assoc_right)
+  have aux2: \<open>(assoc_ell2 o\<^sub>C\<^sub>L ((x \<otimes>\<^sub>o y) \<otimes>\<^sub>o z) o\<^sub>C\<^sub>L assoc_ell2') = x \<otimes>\<^sub>o (y \<otimes>\<^sub>o z)\<close> for x y z
+    apply (rule equal_ket, rename_tac xyz)
+    apply (case_tac xyz, hypsubst_thin)
+    by (simp flip: tensor_ell2_ket add: assoc_ell2'_tensor assoc_ell2_tensor tensor_op_ell2)
+
+  have \<open>d = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L d o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun)\<close>
+    by (auto simp: d_def n1[symmetric] comp_tensor_op cnorm_eq_1[THEN iffD1])
+  also have \<open>\<dots> = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L assoc_ell2 o\<^sub>C\<^sub>L (b12\<^sub>n \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n')
+                  o\<^sub>C\<^sub>L assoc_ell2' o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun)\<close>
+    by (auto simp: d_def eq n2 cblinfun_assoc_left)
+  also have \<open>\<dots> = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L assoc_ell2 o\<^sub>C\<^sub>L 
+               ((id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n) o\<^sub>C\<^sub>L (b12\<^sub>n \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n') o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n' \<phi>\<^sub>n'))
+               o\<^sub>C\<^sub>L assoc_ell2' o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun)\<close>
+    by (auto simp: comp_tensor_op cnorm_eq_1[THEN iffD1])
+  also have \<open>\<dots> = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L assoc_ell2 o\<^sub>C\<^sub>L 
+               ((id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n) o\<^sub>C\<^sub>L (assoc_ell2' o\<^sub>C\<^sub>L d o\<^sub>C\<^sub>L assoc_ell2) o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n' \<phi>\<^sub>n'))
+               o\<^sub>C\<^sub>L assoc_ell2' o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun)\<close>
+    by (auto simp: d_def n2 eq aux)
+  also have \<open>\<dots> = ((butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L (assoc_ell2 o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n) o\<^sub>C\<^sub>L assoc_ell2'))
+               o\<^sub>C\<^sub>L d o\<^sub>C\<^sub>L ((assoc_ell2 o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n' \<phi>\<^sub>n') o\<^sub>C\<^sub>L assoc_ell2') o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun))\<close>
+    by (auto simp: sandwich_def cblinfun_assoc_left)
+  also have \<open>\<dots> = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n)
+               o\<^sub>C\<^sub>L d o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n' \<phi>\<^sub>n')\<close>
+    apply (simp only: tensor_id[symmetric] comp_tensor_op aux2)
+    by (simp add: cnorm_eq_1[THEN iffD1])
+  also have \<open>\<dots> = (vector_to_cblinfun \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o vector_to_cblinfun \<phi>\<^sub>n)
+               o\<^sub>C\<^sub>L c' o\<^sub>C\<^sub>L (vector_to_cblinfun \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o vector_to_cblinfun \<phi>\<^sub>n')*\<close>
+    apply (simp add: c'_def butterfly_def_one_dim[where 'c="unit ell2"] cblinfun_assoc_left comp_tensor_op
+                      tensor_op_adjoint cnorm_eq_1[THEN iffD1])
+    by (simp add: cblinfun_assoc_right comp_tensor_op)
+  also have \<open>\<dots> = butterfly \<psi>\<^sub>n \<psi>\<^sub>n' \<otimes>\<^sub>o c'' \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n'\<close>
+    by (simp add: c'_c'' comp_tensor_op tensor_op_adjoint butterfly_def_one_dim[symmetric])
+  also have \<open>\<dots> = butterfly \<psi> \<psi>' \<otimes>\<^sub>o c \<otimes>\<^sub>o butterfly \<phi> \<phi>'\<close>
+    by (simp add: \<psi>\<^sub>n_def \<psi>\<^sub>n'_def \<phi>\<^sub>n_def \<phi>\<^sub>n'_def c_def tensor_op_scaleC_left tensor_op_scaleC_right)
+  finally have d_c: \<open>d = butterfly \<psi> \<psi>' \<otimes>\<^sub>o c \<otimes>\<^sub>o butterfly \<phi> \<phi>'\<close>
+    by -
+  then show ?thesis
+    by (auto simp: d_def)
+qed
+
 
 end

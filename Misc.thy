@@ -169,5 +169,13 @@ lemma ccspan_mono:
   apply (transfer fixing: A B)
   by (simp add: assms closure_mono complex_vector.span_mono)
 
+(* TODO move to BO *)
+lemma cblinfun_comp_butterfly: "a o\<^sub>C\<^sub>L butterfly \<psi> \<phi> = butterfly (a *\<^sub>V \<psi>) \<phi>"
+  unfolding butterfly_def
+  by (simp add: cblinfun_compose_assoc vector_to_cblinfun_applyOp)  
+
+lemma double_exists: \<open>(\<exists>x y. Q x y) \<longleftrightarrow> (\<exists>z. Q (fst z) (snd z))\<close>
+  by simp
+
 
 end

@@ -95,18 +95,6 @@ lemma register_pair_butterfly_tensor: \<open>(F; G) (butterfly (a \<otimes>\<^su
   if [simp]: \<open>compatible F G\<close>
   by (auto simp: default_prod_def simp flip: tensor_ell2_ket tensor_butterfly register_pair_apply)
 
-(* lemma aux3: \<open>(F; G) (butterfly (a \<otimes>\<^sub>s b) (ket default)) = F (butterfly a (ket default)) o\<^sub>C\<^sub>L G (butterfly b (ket default))\<close>
-  if [simp]: \<open>compatible F G\<close>
-  by (auto simp: default_prod_def simp flip: tensor_ell2_ket tensor_butterfly register_pair_apply) *)
-
-(* lemma aux4: \<open>(F; G) (butterfly (ket default) (a \<otimes>\<^sub>s b)) = F (butterfly (ket default) a) o\<^sub>C\<^sub>L G (butterfly (ket default) b)\<close>
-  if [simp]: \<open>compatible F G\<close>
-  by (auto simp: default_prod_def simp flip: tensor_ell2_ket tensor_butterfly register_pair_apply) *)
-
-(* lemma aux1: \<open>(F; G) (selfbutterket default) = F (selfbutterket default) o\<^sub>C\<^sub>L G (selfbutterket default)\<close>
-  if [simp]: \<open>compatible F G\<close>
-  by (auto simp: default_prod_def simp flip: tensor_ell2_ket tensor_butterfly register_pair_apply) *)
-
 lemma pure_state_eqI:
   assumes \<open>F (selfbutter \<eta>\<^sub>F) = G (selfbutter \<eta>\<^sub>G)\<close>
   assumes \<open>F (butterfly \<psi> \<eta>\<^sub>F) = G (butterfly \<phi> \<eta>\<^sub>G)\<close>
@@ -121,98 +109,7 @@ proof -
 qed
 
 
-(* (* Example *)
-lemma example1: \<open>(F f \<otimes>\<^sub>p G g \<otimes>\<^sub>p H h) = (H h \<otimes>\<^sub>p G g \<otimes>\<^sub>p F f)\<close>
-  (is \<open>pure_state ?FGH ?fgh = pure_state ?HGF ?hgf\<close>)
-  if [simp]: \<open>mutually compatible (F, G, H)\<close> \<open>register F\<close> \<open>register G\<close> \<open>register H\<close>
-  apply (rule pure_state_eqI)
-  by (auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def simp flip: tensor_ell2_ket)
-
-(* Example *)
-lemma example2: \<open>pure_state (F;(G;H)) (f \<otimes>\<^sub>s g \<otimes>\<^sub>s h) = pure_state ((F;G);H) ((f \<otimes>\<^sub>s g) \<otimes>\<^sub>s h)\<close>
-  if [compatible]: \<open>mutually compatible (F, G, H)\<close>
-  apply (rule pure_state_eqI)
-  by (auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def simp flip: tensor_ell2_ket) *)
-
 definition \<open>regular_register F \<longleftrightarrow> register F \<and> (\<exists>a. (F; complement F) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default)\<close>
-
-
-(* TODO: rewrite without using registers, move to Finite_Tensor_Product *)
-lemma overlapping_tensor:
-  assumes eq: \<open>butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23 = assoc (b12 \<otimes>\<^sub>o butterfly \<phi> \<phi>')\<close>
-  assumes \<open>\<psi> \<noteq> 0\<close> \<open>\<psi>' \<noteq> 0\<close> \<open>\<phi> \<noteq> 0\<close> \<open>\<phi>' \<noteq> 0\<close>
-  shows \<open>\<exists>c. butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23 = butterfly \<psi> \<psi>' \<otimes>\<^sub>o c \<otimes>\<^sub>o butterfly \<phi> \<phi>'\<close>
-proof -
-  note id_cblinfun_eq_1[simp del]
-  define d where \<open>d = butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23\<close>
-  
-  define \<psi>\<^sub>n \<psi>\<^sub>n' a23\<^sub>n where \<open>\<psi>\<^sub>n = \<psi> /\<^sub>C norm \<psi>\<close> and \<open>\<psi>\<^sub>n' = \<psi>' /\<^sub>C norm \<psi>'\<close> and \<open>a23\<^sub>n = norm \<psi> *\<^sub>C norm \<psi>' *\<^sub>C a23\<close>
-  have [simp]: \<open>norm \<psi>\<^sub>n = 1\<close> \<open>norm \<psi>\<^sub>n' = 1\<close>
-    using \<open>\<psi> \<noteq> 0\<close> \<open>\<psi>' \<noteq> 0\<close> by (auto simp: \<psi>\<^sub>n_def \<psi>\<^sub>n'_def norm_inverse)
-  have n1: \<open>butterfly \<psi>\<^sub>n \<psi>\<^sub>n' \<otimes>\<^sub>o a23\<^sub>n = butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23\<close>
-    apply (auto simp: \<psi>\<^sub>n_def \<psi>\<^sub>n'_def a23\<^sub>n_def tensor_op_scaleC_left tensor_op_scaleC_right)
-    by (metis (no_types, lifting) assms(2) assms(3) inverse_mult_distrib mult.commute no_zero_divisors norm_eq_zero of_real_eq_0_iff right_inverse scaleC_one)
-
-  define \<phi>\<^sub>n \<phi>\<^sub>n' b12\<^sub>n where \<open>\<phi>\<^sub>n = \<phi> /\<^sub>C norm \<phi>\<close> and \<open>\<phi>\<^sub>n' = \<phi>' /\<^sub>C norm \<phi>'\<close> and \<open>b12\<^sub>n = norm \<phi> *\<^sub>C norm \<phi>' *\<^sub>C b12\<close>
-  have [simp]: \<open>norm \<phi>\<^sub>n = 1\<close> \<open>norm \<phi>\<^sub>n' = 1\<close>
-    using \<open>\<phi> \<noteq> 0\<close> \<open>\<phi>' \<noteq> 0\<close> by (auto simp: \<phi>\<^sub>n_def \<phi>\<^sub>n'_def norm_inverse)
-  have n2: \<open>b12\<^sub>n \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n' = b12 \<otimes>\<^sub>o butterfly \<phi> \<phi>'\<close>
-    apply (auto simp: \<phi>\<^sub>n_def \<phi>\<^sub>n'_def b12\<^sub>n_def tensor_op_scaleC_left tensor_op_scaleC_right)
-    by (metis (no_types, lifting) assms(4) assms(5) field_class.field_inverse inverse_mult_distrib mult.commute no_zero_divisors norm_eq_zero of_real_hom.hom_0 scaleC_one)
-
-  define c' :: \<open>(unit*'b*unit) ell2 \<Rightarrow>\<^sub>C\<^sub>L (unit*'b*unit) ell2\<close> 
-    where \<open>c' = (vector_to_cblinfun \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o vector_to_cblinfun \<phi>\<^sub>n)* o\<^sub>C\<^sub>L d
-            o\<^sub>C\<^sub>L (vector_to_cblinfun \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o vector_to_cblinfun \<phi>\<^sub>n')\<close>
-
-  define c'' :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
-    where \<open>c'' = (empty_var;(id;empty_var)) c'\<close>
-
-  have c'_c'': \<open>c' = id_cblinfun \<otimes>\<^sub>o c'' \<otimes>\<^sub>o id_cblinfun\<close>
-    unfolding c''_def
-    apply (rule fun_cong[where x=c'])
-    apply (rule tensor_extensionality3)
-      apply auto[2]
-    apply (auto simp: register_pair_apply)
-    apply (auto simp: empty_var_def)
-    by (metis (no_types, lifting) id_cblinfun_eq_1 one_dim_scaleC_1 scaleC_scaleC tensor_op_scaleC_left tensor_op_scaleC_right)
-
-  define c :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
-    where \<open>c = c'' /\<^sub>C norm \<psi> /\<^sub>C norm \<psi>' /\<^sub>C norm \<phi> /\<^sub>C norm \<phi>'\<close>
-
-  have \<open>d = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L d o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun)\<close>
-    by (auto simp: d_def n1[symmetric] comp_tensor_op cnorm_eq_1[THEN iffD1])
-  also have \<open>\<dots> = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L assoc (b12\<^sub>n \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n')
-                  o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun)\<close>
-    by (auto simp: d_def eq n2 assoc_ell2_sandwich cblinfun_assoc_left)
-  also have \<open>\<dots> = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L assoc
-               ((id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n) o\<^sub>C\<^sub>L (b12\<^sub>n \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n') o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n' \<phi>\<^sub>n'))
-              o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun)\<close>
-    by (auto simp: comp_tensor_op cnorm_eq_1[THEN iffD1])
-  also have \<open>\<dots> = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L assoc
-              ((id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n) o\<^sub>C\<^sub>L (assoc' d) o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n' \<phi>\<^sub>n'))
-              o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun)\<close>
-    by (auto simp: d_def n2 eq)
-  also have \<open>\<dots> = ((butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L (assoc (id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n)))
-               o\<^sub>C\<^sub>L d o\<^sub>C\<^sub>L (assoc (id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n' \<phi>\<^sub>n') o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun))\<close>
-    by (auto simp: assoc_ell2_sandwich assoc_ell2'_sandwich sandwich_def cblinfun_assoc_left)
-  also have \<open>\<dots> = (butterfly \<psi>\<^sub>n \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n)
-               o\<^sub>C\<^sub>L d o\<^sub>C\<^sub>L (butterfly \<psi>\<^sub>n' \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o butterfly \<phi>\<^sub>n' \<phi>\<^sub>n')\<close>
-    apply (simp only: tensor_id[symmetric] assoc_apply comp_tensor_op)
-    by (simp add: cnorm_eq_1[THEN iffD1])
-  also have \<open>\<dots> = (vector_to_cblinfun \<psi>\<^sub>n \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o vector_to_cblinfun \<phi>\<^sub>n)
-               o\<^sub>C\<^sub>L c' o\<^sub>C\<^sub>L (vector_to_cblinfun \<psi>\<^sub>n' \<otimes>\<^sub>o id_cblinfun \<otimes>\<^sub>o vector_to_cblinfun \<phi>\<^sub>n')*\<close>
-    apply (simp add: c'_def butterfly_def_one_dim[where 'c="unit ell2"] cblinfun_assoc_left comp_tensor_op
-                      tensor_op_adjoint cnorm_eq_1[THEN iffD1])
-    by (simp add: cblinfun_assoc_right comp_tensor_op)
-  also have \<open>\<dots> = butterfly \<psi>\<^sub>n \<psi>\<^sub>n' \<otimes>\<^sub>o c'' \<otimes>\<^sub>o butterfly \<phi>\<^sub>n \<phi>\<^sub>n'\<close>
-    by (simp add: c'_c'' comp_tensor_op tensor_op_adjoint butterfly_def_one_dim[symmetric])
-  also have \<open>\<dots> = butterfly \<psi> \<psi>' \<otimes>\<^sub>o c \<otimes>\<^sub>o butterfly \<phi> \<phi>'\<close>
-    by (simp add: \<psi>\<^sub>n_def \<psi>\<^sub>n'_def \<phi>\<^sub>n_def \<phi>\<^sub>n'_def c_def tensor_op_scaleC_left tensor_op_scaleC_right)
-  finally have d_c: \<open>d = butterfly \<psi> \<psi>' \<otimes>\<^sub>o c \<otimes>\<^sub>o butterfly \<phi> \<phi>'\<close>
-    by -
-  then show ?thesis
-    by (auto simp: d_def)
-qed
 
 lemma regular_register_pair:
   assumes [simp]: \<open>compatible F G\<close>
@@ -320,7 +217,8 @@ proof -
 
   obtain c where *: \<open>selfbutterket (default::'c) \<otimes>\<^sub>o swap (inv J aG) = selfbutterket default \<otimes>\<^sub>o c \<otimes>\<^sub>o selfbutterket default\<close>
     apply atomize_elim
-    using * apply (rule overlapping_tensor)
+    apply (rule overlapping_tensor)
+    using * unfolding assoc_ell2_sandwich sandwich_def
     by auto
 
   have \<open>t1 = ((swap \<otimes>\<^sub>r id) o assoc') t3\<close>
@@ -482,10 +380,6 @@ proof -
     by (auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def simp flip: tensor_ell2_ket)
 qed
 
-lemma cblinfun_comp_butterfly: "a o\<^sub>C\<^sub>L butterfly \<psi> \<phi> = butterfly (a *\<^sub>V \<psi>) \<phi>"
-  unfolding butterfly_def
-  by (simp add: cblinfun_compose_assoc vector_to_cblinfun_applyOp)  
-
 lemma state_apply1: 
   assumes [compatible]: \<open>compatible F G\<close>
   shows \<open>F U *\<^sub>V (F \<psi> \<otimes>\<^sub>p G \<phi>) = (F (U \<psi>) \<otimes>\<^sub>p G \<phi>)\<close>
@@ -502,9 +396,6 @@ proof -
     by -
 qed
 
-lemma double_exists: \<open>(\<exists>x y. Q x y) \<longleftrightarrow> (\<exists>z. Q (fst z) (snd z))\<close>
-  by simp
-
 
 (* lemma surj_isometry_is_unitary':
   fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
@@ -514,108 +405,24 @@ lemma double_exists: \<open>(\<exists>x y. Q x y) \<longleftrightarrow> (\<exist
   using assms(1) apply (rule surj_isometry_is_unitary)
   using assms(2) apply transfer by auto *)
 
-(* TODO: move *)
-lemma iso_register_decomposition:
-  assumes [simp]: \<open>iso_register F\<close>
-  shows \<open>\<exists>U. unitary U \<and> F = sandwich U\<close>
-proof -
-  have [simp]: \<open>register F\<close>
-    using assms iso_register_is_register by blast 
-  
-  let ?ida = \<open>id_cblinfun :: ('a, 'b) complement_domain ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close>
+attribute_setup internalize_sort = \<open>let
+fun find_tvar thm v = let
+  val tvars = Term.add_tvars (Thm.prop_of thm) []
+  val tv = case find_first (fn (n,sort) => n=v) tvars of
+              SOME tv => tv | NONE => raise THM ("Type variable " ^ string_of_indexname v ^ " not found", 0, [thm])
+in 
+TVar tv
+end
 
-  from register_decomposition[OF \<open>register F\<close>]
-  obtain V :: \<open>('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> where \<open>unitary V\<close>
-    and FV: \<open>F \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o ?ida)\<close> for \<theta>
-    by auto
+fun internalize_sort_attr (tvar:indexname) =
+  Thm.rule_attribute [] (fn context => fn thm =>
+    (snd (Internalize_Sort.internalize_sort (Thm.ctyp_of (Context.proof_of context) (find_tvar thm tvar)) thm)));
+in
+  Scan.lift Args.var >> internalize_sort_attr
+end\<close>
+  "internalize a sort"
 
-  have \<open>surj F\<close>
-    by (meson assms iso_register_inv_comp2 surj_iff)
-  have surj_tensor: \<open>surj (\<lambda>a::'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2. a \<otimes>\<^sub>o ?ida)\<close>
-    apply (rule surj_from_comp[where g=\<open>sandwich V\<close>])
-    using \<open>surj F\<close> apply (auto simp: FV)
-    by (meson \<open>unitary V\<close> register_inj unitary_sandwich_register)
-  then obtain a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close> 
-    where a: \<open>a \<otimes>\<^sub>o ?ida = selfbutterket undefined \<otimes>\<^sub>o selfbutterket undefined\<close>
-    by (smt (verit, best) surjD)
 
-  then have \<open>a \<noteq> 0\<close>
-    apply auto
-    by (metis butterfly_apply cblinfun.zero_left complex_vector.scale_eq_0_iff ket_is_orthogonal ket_nonzero)
-
-  obtain \<gamma> where \<gamma>: \<open>?ida = \<gamma> *\<^sub>C selfbutterket undefined\<close>
-    apply atomize_elim
-    using a \<open>a \<noteq> 0\<close> by (rule tensor_op_almost_injective)
-  then have \<open>?ida (ket undefined) = \<gamma> *\<^sub>C (selfbutterket undefined *\<^sub>V ket undefined)\<close>
-    by (simp add: \<open>id_cblinfun = \<gamma> *\<^sub>C selfbutterket undefined\<close> scaleC_cblinfun.rep_eq)
-  then have \<open>ket undefined = \<gamma> *\<^sub>C ket undefined\<close>
-    by (metis butterfly_apply cinner_scaleC_right id_cblinfun_apply ket_Kronecker_delta_eq mult.right_neutral scaleC_one)
-  then have \<open>\<gamma> = 1\<close>
-    by (smt (z3) \<gamma> butterfly_apply butterfly_scaleC_left cblinfun_id_cblinfun_apply complex_vector.scale_cancel_right ket_Kronecker_delta_eq ket_nonzero)
-
-  define T U where \<open>T = cBlinfun (\<lambda>\<psi>. \<psi> \<otimes>\<^sub>s ket undefined)\<close> and \<open>U = V o\<^sub>C\<^sub>L T\<close>
-  have T: \<open>T \<psi> = \<psi> \<otimes>\<^sub>s ket undefined\<close> for \<psi>
-    unfolding T_def
-    apply (subst bounded_clinear_cBlinfun_apply)
-    by (auto intro!: bounded_clinear_finite_dim clinear_tensor_ell22)
-  have sandwich_T: \<open>sandwich T a = a \<otimes>\<^sub>o ?ida\<close> for a
-    apply (rule fun_cong[where x=a])
-    apply (rule clinear_eq_butterfly_ketI)
-      apply auto
-    by (metis (no_types, hide_lams) Misc.sandwich_def T \<gamma> \<open>\<gamma> = 1\<close> adj_cblinfun_compose butterfly_adjoint cblinfun_comp_butterfly scaleC_one tensor_butterfly)
-
-  have \<open>F (butterfly x y) = V o\<^sub>C\<^sub>L (butterfly x y \<otimes>\<^sub>o ?ida) o\<^sub>C\<^sub>L V*\<close> for x y
-    by (simp add: Misc.sandwich_def FV)
-  also have \<open>\<dots> x y = V o\<^sub>C\<^sub>L (butterfly (T x) (T y)) o\<^sub>C\<^sub>L V*\<close> for x y
-    by (simp add: T \<gamma> \<open>\<gamma> = 1\<close>)
-  also have \<open>\<dots> x y = U o\<^sub>C\<^sub>L (butterfly x y) o\<^sub>C\<^sub>L U*\<close> for x y
-    by (simp add: U_def butterfly_comp_cblinfun cblinfun_comp_butterfly)
-  finally have F_rep:  \<open>F a = U o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L U*\<close> for a
-    apply (rule_tac fun_cong[where x=a])
-    apply (rule_tac clinear_eq_butterfly_ketI)
-    apply auto
-    by (metis (no_types, lifting) cblinfun_apply_clinear clinear_iff sandwich_apply)
-
-  have \<open>isometry T\<close>
-    apply (rule orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
-    by (auto simp: T)
-  moreover have \<open>T *\<^sub>S \<top> = \<top>\<close>
-  proof -
-    have 1: \<open>\<phi> \<otimes>\<^sub>s \<xi> \<in> range ((*\<^sub>V) T)\<close> for \<phi> \<xi>
-    proof -
-      have \<open>T *\<^sub>V (cinner (ket undefined) \<xi> *\<^sub>C \<phi>) = \<phi> \<otimes>\<^sub>s (cinner (ket undefined) \<xi> *\<^sub>C ket undefined)\<close>
-        by (simp add: T tensor_ell2_scaleC2)
-      also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s (selfbutterket undefined *\<^sub>V \<xi>)\<close>
-        by simp
-      also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s (?ida *\<^sub>V \<xi>)\<close>
-        by (simp add: \<gamma> \<open>\<gamma> = 1\<close>)
-      also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s \<xi>\<close>
-        by simp
-      finally show ?thesis
-        by (metis range_eqI)
-    qed
-
-    have \<open>\<top> \<le> ccspan {ket x | x. True}\<close>
-      by (simp add: full_SetCompr_eq)
-    also have \<open>\<dots> \<le> ccspan {\<phi> \<otimes>\<^sub>s \<xi> | \<phi> \<xi>. True}\<close>
-      apply (rule ccspan_mono)
-      by (auto simp flip: tensor_ell2_ket)
-    also from 1 have \<open>\<dots> \<le> ccspan (range ((*\<^sub>V) T))\<close>
-      by (auto intro!: ccspan_mono)
-    also have \<open>\<dots> = T *\<^sub>S \<top>\<close>
-      by (metis (mono_tags, hide_lams) calculation cblinfun_image_Span cblinfun_image_mono eq_iff top_greatest)
-    finally show \<open>T *\<^sub>S \<top> = \<top>\<close>
-      using top.extremum_uniqueI by blast
-  qed
-
-  ultimately have \<open>unitary T\<close>
-    by (rule surj_isometry_is_unitary)
-  then have \<open>unitary U\<close>
-    by (simp add: U_def \<open>unitary V\<close>)
-
-  from F_rep \<open>unitary U\<close> show ?thesis
-    by (auto simp: sandwich_def[abs_def])
-qed
 
 lemma cspan_state: 
   assumes \<open>iso_register F\<close>
@@ -660,12 +467,21 @@ lemma cspan_state':
   apply (rule pure_state_target_vector_correct)
   by (auto simp: iso_register_is_register)
 
+(* Proves (or reduces to subgoals) a goal of the form
+  F \<psi> \<otimes>\<^sub>p G \<phi> \<otimes> \<dots> = (something of the same form)
+
+  The registers may be pairs and will be properly unfolded (assuming "compatible X Y" can be proven for all involved registers)
+
+  If the pure states \<psi>... themselves are \<otimes>\<^sub>p-tensors, they will be treated as opaque.
+  Use (subst pure_state_nested) first to flatten those. (TODO: automate)
+ *)
 method pure_state_eq = 
   (rule pure_state_eqI;
-    auto simp: pure_state_nested register_pair_butterfly_tensor compatible_ac_rules default_prod_def simp flip: tensor_ell2_ket)
+    auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def 
+    simp flip: tensor_ell2_ket)
 
 (* Example *)
-lemma example3:
+lemma example:
   fixes F :: \<open>bit update \<Rightarrow> 'c::{finite,default} update\<close>
     and G :: \<open>bit update \<Rightarrow> 'c update\<close>
   assumes [compatible]: \<open>compatible F G\<close>
