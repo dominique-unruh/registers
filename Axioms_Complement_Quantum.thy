@@ -146,7 +146,7 @@ proof -
     also have \<open>\<dots> = Proj (ccspan (B j)) + Proj (ccspan (\<Union>i\<in>M. B i))\<close>
       unfolding P'B insert.IH[symmetric] by simp
     also have \<open>\<dots> = Proj (ccspan (B j \<union> (\<Union>i\<in>M. B i)))\<close>
-      apply (rule Proj_orthog_ccspan_plus)
+      apply (rule Proj_orthog_ccspan_union[symmetric])
       using orthoBiBj insert.hyps(2) by auto
     also have \<open>\<dots> = Proj (ccspan (\<Union>i\<in>insert j M. B i))\<close>
       by auto
