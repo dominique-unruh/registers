@@ -288,4 +288,16 @@ proof (rule complementsI)
     using equivalent_registers_sym iso_register_equivalent_id by blast
 qed
 
+lemma complements_Fst_Snd[simp]: \<open>complements Fst Snd\<close>
+  by (auto intro!: complementsI simp: pair_Fst_Snd)
+
+lemma complements_Snd_Fst[simp]: \<open>complements Snd Fst\<close>
+  by (auto intro!: complementsI simp flip: swap_def)
+
+lemma compatible_unit_register[simp]: \<open>register F \<Longrightarrow> compatible F unit_register\<close>
+  using compatible_sym unit_register_compatible unit_register_is_unit_register by blast
+
+lemma complements_id_unit_register[simp]: \<open>complements id unit_register\<close>
+  using complements_sym is_unit_register_def unit_register_is_unit_register by blast
+
 end

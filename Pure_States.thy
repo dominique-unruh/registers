@@ -426,14 +426,6 @@ qed
   using assms(2) apply transfer by auto *)
 
 
-(* TODO move *)
-lemma complements_Fst_Snd[simp]: \<open>complements Fst Snd\<close>
-  by (auto intro!: complementsI simp: pair_Fst_Snd)
-
-(* TODO move *)
-lemma complements_Snd_Fst[simp]: \<open>complements Snd Fst\<close>
-  by (auto intro!: complementsI simp flip: swap_def)
-
 lemma Fst_regular[simp]: \<open>regular_register Fst\<close>
   apply (rule regular_registerI[where a=\<open>selfbutterket default\<close> and G=Snd])
   by (auto simp: pair_Fst_Snd default_prod_def)
@@ -443,14 +435,6 @@ lemma Snd_regular[simp]: \<open>regular_register Snd\<close>
     apply auto[2]
   apply (auto simp only: default_prod_def swap_apply simp flip: swap_def)
   by auto
-
-(* TODO move, name *)
-lemma [simp]: \<open>register F \<Longrightarrow> compatible F unit_register\<close>
-  using compatible_sym unit_register_compatible unit_register_is_unit_register by blast
-
-(* TODO move, name *)
-lemma [simp]: \<open>complements id unit_register\<close>
-  using complements_sym is_unit_register_def unit_register_is_unit_register by blast
 
 lemma id_regular[simp]: \<open>regular_register id\<close>
   apply (rule regular_registerI[where G=unit_register and a=id_cblinfun])
@@ -507,33 +491,6 @@ lemma cspan_pure_state:
   using assms apply auto[2]
   apply (rule pure_state_target_vector_correct)
   by (auto simp: iso_register_is_register)
-
-(* TODO move *)
-lemma register_bounded_clinear: \<open>register F \<Longrightarrow> bounded_clinear F\<close>
-  using bounded_clinear_finite_dim register_def by blast
-
-(* TODO move *)
-lemma norm_tensor_ell2: \<open>norm (a \<otimes>\<^sub>s b) = norm a * norm b\<close>
-  apply transfer
-  by (simp add: ell2_norm_finite sum_product sum.cartesian_product case_prod_beta
-      norm_mult power_mult_distrib flip: real_sqrt_mult)
-
-(* TODO move *)
-lemma TODO_name1[bounded_cbilinear]: \<open>bounded_cbilinear (\<otimes>\<^sub>s)\<close>
-proof standard
-  fix a a' :: "'a ell2" and b b' :: "'b ell2" and r :: complex
-  show \<open>tensor_ell2 (a + a') b = tensor_ell2 a b + tensor_ell2 a' b\<close>
-    by (meson tensor_ell2_add1)
-  show \<open>tensor_ell2 a (b + b') = tensor_ell2 a b + tensor_ell2 a b'\<close>
-    by (simp add: tensor_ell2_add2)  
-  show \<open>tensor_ell2 (r *\<^sub>C a) b = r *\<^sub>C tensor_ell2 a b\<close>
-    by (simp add: tensor_ell2_scaleC1)
-  show \<open>tensor_ell2 a (r *\<^sub>C b) = r *\<^sub>C tensor_ell2 a b\<close>
-    by (simp add: tensor_ell2_scaleC2)
-  show \<open>\<exists>K. \<forall>a b. norm (tensor_ell2 a b) \<le> norm a * norm b * K \<close>
-    apply (rule exI[of _ 1])
-    by (simp add: norm_tensor_ell2)
-qed
 
 lemma pure_state_bounded_clinear:
   assumes [compatible]: \<open>compatible F G\<close>

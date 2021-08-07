@@ -765,5 +765,26 @@ proof -
     by (auto simp: d_def)
 qed
 
+lemma norm_tensor_ell2: \<open>norm (a \<otimes>\<^sub>s b) = norm a * norm b\<close>
+  apply transfer
+  by (simp add: ell2_norm_finite sum_product sum.cartesian_product case_prod_beta
+      norm_mult power_mult_distrib flip: real_sqrt_mult)
+
+lemma bounded_cbilinear_tensor_ell2[bounded_cbilinear]: \<open>bounded_cbilinear (\<otimes>\<^sub>s)\<close>
+proof standard
+  fix a a' :: "'a ell2" and b b' :: "'b ell2" and r :: complex
+  show \<open>tensor_ell2 (a + a') b = tensor_ell2 a b + tensor_ell2 a' b\<close>
+    by (meson tensor_ell2_add1)
+  show \<open>tensor_ell2 a (b + b') = tensor_ell2 a b + tensor_ell2 a b'\<close>
+    by (simp add: tensor_ell2_add2)  
+  show \<open>tensor_ell2 (r *\<^sub>C a) b = r *\<^sub>C tensor_ell2 a b\<close>
+    by (simp add: tensor_ell2_scaleC1)
+  show \<open>tensor_ell2 a (r *\<^sub>C b) = r *\<^sub>C tensor_ell2 a b\<close>
+    by (simp add: tensor_ell2_scaleC2)
+  show \<open>\<exists>K. \<forall>a b. norm (tensor_ell2 a b) \<le> norm a * norm b * K \<close>
+    apply (rule exI[of _ 1])
+    by (simp add: norm_tensor_ell2)
+qed
+
 
 end

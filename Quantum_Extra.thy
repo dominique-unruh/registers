@@ -156,5 +156,8 @@ lemma register_scaleC:
   assumes \<open>register F\<close> shows \<open>F (c *\<^sub>C a) = c *\<^sub>C F a\<close>
   by (simp add: assms complex_vector.linear_scale)
 
+lemma register_bounded_clinear: \<open>register F \<Longrightarrow> bounded_clinear F\<close>
+  using bounded_clinear_finite_dim register_def by blast
+
 end
 
