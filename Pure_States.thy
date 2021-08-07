@@ -509,61 +509,6 @@ lemma cspan_pure_state:
   by (auto simp: iso_register_is_register)
 
 (* TODO move *)
-lemma bounded_antilinearI:
-  assumes \<open>\<And>b1 b2. f (b1 + b2) = f b1 + f b2\<close>
-  assumes \<open>\<And>r b. f (r *\<^sub>C b) = cnj r *\<^sub>C f b\<close>
-  assumes \<open>\<forall>x. norm (f x) \<le> norm x * K\<close>
-  shows "bounded_antilinear f"
-  using assms by (auto intro!: exI bounded_antilinear.intro antilinearI simp: bounded_antilinear_axioms_def)
-
-(* TODO move *)
-lemma TODO_name13: \<open>vector_to_cblinfun (x + y) = vector_to_cblinfun x + vector_to_cblinfun y\<close>
-  apply transfer
-  by (simp add: scaleC_add_right)
-
-(* TODO move *)
-lemma TODO_name11: \<open>butterfly (a + a') b = butterfly a b + butterfly a' b\<close>
-  by (simp add: butterfly_def TODO_name13 cbilinear_add_left)
-
-(* TODO move *)
-lemma TODO_name12: \<open>butterfly a (b + b') = butterfly a b + butterfly a b'\<close>
-  by (simp add: butterfly_def adj_plus TODO_name13  cbilinear_add_right)
-
-(* TODO move *)
-lemma TODO_name9[bounded_sesquilinear]: \<open>bounded_sesquilinear (\<lambda>(b::'b::chilbert_space) (a::'a::chilbert_space). butterfly a b)\<close>
-proof standard
-  fix a a' :: 'a and b b' :: 'b and r :: complex
-  show \<open>butterfly (a + a') b = butterfly a b + butterfly a' b\<close>
-    by (rule TODO_name11)
-  show \<open>butterfly a (b + b') = butterfly a b + butterfly a b'\<close>  
-    by (rule TODO_name12)
-  show \<open>butterfly (r *\<^sub>C a) b = r *\<^sub>C butterfly a b\<close>
-    by simp
-  show \<open>butterfly a (r *\<^sub>C b) = cnj r *\<^sub>C butterfly a b\<close>
-    by simp
-  show \<open>\<exists>K. \<forall>b a. norm (butterfly a b) \<le> norm b * norm a * K \<close>
-    apply (rule exI[of _ 1])
-    by (simp add: norm_butterfly)
-qed
-
-(* TODO move *)
-(* lemma TODO_name5:
-  \<open>butterfly a (b1 + b2) = butterfly a b1 + butterfly a b2\<close>
-  unfolding butterfly_def
-  by - *)
-
-(* TODO move *)
-(* lemma TODO_name6:
-  \<open>butterfly (a1 + a2) b = butterfly a1 b + butterfly a2 b\<close>
-  by - *)
-
-(* TODO move *)
-(* lemma TODO_name3[bounded_antilinear]:
-  \<open>bounded_antilinear (\<lambda>y. butterfly x y)\<close>
-  apply (auto intro!: bounded_antilinearI[where K=\<open>norm x\<close>] simp: norm_butterfly)
-  by - *)
-
-(* TODO move *)
 lemma register_bounded_clinear: \<open>register F \<Longrightarrow> bounded_clinear F\<close>
   using bounded_clinear_finite_dim register_def by blast
 
@@ -589,10 +534,6 @@ proof standard
     apply (rule exI[of _ 1])
     by (simp add: norm_tensor_ell2)
 qed
-
-(* TODO move *)
-(* lemma TODO_name2[bounded_clinear]: \<open>bounded_clinear (\<lambda>b. a \<otimes>\<^sub>s b)\<close>
-  by (simp add: clinear_tensor_ell21) *)
 
 lemma pure_state_bounded_clinear:
   assumes [compatible]: \<open>compatible F G\<close>

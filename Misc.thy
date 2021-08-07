@@ -162,19 +162,6 @@ lemma surj_from_comp:
   shows \<open>surj f\<close>
   by (metis assms(1) assms(2) f_inv_into_f fun.set_map inj_image_mem_iff iso_tuple_UNIV_I surj_iff_all)
 
-
-(* TODO to BO *)
-lemma ccspan_mono:
-  assumes \<open>A \<subseteq> B\<close>
-  shows \<open>ccspan A \<le> ccspan B\<close>
-  apply (transfer fixing: A B)
-  by (simp add: assms closure_mono complex_vector.span_mono)
-
-(* TODO move to BO *)
-lemma cblinfun_comp_butterfly: "a o\<^sub>C\<^sub>L butterfly \<psi> \<phi> = butterfly (a *\<^sub>V \<psi>) \<phi>"
-  unfolding butterfly_def
-  by (simp add: cblinfun_compose_assoc vector_to_cblinfun_applyOp)  
-
 lemma double_exists: \<open>(\<exists>x y. Q x y) \<longleftrightarrow> (\<exists>z. Q (fst z) (snd z))\<close>
   by simp
 
