@@ -111,6 +111,26 @@ qed
 
 definition \<open>regular_register F \<longleftrightarrow> register F \<and> (\<exists>a. (F; complement F) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default)\<close>
 
+lemma regular_registerI:
+  assumes [simp]: \<open>register F\<close>
+  assumes [simp]: \<open>complements F G\<close>
+  assumes eq: \<open>(F; G) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default\<close>
+  shows \<open>regular_register F\<close>
+proof -
+  have [simp]: \<open>compatible F G\<close>
+    using assms by (simp add: complements_def)
+  from \<open>complements F G\<close>
+  obtain I where cFI: \<open>complement F o I = G\<close> and \<open>iso_register I\<close>
+    apply atomize_elim
+    by (meson Laws_Complement_Quantum.complement_unique equivalent_registers_def equivalent_registers_sym)
+  have \<open>(F; complement F) (selfbutterket default \<otimes>\<^sub>o I a) = (F; G) (selfbutterket default \<otimes>\<^sub>o a)\<close>
+    using cFI by (auto simp: register_pair_apply)
+  also have \<open>\<dots> = selfbutterket default\<close>
+    by (rule eq)
+  finally show ?thesis
+    unfolding regular_register_def by auto
+qed
+
 lemma regular_register_pair:
   assumes [simp]: \<open>compatible F G\<close>
   assumes \<open>regular_register F\<close> and \<open>regular_register G\<close>
@@ -326,7 +346,7 @@ proof -
     by simp
 
   from F have \<open>one_dim_iso (I a) \<noteq> (0::complex)\<close>
-    by (metis butterfly_apply butterfly_scaleC_left complex_vector.scale_eq_0_iff id_cblinfun_eq_1 id_cblinfun_not_0 ket_Kronecker_delta_eq ket_nonzero one_dim_iso_of_one one_dim_iso_of_zero')
+    by (metis butterfly_apply butterfly_scaleC_left complex_vector.scale_eq_0_iff id_cblinfun_eq_1 id_cblinfun_not_0 cinner_ket_same ket_nonzero one_dim_iso_of_one one_dim_iso_of_zero')
 
   have \<open>selfbutterket default = one_dim_iso (I a) *\<^sub>C F (selfbutterket default)\<close>
     using F by simp
@@ -337,9 +357,9 @@ proof -
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C ((selfbutterket default /\<^sub>C one_dim_iso (I a)) o\<^sub>C\<^sub>L (selfbutterket default /\<^sub>C one_dim_iso (I a)))\<close>
     by (metis (no_types, lifting) F \<open>one_dim_iso (I a) \<noteq> 0\<close> complex_vector.scale_left_imp_eq inverse_1 left_inverse scaleC_scaleC zero_neq_one)
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C selfbutterket default\<close>
-    by (smt (verit, best) butterfly_comp_butterfly calculation cblinfun_compose_scaleC_left cblinfun_compose_scaleC_right complex_vector.scale_cancel_left ket_Kronecker_delta_eq left_inverse scaleC_one scaleC_scaleC)
+    by (smt (verit, best) butterfly_comp_butterfly calculation cblinfun_compose_scaleC_left cblinfun_compose_scaleC_right complex_vector.scale_cancel_left cinner_ket_same left_inverse scaleC_one scaleC_scaleC)
   finally have \<open>one_dim_iso (I a) = (1::complex)\<close>
-    by (metis butterfly_0_left butterfly_apply complex_vector.scale_cancel_right ket_Kronecker_delta_eq ket_nonzero scaleC_one)
+    by (metis butterfly_0_left butterfly_apply complex_vector.scale_cancel_right cinner_ket_same ket_nonzero scaleC_one)
   with F show \<open>F (selfbutterket default) = selfbutterket default\<close>
     by simp
 qed
@@ -359,7 +379,7 @@ proof -
   have 1: \<open>pure_state_target_vector H (ket default) = ket default\<close>
     apply (rule pure_state_target_vector_ket_default)
     apply auto
-    by (metis (no_types, lifting) ket_Kronecker_delta_eq rangeI scaleC_one)
+    by (metis (no_types, lifting) cinner_ket_same rangeI scaleC_one)
 
   have \<open>butterfly (pure_state H h) (ket default) = butterfly (H (butterfly h (ket default)) *\<^sub>V ket default) (ket default)\<close>
     by (simp add: pure_state'_def 1)
@@ -405,26 +425,47 @@ qed
   using assms(1) apply (rule surj_isometry_is_unitary)
   using assms(2) apply transfer by auto *)
 
-attribute_setup internalize_sort = \<open>let
-fun find_tvar thm v = let
-  val tvars = Term.add_tvars (Thm.prop_of thm) []
-  val tv = case find_first (fn (n,sort) => n=v) tvars of
-              SOME tv => tv | NONE => raise THM ("Type variable " ^ string_of_indexname v ^ " not found", 0, [thm])
-in 
-TVar tv
-end
 
-fun internalize_sort_attr (tvar:indexname) =
-  Thm.rule_attribute [] (fn context => fn thm =>
-    (snd (Internalize_Sort.internalize_sort (Thm.ctyp_of (Context.proof_of context) (find_tvar thm tvar)) thm)));
-in
-  Scan.lift Args.var >> internalize_sort_attr
-end\<close>
-  "internalize a sort"
+(* TODO move *)
+lemma complements_Fst_Snd[simp]: \<open>complements Fst Snd\<close>
+  by (auto intro!: complementsI simp: pair_Fst_Snd)
 
+(* TODO move *)
+lemma complements_Snd_Fst[simp]: \<open>complements Snd Fst\<close>
+  by (auto intro!: complementsI simp flip: swap_def)
 
+lemma Fst_regular[simp]: \<open>regular_register Fst\<close>
+  apply (rule regular_registerI[where a=\<open>selfbutterket default\<close> and G=Snd])
+  by (auto simp: pair_Fst_Snd default_prod_def)
 
-lemma cspan_state: 
+lemma Snd_regular[simp]: \<open>regular_register Snd\<close>
+  apply (rule regular_registerI[where a=\<open>selfbutterket default\<close> and G=Fst])
+    apply auto[2]
+  apply (auto simp only: default_prod_def swap_apply simp flip: swap_def)
+  by auto
+
+(* TODO move, name *)
+lemma [simp]: \<open>register F \<Longrightarrow> compatible F unit_register\<close>
+  using compatible_sym unit_register_compatible unit_register_is_unit_register by blast
+
+(* TODO move, name *)
+lemma [simp]: \<open>complements id unit_register\<close>
+  using complements_sym is_unit_register_def unit_register_is_unit_register by blast
+
+lemma id_regular[simp]: \<open>regular_register id\<close>
+  apply (rule regular_registerI[where G=unit_register and a=id_cblinfun])
+  by (auto simp: register_pair_apply)
+
+lemma swap_regular[simp]: \<open>regular_register swap\<close>
+  by (auto intro!: regular_register_pair simp: swap_def)
+
+lemma assoc_regular[simp]: \<open>regular_register assoc\<close>
+  by (auto intro!: regular_register_pair regular_register_comp simp: assoc_def)
+
+lemma assoc'_regular[simp]: \<open>regular_register assoc'\<close>
+  by (auto intro!: regular_register_pair regular_register_comp simp: assoc'_def)
+
+lemma cspan_pure_state': 
   assumes \<open>iso_register F\<close>
   assumes \<open>cspan (g ` X) = UNIV\<close>
   assumes \<eta>_cond: \<open>F (selfbutter \<eta>) *\<^sub>V pure_state_target_vector F \<eta> \<noteq> 0\<close>
@@ -458,29 +499,134 @@ proof -
     by -
 qed
 
-lemma cspan_state': 
+lemma cspan_pure_state: 
   assumes [simp]: \<open>iso_register F\<close>
   assumes \<open>cspan (g ` X) = UNIV\<close>
   shows \<open>cspan ((\<lambda>z. pure_state F (g z)) ` X) = UNIV\<close>
-  apply (rule cspan_state)
+  apply (rule cspan_pure_state')
   using assms apply auto[2]
   apply (rule pure_state_target_vector_correct)
   by (auto simp: iso_register_is_register)
+
+(* TODO move *)
+lemma bounded_antilinearI:
+  assumes \<open>\<And>b1 b2. f (b1 + b2) = f b1 + f b2\<close>
+  assumes \<open>\<And>r b. f (r *\<^sub>C b) = cnj r *\<^sub>C f b\<close>
+  assumes \<open>\<forall>x. norm (f x) \<le> norm x * K\<close>
+  shows "bounded_antilinear f"
+  using assms by (auto intro!: exI bounded_antilinear.intro antilinearI simp: bounded_antilinear_axioms_def)
+
+(* TODO move *)
+lemma TODO_name13: \<open>vector_to_cblinfun (x + y) = vector_to_cblinfun x + vector_to_cblinfun y\<close>
+  apply transfer
+  by (simp add: scaleC_add_right)
+
+(* TODO move *)
+lemma TODO_name11: \<open>butterfly (a + a') b = butterfly a b + butterfly a' b\<close>
+  by (simp add: butterfly_def TODO_name13 cbilinear_add_left)
+
+(* TODO move *)
+lemma TODO_name12: \<open>butterfly a (b + b') = butterfly a b + butterfly a b'\<close>
+  by (simp add: butterfly_def adj_plus TODO_name13  cbilinear_add_right)
+
+(* TODO move *)
+lemma TODO_name9[bounded_sesquilinear]: \<open>bounded_sesquilinear (\<lambda>(b::'b::chilbert_space) (a::'a::chilbert_space). butterfly a b)\<close>
+proof standard
+  fix a a' :: 'a and b b' :: 'b and r :: complex
+  show \<open>butterfly (a + a') b = butterfly a b + butterfly a' b\<close>
+    by (rule TODO_name11)
+  show \<open>butterfly a (b + b') = butterfly a b + butterfly a b'\<close>  
+    by (rule TODO_name12)
+  show \<open>butterfly (r *\<^sub>C a) b = r *\<^sub>C butterfly a b\<close>
+    by simp
+  show \<open>butterfly a (r *\<^sub>C b) = cnj r *\<^sub>C butterfly a b\<close>
+    by simp
+  show \<open>\<exists>K. \<forall>b a. norm (butterfly a b) \<le> norm b * norm a * K \<close>
+    apply (rule exI[of _ 1])
+    by (simp add: norm_butterfly)
+qed
+
+(* TODO move *)
+(* lemma TODO_name5:
+  \<open>butterfly a (b1 + b2) = butterfly a b1 + butterfly a b2\<close>
+  unfolding butterfly_def
+  by - *)
+
+(* TODO move *)
+(* lemma TODO_name6:
+  \<open>butterfly (a1 + a2) b = butterfly a1 b + butterfly a2 b\<close>
+  by - *)
+
+(* TODO move *)
+(* lemma TODO_name3[bounded_antilinear]:
+  \<open>bounded_antilinear (\<lambda>y. butterfly x y)\<close>
+  apply (auto intro!: bounded_antilinearI[where K=\<open>norm x\<close>] simp: norm_butterfly)
+  by - *)
+
+(* TODO move *)
+lemma register_bounded_clinear: \<open>register F \<Longrightarrow> bounded_clinear F\<close>
+  using bounded_clinear_finite_dim register_def by blast
+
+(* TODO move *)
+lemma norm_tensor_ell2: \<open>norm (a \<otimes>\<^sub>s b) = norm a * norm b\<close>
+  apply transfer
+  by (simp add: ell2_norm_finite sum_product sum.cartesian_product case_prod_beta
+      norm_mult power_mult_distrib flip: real_sqrt_mult)
+
+(* TODO move *)
+lemma TODO_name1[bounded_cbilinear]: \<open>bounded_cbilinear (\<otimes>\<^sub>s)\<close>
+proof standard
+  fix a a' :: "'a ell2" and b b' :: "'b ell2" and r :: complex
+  show \<open>tensor_ell2 (a + a') b = tensor_ell2 a b + tensor_ell2 a' b\<close>
+    by (meson tensor_ell2_add1)
+  show \<open>tensor_ell2 a (b + b') = tensor_ell2 a b + tensor_ell2 a b'\<close>
+    by (simp add: tensor_ell2_add2)  
+  show \<open>tensor_ell2 (r *\<^sub>C a) b = r *\<^sub>C tensor_ell2 a b\<close>
+    by (simp add: tensor_ell2_scaleC1)
+  show \<open>tensor_ell2 a (r *\<^sub>C b) = r *\<^sub>C tensor_ell2 a b\<close>
+    by (simp add: tensor_ell2_scaleC2)
+  show \<open>\<exists>K. \<forall>a b. norm (tensor_ell2 a b) \<le> norm a * norm b * K \<close>
+    apply (rule exI[of _ 1])
+    by (simp add: norm_tensor_ell2)
+qed
+
+(* TODO move *)
+(* lemma TODO_name2[bounded_clinear]: \<open>bounded_clinear (\<lambda>b. a \<otimes>\<^sub>s b)\<close>
+  by (simp add: clinear_tensor_ell21) *)
+
+lemma pure_state_bounded_clinear:
+  assumes [compatible]: \<open>compatible F G\<close>
+  shows \<open>bounded_clinear (\<lambda>\<psi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
+proof -
+  have [bounded_clinear]: \<open>bounded_clinear (F;G)\<close>
+    using assms pair_is_register register_bounded_clinear by blast
+  show ?thesis
+    unfolding pure_state'_def
+    by (auto intro!: bounded_linear_intros)
+qed
+
+lemma pure_state_clinear:
+  assumes [compatible]: \<open>compatible F G\<close>
+  shows \<open>clinear (\<lambda>\<psi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
+  using assms bounded_clinear.clinear pure_state_bounded_clinear by blast
+
+method pure_state_flatten_nested =
+  (subst pure_state_nested, (auto; fail)[3])+
 
 (* Proves (or reduces to subgoals) a goal of the form
   F \<psi> \<otimes>\<^sub>p G \<phi> \<otimes> \<dots> = (something of the same form)
 
   The registers may be pairs and will be properly unfolded (assuming "compatible X Y" can be proven for all involved registers)
 
-  If the pure states \<psi>... themselves are \<otimes>\<^sub>p-tensors, they will be treated as opaque.
-  Use (subst pure_state_nested) first to flatten those. (TODO: automate)
- *)
+  If the pure states \<psi>... themselves are \<otimes>\<^sub>p-tensors, they will be flattened if possible. 
+  (If all necessary conditions can be proven, such as \<open>regular_register\<close> etc.
+*)
 method pure_state_eq = 
-  (rule pure_state_eqI;
+  (pure_state_flatten_nested?,
+    rule pure_state_eqI;
     auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def 
     simp flip: tensor_ell2_ket)
 
-(* Example *)
 lemma example:
   fixes F :: \<open>bit update \<Rightarrow> 'c::{finite,default} update\<close>
     and G :: \<open>bit update \<Rightarrow> 'c update\<close>
@@ -535,7 +681,7 @@ proof -
     (* TODO make this one nicer *)
     apply (simp only: double_exists setcompr_eq_image full_SetCompr_eq)
     apply simp
-    apply (rule cspan_state')
+    apply (rule cspan_pure_state)
     by auto
 
   ultimately show ?thesis

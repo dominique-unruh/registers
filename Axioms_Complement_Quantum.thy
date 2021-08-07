@@ -121,7 +121,7 @@ proof -
     also have \<open>\<dots> = cinner (\<Phi> (selfbutterket j o\<^sub>C\<^sub>L selfbutterket i) *\<^sub>V x') y'\<close>
       unfolding P_butter by simp
     also have \<open>\<dots> = cinner (\<Phi> 0 *\<^sub>V x') y'\<close>
-      by (metis butterfly_comp_butterfly complex_vector.scale_eq_0_iff ket_Kronecker_delta_neq that(3))
+      by (metis butterfly_comp_butterfly complex_vector.scale_eq_0_iff orthogonal_ket that(3))
     also have \<open>\<dots> = 0\<close>
       by (simp add: complex_vector.linear_0)
     finally show ?thesis
@@ -245,8 +245,7 @@ proof -
     also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>0 \<xi>' o\<^sub>C\<^sub>L butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (simp add: register_mult cblinfun_apply_cblinfun_compose[symmetric])
     also have \<open>\<dots> = cinner (\<Phi> (eqa \<xi>' \<xi> *\<^sub>C selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      apply simp
-      by (metis eqa_def ket_Kronecker_delta_eq ket_is_orthogonal)
+      apply simp by (metis eqa_def cinner_ket)
     also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (\<Phi> (selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (smt (verit, ccfv_threshold) \<open>clinear \<Phi>\<close> eqa_def cblinfun.scaleC_left cinner_commute 
               cinner_scaleC_left cinner_zero_right complex_cnj_one complex_vector.linear_scale)
@@ -276,7 +275,7 @@ proof -
     also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta> o\<^sub>C\<^sub>L butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
       by (metis (no_types, lifting) assms butterfly_comp_butterfly lift_cblinfun_comp(4) register_mult)
     also have \<open>\<dots> = U* *\<^sub>V \<Phi> (eqa \<eta> \<xi>1 *\<^sub>C butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
-      by (simp add: eqa_def ket_Kronecker_delta)
+      by (simp add: eqa_def cinner_ket)
     also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
       by (simp add: complex_vector.linear_scale)
     also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V U *\<^sub>V ket (\<xi>, \<alpha>)\<close>
@@ -395,7 +394,7 @@ proof -
 
   then have \<open>a \<noteq> 0\<close>
     apply auto
-    by (metis butterfly_apply cblinfun.zero_left complex_vector.scale_eq_0_iff ket_is_orthogonal ket_nonzero)
+    by (metis butterfly_apply cblinfun.zero_left complex_vector.scale_eq_0_iff ket_nonzero orthogonal_ket)
 
   obtain \<gamma> where \<gamma>: \<open>?ida = \<gamma> *\<^sub>C selfbutterket undefined\<close>
     apply atomize_elim
@@ -403,9 +402,9 @@ proof -
   then have \<open>?ida (ket undefined) = \<gamma> *\<^sub>C (selfbutterket undefined *\<^sub>V ket undefined)\<close>
     by (simp add: \<open>id_cblinfun = \<gamma> *\<^sub>C selfbutterket undefined\<close> scaleC_cblinfun.rep_eq)
   then have \<open>ket undefined = \<gamma> *\<^sub>C ket undefined\<close>
-    by (metis butterfly_apply cinner_scaleC_right id_cblinfun_apply ket_Kronecker_delta_eq mult.right_neutral scaleC_one)
+    by (metis butterfly_apply cinner_scaleC_right id_cblinfun_apply cinner_ket_same mult.right_neutral scaleC_one)
   then have \<open>\<gamma> = 1\<close>
-    by (smt (z3) \<gamma> butterfly_apply butterfly_scaleC_left cblinfun_id_cblinfun_apply complex_vector.scale_cancel_right ket_Kronecker_delta_eq ket_nonzero)
+    by (smt (z3) \<gamma> butterfly_apply butterfly_scaleC_left cblinfun_id_cblinfun_apply complex_vector.scale_cancel_right cinner_ket_same ket_nonzero)
 
   define T U where \<open>T = cBlinfun (\<lambda>\<psi>. \<psi> \<otimes>\<^sub>s ket undefined)\<close> and \<open>U = V o\<^sub>C\<^sub>L T\<close>
   have T: \<open>T \<psi> = \<psi> \<otimes>\<^sub>s ket undefined\<close> for \<psi>

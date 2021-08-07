@@ -5,7 +5,6 @@ theory Quantum
     Finite_Tensor_Product
     "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix_Impl 
-    Bounded_Operators.Bounded_Operators_Code
     Real_Impl.Real_Impl
     "HOL-Library.Code_Target_Numeral"
 begin

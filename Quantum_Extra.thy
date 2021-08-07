@@ -3,9 +3,6 @@ section \<open>Derived facts about quantum registers\<close>
 theory Quantum_Extra
   imports
     Laws_Quantum
-    Bounded_Operators.Bounded_Operators_Code
-    Real_Impl.Real_Impl
-    "HOL-Library.Code_Target_Numeral"
     Quantum
 begin
 

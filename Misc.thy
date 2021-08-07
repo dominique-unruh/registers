@@ -4,9 +4,10 @@ text \<open>This theory proves various facts that are not directly related to th
 but do not occur in the imported theories.\<close>
 
 theory Misc
-  imports Bounded_Operators.Bounded_Operators_Code "HOL-Library.Z2"
+  imports
+    Bounded_Operators.Cblinfun_Code
+    "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix
-    "HOL-ex.Sketch_and_Explore"
 begin
 
 \<comment> \<open>Remove notation that collides with the notation we use\<close>

@@ -199,11 +199,10 @@ proof -
     obtain i  j  k  l  where x: "x = (i,j,k,l)" by (meson prod_cases4) 
     obtain i' j' k' l' where y: "y = (i',j',k',l')" by (meson prod_cases4) 
     have 1: "bra (i,k) *\<^sub>V t4 x *\<^sub>V ket (j,l) = 1"
-      by (auto simp: t4_def x tensor_op_ell2 butterfly_def cblinfun_apply_cblinfun_compose ket_Kronecker_delta_eq
-               simp flip: tensor_ell2_ket)
+      by (auto simp: t4_def x tensor_op_ell2 butterfly_def cinner_ket simp flip: tensor_ell2_ket)
     assume \<open>x \<noteq> y\<close>
     then have 2: "bra (i,k) *\<^sub>V t4 y *\<^sub>V ket (j,l) = 0"
-      by (auto simp: t4_def x y tensor_op_ell2 butterfly_def cblinfun_apply_cblinfun_compose ket_Kronecker_delta_neq
+      by (auto simp: t4_def x y tensor_op_ell2 butterfly_def cblinfun_apply_cblinfun_compose cinner_ket
                simp flip: tensor_ell2_ket)
     from 1 2 that
     show False
@@ -516,7 +515,7 @@ lemma tensor_ell2_almost_injective:
   shows \<open>\<exists>\<gamma>. b = \<gamma> *\<^sub>C d\<close>
 proof -
   from \<open>a \<noteq> 0\<close> obtain i where i: \<open>cinner (ket i) a \<noteq> 0\<close>
-    by (metis cinner_eq_zero_iff cinner_ket_left ell2_ortho)
+    by (metis cinner_eq_zero_iff cinner_ket_left ell2_pointwise_ortho)
   have \<open>cinner (ket i \<otimes>\<^sub>s ket j) (a \<otimes>\<^sub>s b) = cinner (ket i \<otimes>\<^sub>s ket j) (c \<otimes>\<^sub>s d)\<close> for j
     using assms by simp
   then have eq2: \<open>(cinner (ket i) a) * (cinner (ket j) b) = (cinner (ket i) c) * (cinner (ket j) d)\<close> for j
