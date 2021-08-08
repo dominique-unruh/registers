@@ -64,7 +64,7 @@ proof -
   have \<open>cindependent S\<close>
     using S_def cindependent_ket by blast
   moreover have \<open>cspan S = UNIV\<close>
-    using S_def cspan_ket_finite by blast
+    using S_def cspan_range_ket_finite by blast
   ultimately have "cblinfun_extension_exists S \<phi>'"
     by (rule cblinfun_extension_exists_finite_dim)
   then have "\<exists>P. \<forall>x\<in>S. P *\<^sub>V x = \<phi>' x"
