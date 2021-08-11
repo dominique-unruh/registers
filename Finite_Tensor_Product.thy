@@ -140,7 +140,7 @@ lemma tensor_butter: \<open>tensor_op (butterket i j) (butterket k l) = butterke
 
 lemma cspan_tensor_op: \<open>cspan {tensor_op (butterket i j) (butterket k l)| i (j::_::finite) k (l::_::finite). True} = UNIV\<close>
   unfolding tensor_butter
-  apply (subst cspan_butterfly_ket_UNIV[symmetric])
+  apply (subst cspan_butterfly_ket[symmetric])
   by (metis surj_pair)
 
 lemma cindependent_tensor_op: \<open>cindependent {tensor_op (butterket i j) (butterket k l)| i (j::_::finite) k (l::_::finite). True}\<close>
@@ -235,13 +235,13 @@ proof -
     using G by (auto simp: t4_def)
   have *: \<open>G *\<^sub>V tensor_op a (butterket k l) = F2 a (butterket k l)\<close> for a k l
     apply (rule complex_vector.linear_eq_on_span[where g=\<open>\<lambda>a. F2 a _\<close> and B=\<open>{butterket k l|k l. True}\<close>])
-    unfolding cspan_butterfly_ket_UNIV
+    unfolding cspan_butterfly_ket
     using * apply (auto intro!: clinear_compose[unfolded o_def, where f=\<open>\<lambda>a. tensor_op a _\<close> and g=\<open>(*\<^sub>V) G\<close>])
      apply (metis cbilinear_def tensor_op_cbilinear)
     using assms unfolding cbilinear_def by blast
   have G_F2: \<open>G *\<^sub>V tensor_op a b = F2 a b\<close> for a b
     apply (rule complex_vector.linear_eq_on_span[where g=\<open>F2 a\<close> and B=\<open>{butterket k l|k l. True}\<close>])
-    unfolding cspan_butterfly_ket_UNIV
+    unfolding cspan_butterfly_ket
     using * apply (auto simp: cblinfun.add_right clinearI
                         intro!: clinear_compose[unfolded o_def, where f=\<open>tensor_op a\<close> and g=\<open>(*\<^sub>V) G\<close>])
     apply (meson cbilinear_def tensor_op_cbilinear)

@@ -77,7 +77,7 @@ proof -
   have proj_P': \<open>is_Proj (P' i)\<close> for i
     by (simp add: P_def P'_def register_projector)
   have \<open>(\<Sum>i\<in>UNIV. P i) = id_cblinfun\<close>
-    using sum_butter P_butter by simp
+    using sum_butterfly_ket P_butter by simp
   then have sumP'id: \<open>(\<Sum>i\<in>UNIV. P' i) = id_cblinfun\<close>
     unfolding P'_def 
     apply (subst complex_vector.linear_sum[OF \<open>clinear \<Phi>\<close>, symmetric])
@@ -318,7 +318,7 @@ proof -
       finally show ?thesis by -
     qed
     moreover have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> (SUP \<xi>\<in>UNIV. \<Phi> (selfbutterket \<xi>) *\<^sub>S \<top>)\<close>
-      unfolding sum_butter[symmetric]
+      unfolding sum_butterfly_ket[symmetric]
       apply (subst complex_vector.linear_sum, simp)
       by (rule cblinfun_sum_image_distr)
     ultimately have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close>

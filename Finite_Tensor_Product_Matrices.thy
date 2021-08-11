@@ -49,11 +49,11 @@ lemma enum_prod_nth_tensor_unpack:
   using assms 
   by (simp add: enum_prod_def card_UNIV_length_enum product_nth tensor_unpack_def)
 
-lemma vec_of_onb_enum_tensor_state_index:
+lemma vec_of_basis_enum_tensor_state_index:
   fixes \<psi> :: \<open>'a::enum ell2\<close> and \<phi> :: \<open>'b::enum ell2\<close>
   assumes [simp]: \<open>i < CARD('a) * CARD('b)\<close>
-  shows \<open>vec_of_onb_enum (\<psi> \<otimes>\<^sub>s \<phi>) $ i = (let (i1,i2) = tensor_unpack CARD('a) CARD('b) i in
-    vec_of_onb_enum \<psi> $ i1 * vec_of_onb_enum \<phi> $ i2)\<close>
+  shows \<open>vec_of_basis_enum (\<psi> \<otimes>\<^sub>s \<phi>) $ i = (let (i1,i2) = tensor_unpack CARD('a) CARD('b) i in
+    vec_of_basis_enum \<psi> $ i1 * vec_of_basis_enum \<phi> $ i2)\<close>
 proof -
   define i1 i2 where "i1 = fst (tensor_unpack CARD('a) CARD('b) i)"
     and "i2 = snd (tensor_unpack CARD('a) CARD('b) i)"
@@ -61,22 +61,22 @@ proof -
     using assms i1_def tensor_unpack_bound1 apply presburger
     using assms i2_def tensor_unpack_bound2 by presburger
 
-  have \<open>vec_of_onb_enum (\<psi> \<otimes>\<^sub>s \<phi>) $ i = Rep_ell2 (\<psi> \<otimes>\<^sub>s \<phi>) (enum_class.enum ! i)\<close>
-    by (simp add: vec_of_onb_enum_ell2_index)
+  have \<open>vec_of_basis_enum (\<psi> \<otimes>\<^sub>s \<phi>) $ i = Rep_ell2 (\<psi> \<otimes>\<^sub>s \<phi>) (enum_class.enum ! i)\<close>
+    by (simp add: vec_of_basis_enum_ell2_index)
   also have \<open>\<dots> = Rep_ell2 \<psi> (Enum.enum!i1) * Rep_ell2 \<phi> (Enum.enum!i2)\<close>
     apply (transfer fixing: i i1 i2)
     by (simp add: enum_prod_nth_tensor_unpack case_prod_beta i1_def i2_def)
-  also have \<open>\<dots> = vec_of_onb_enum \<psi> $ i1 * vec_of_onb_enum \<phi> $ i2\<close>
-    by (simp add: vec_of_onb_enum_ell2_index)
+  also have \<open>\<dots> = vec_of_basis_enum \<psi> $ i1 * vec_of_basis_enum \<phi> $ i2\<close>
+    by (simp add: vec_of_basis_enum_ell2_index)
   finally show ?thesis
     by (simp add: case_prod_beta i1_def i2_def)
 qed
 
-lemma vec_of_onb_enum_tensor_state:
+lemma vec_of_basis_enum_tensor_state:
   fixes \<psi> :: \<open>'a::enum ell2\<close> and \<phi> :: \<open>'b::enum ell2\<close>
-  shows \<open>vec_of_onb_enum (\<psi> \<otimes>\<^sub>s \<phi>) = tensor_state_jnf (vec_of_onb_enum \<psi>) (vec_of_onb_enum \<phi>)\<close>
+  shows \<open>vec_of_basis_enum (\<psi> \<otimes>\<^sub>s \<phi>) = tensor_state_jnf (vec_of_basis_enum \<psi>) (vec_of_basis_enum \<phi>)\<close>
   apply (rule eq_vecI, simp_all)
-  apply (subst vec_of_onb_enum_tensor_state_index, simp_all)
+  apply (subst vec_of_basis_enum_tensor_state_index, simp_all)
   by (simp add: tensor_state_jnf_def case_prod_beta Let_def)
 
 
@@ -105,14 +105,14 @@ proof -
     by (simp add: mat_of_cblinfun_ell2_index)
   also have \<open>\<dots> = Rep_ell2 ((a *\<^sub>V ket (Enum.enum!j1)) \<otimes>\<^sub>s (b *\<^sub>V ket (Enum.enum!j2))) (Enum.enum!i)\<close>
     by (simp add: tensor_op_ell2 enum_prod_nth_tensor_unpack[where i=j] Let_def case_prod_beta j1_def[symmetric] j2_def[symmetric] flip: tensor_ell2_ket)
-  also have \<open>\<dots> = vec_of_onb_enum ((a *\<^sub>V ket (Enum.enum!j1)) \<otimes>\<^sub>s b *\<^sub>V ket (Enum.enum!j2)) $ i\<close>
-    by (simp add: vec_of_onb_enum_ell2_index)
-  also have \<open>\<dots> = vec_of_onb_enum (a *\<^sub>V ket (enum_class.enum ! j1)) $ i1 *
-                  vec_of_onb_enum (b *\<^sub>V ket (enum_class.enum ! j2)) $ i2\<close>
-    by (simp add: case_prod_beta vec_of_onb_enum_tensor_state_index i1_def[symmetric] i2_def[symmetric])
+  also have \<open>\<dots> = vec_of_basis_enum ((a *\<^sub>V ket (Enum.enum!j1)) \<otimes>\<^sub>s b *\<^sub>V ket (Enum.enum!j2)) $ i\<close>
+    by (simp add: vec_of_basis_enum_ell2_index)
+  also have \<open>\<dots> = vec_of_basis_enum (a *\<^sub>V ket (enum_class.enum ! j1)) $ i1 *
+                  vec_of_basis_enum (b *\<^sub>V ket (enum_class.enum ! j2)) $ i2\<close>
+    by (simp add: case_prod_beta vec_of_basis_enum_tensor_state_index i1_def[symmetric] i2_def[symmetric])
   also have \<open>\<dots> = Rep_ell2 (a *\<^sub>V ket (enum_class.enum ! j1)) (enum_class.enum ! i1) *
                   Rep_ell2 (b *\<^sub>V ket (enum_class.enum ! j2)) (enum_class.enum ! i2)\<close>
-    by (simp add: vec_of_onb_enum_ell2_index)
+    by (simp add: vec_of_basis_enum_ell2_index)
   also have \<open>\<dots> = mat_of_cblinfun a $$ (i1, j1) * mat_of_cblinfun b $$ (i2, j2)\<close>
     by (simp add: mat_of_cblinfun_ell2_index)
   finally show ?thesis

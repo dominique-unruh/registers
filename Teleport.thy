@@ -153,9 +153,9 @@ proof -
     apply (rule cblinfun_eq_mat_of_cblinfunI)
     apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_tensor_op XZ_def
                      butterfly_def cblinfun_of_mat_timesOp mat_of_cblinfun_ell2_to_l2bounded 
-                     mat_of_cblinfun_adjoint' vec_of_onb_enum_ket 
+                     mat_of_cblinfun_adjoint' vec_of_basis_enum_ket 
                      cblinfun_of_mat_id swap_sandwich[abs_def] mat_of_cblinfun_scaleR mat_of_cblinfun_scalarMult
-                     id_tensor_sandwich vec_of_onb_enum_tensor_state mat_of_cblinfun_description
+                     id_tensor_sandwich vec_of_basis_enum_tensor_state mat_of_cblinfun_description
                      mat_of_cblinfun_sandwich)
     by normalization
 

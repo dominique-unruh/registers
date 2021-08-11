@@ -16,8 +16,8 @@ subsection \<open>Basic quantum states\<close>
 subsubsection \<open>EPR pair\<close>
 
 definition "vector_\<beta>00 = vec_of_list [ 1/sqrt 2::complex, 0, 0, 1/sqrt 2 ]"
-definition \<beta>00 :: \<open>(bit\<times>bit) ell2\<close> where [code del]: "\<beta>00 = onb_enum_of_vec vector_\<beta>00"
-lemma vec_of_onb_enum_\<beta>00[simp]: "vec_of_onb_enum \<beta>00 = vector_\<beta>00"
+definition \<beta>00 :: \<open>(bit\<times>bit) ell2\<close> where [code del]: "\<beta>00 = basis_enum_of_vec vector_\<beta>00"
+lemma vec_of_basis_enum_\<beta>00[simp]: "vec_of_basis_enum \<beta>00 = vector_\<beta>00"
   by (auto simp add: \<beta>00_def vector_\<beta>00_def)
 lemma vec_of_ell2_\<beta>00[simp, code]: "vec_of_ell2 \<beta>00 = vector_\<beta>00"
   by (simp add: vec_of_ell2_def)
@@ -28,8 +28,8 @@ lemma norm_\<beta>00[simp]: "norm \<beta>00 = 1"
 subsubsection \<open>Ket plus\<close>
 
 definition "vector_ketplus = vec_of_list [ 1/sqrt 2::complex, 1/sqrt 2 ]"
-definition ketplus :: \<open>bit ell2\<close> ("|+\<rangle>") where [code del]: \<open>ketplus = onb_enum_of_vec vector_ketplus\<close>
-lemma vec_of_onb_enum_ketplus[simp]: "vec_of_onb_enum ketplus = vector_ketplus"
+definition ketplus :: \<open>bit ell2\<close> ("|+\<rangle>") where [code del]: \<open>ketplus = basis_enum_of_vec vector_ketplus\<close>
+lemma vec_of_basis_enum_ketplus[simp]: "vec_of_basis_enum ketplus = vector_ketplus"
   by (auto simp add: ketplus_def vector_ketplus_def)
 lemma vec_of_ell2_ketplus[simp, code]: "vec_of_ell2 ketplus = vector_ketplus"
   by (simp add: vec_of_ell2_def)
@@ -125,8 +125,8 @@ lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otim
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
   apply (simp add: cblinfun.add_right clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
   apply (simp add: clinear_tensor_ell22)
-  apply (rule ell2_eq_vec_of_onb_enumI)
-  apply (simp add: mat_of_cblinfun_description vec_of_onb_enum_ket)
+  apply (rule ell2_eq_vec_of_basis_enumI)
+  apply (simp add: mat_of_cblinfun_description vec_of_basis_enum_ket)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)
 
 end
