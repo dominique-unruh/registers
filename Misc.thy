@@ -93,7 +93,7 @@ lemma sandwich_id[simp]: \<open>sandwich id_cblinfun = id\<close>
 lemma mat_of_cblinfun_sandwich:
   fixes a :: "(_::onb_enum, _::onb_enum) cblinfun"
   shows \<open>mat_of_cblinfun (sandwich a b) = (let a' = mat_of_cblinfun a in a' * mat_of_cblinfun b * mat_adjoint a')\<close>
-  by (simp add: cblinfun_of_mat_timesOp sandwich_def Let_def mat_of_cblinfun_adjoint')
+  by (simp add: mat_of_cblinfun_compose sandwich_def Let_def mat_of_cblinfun_adj)
 
 lemma prod_cases3' [cases type]:
   obtains (fields) a b c where "y = ((a, b), c)"

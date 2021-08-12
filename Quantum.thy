@@ -126,7 +126,7 @@ lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otim
   apply (simp add: cblinfun.add_right clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
   apply (simp add: clinear_tensor_ell22)
   apply (rule ell2_eq_vec_of_basis_enumI)
-  apply (simp add: mat_of_cblinfun_description vec_of_basis_enum_ket)
+  apply (simp add: mat_of_cblinfun_cblinfun_apply vec_of_basis_enum_ket)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)
 
 end

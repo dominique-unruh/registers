@@ -233,9 +233,9 @@ lemma mat_of_cblinfun_assoc_ell2[simp]:
 proof -
   let ?assoc' = "assoc_ell2' :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)"
   have "one_mat (CARD('a)*CARD('b)*CARD('c)) = mat_of_cblinfun (?assoc o\<^sub>C\<^sub>L ?assoc')"
-    by (simp add: mult.assoc cblinfun_of_mat_id)
+    by (simp add: mult.assoc mat_of_cblinfun_id)
   also have \<open>\<dots> = mat_of_cblinfun ?assoc * mat_of_cblinfun ?assoc'\<close>
-    using cblinfun_of_mat_timesOp by blast
+    using mat_of_cblinfun_compose by blast
   also have \<open>\<dots> = mat_of_cblinfun ?assoc * one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
     by simp
   also have \<open>\<dots> = mat_of_cblinfun ?assoc\<close>
