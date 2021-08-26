@@ -62,12 +62,12 @@ proof -
     using assms i2_def tensor_unpack_bound2 by presburger
 
   have \<open>vec_of_basis_enum (\<psi> \<otimes>\<^sub>s \<phi>) $ i = Rep_ell2 (\<psi> \<otimes>\<^sub>s \<phi>) (enum_class.enum ! i)\<close>
-    by (simp add: vec_of_basis_enum_ell2_index)
+    by (simp add: vec_of_basis_enum_ell2_component)
   also have \<open>\<dots> = Rep_ell2 \<psi> (Enum.enum!i1) * Rep_ell2 \<phi> (Enum.enum!i2)\<close>
     apply (transfer fixing: i i1 i2)
     by (simp add: enum_prod_nth_tensor_unpack case_prod_beta i1_def i2_def)
   also have \<open>\<dots> = vec_of_basis_enum \<psi> $ i1 * vec_of_basis_enum \<phi> $ i2\<close>
-    by (simp add: vec_of_basis_enum_ell2_index)
+    by (simp add: vec_of_basis_enum_ell2_component)
   finally show ?thesis
     by (simp add: case_prod_beta i1_def i2_def)
 qed
@@ -102,19 +102,19 @@ proof -
 
   have \<open>mat_of_cblinfun (tensor_op a b) $$ (i,j) 
        = Rep_ell2 (tensor_op a b *\<^sub>V ket (Enum.enum!j)) (Enum.enum ! i)\<close>
-    by (simp add: mat_of_cblinfun_ell2_index)
+    by (simp add: mat_of_cblinfun_ell2_component)
   also have \<open>\<dots> = Rep_ell2 ((a *\<^sub>V ket (Enum.enum!j1)) \<otimes>\<^sub>s (b *\<^sub>V ket (Enum.enum!j2))) (Enum.enum!i)\<close>
     by (simp add: tensor_op_ell2 enum_prod_nth_tensor_unpack[where i=j] Let_def case_prod_beta j1_def[symmetric] j2_def[symmetric] flip: tensor_ell2_ket)
   also have \<open>\<dots> = vec_of_basis_enum ((a *\<^sub>V ket (Enum.enum!j1)) \<otimes>\<^sub>s b *\<^sub>V ket (Enum.enum!j2)) $ i\<close>
-    by (simp add: vec_of_basis_enum_ell2_index)
+    by (simp add: vec_of_basis_enum_ell2_component)
   also have \<open>\<dots> = vec_of_basis_enum (a *\<^sub>V ket (enum_class.enum ! j1)) $ i1 *
                   vec_of_basis_enum (b *\<^sub>V ket (enum_class.enum ! j2)) $ i2\<close>
     by (simp add: case_prod_beta vec_of_basis_enum_tensor_state_index i1_def[symmetric] i2_def[symmetric])
   also have \<open>\<dots> = Rep_ell2 (a *\<^sub>V ket (enum_class.enum ! j1)) (enum_class.enum ! i1) *
                   Rep_ell2 (b *\<^sub>V ket (enum_class.enum ! j2)) (enum_class.enum ! i2)\<close>
-    by (simp add: vec_of_basis_enum_ell2_index)
+    by (simp add: vec_of_basis_enum_ell2_component)
   also have \<open>\<dots> = mat_of_cblinfun a $$ (i1, j1) * mat_of_cblinfun b $$ (i2, j2)\<close>
-    by (simp add: mat_of_cblinfun_ell2_index)
+    by (simp add: mat_of_cblinfun_ell2_component)
   finally show ?thesis
     by (simp add: i1_def[symmetric] i2_def[symmetric] j1_def[symmetric] j2_def[symmetric] case_prod_beta)
 qed
@@ -206,7 +206,7 @@ proof  (rule mat_eq_iff[THEN iffD2], intro conjI allI impI)
         prod_eq_iff tensor_unpack_fstsnd tensor_unpack_sndsnd)
 
   have \<open>mat_of_cblinfun ?assoc $$ (i, j) = Rep_ell2 (assoc_ell2' *\<^sub>V ket ?j) ?i\<close>
-    by (subst mat_of_cblinfun_ell2_index, auto)
+    by (subst mat_of_cblinfun_ell2_component, auto)
   also have \<open>\<dots> = Rep_ell2 ((ket ?j1 \<otimes>\<^sub>s ket ?j2) \<otimes>\<^sub>s ket ?j3) ?i\<close>
     by (simp add: j assoc_ell2'_tensor flip: tensor_ell2_ket)
   also have \<open>\<dots> = (if (?i1,?i2,?i3) = (?j1,?j2,?j3) then 1 else 0)\<close>

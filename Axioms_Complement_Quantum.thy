@@ -312,7 +312,7 @@ proof -
       also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S ccspan (B \<xi>0)\<close>
         by (simp add: ccspanB)
       also have \<open>\<dots> = ccspan (\<Phi> (butterket \<xi> \<xi>0) ` B \<xi>0)\<close>
-        by (meson cblinfun_image_Span)
+        by (meson cblinfun_image_ccspan)
       also have \<open>\<dots> \<le> U *\<^sub>S \<top>\<close>
         by (rule ccspan_leqI, use * in auto)
       finally show ?thesis by -
@@ -456,7 +456,7 @@ proof -
     also from 1 have \<open>\<dots> \<le> ccspan (range ((*\<^sub>V) T))\<close>
       by (auto intro!: ccspan_mono)
     also have \<open>\<dots> = T *\<^sub>S \<top>\<close>
-      by (metis (mono_tags, hide_lams) calculation cblinfun_image_Span cblinfun_image_mono eq_iff top_greatest)
+      by (metis (mono_tags, hide_lams) calculation cblinfun_image_ccspan cblinfun_image_mono eq_iff top_greatest)
     finally show \<open>T *\<^sub>S \<top> = \<top>\<close>
       using top.extremum_uniqueI by blast
   qed
