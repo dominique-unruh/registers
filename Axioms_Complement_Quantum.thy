@@ -406,10 +406,10 @@ proof -
   then have \<open>\<gamma> = 1\<close>
     by (smt (z3) \<gamma> butterfly_apply butterfly_scaleC_left cblinfun_id_cblinfun_apply complex_vector.scale_cancel_right cinner_ket_same ket_nonzero)
 
-  define T U where \<open>T = cBlinfun (\<lambda>\<psi>. \<psi> \<otimes>\<^sub>s ket undefined)\<close> and \<open>U = V o\<^sub>C\<^sub>L T\<close>
+  define T U where \<open>T = CBlinfun (\<lambda>\<psi>. \<psi> \<otimes>\<^sub>s ket undefined)\<close> and \<open>U = V o\<^sub>C\<^sub>L T\<close>
   have T: \<open>T \<psi> = \<psi> \<otimes>\<^sub>s ket undefined\<close> for \<psi>
     unfolding T_def
-    apply (subst bounded_clinear_cBlinfun_apply)
+    apply (subst bounded_clinear_CBlinfun_apply)
     by (auto intro!: bounded_clinear_finite_dim clinear_tensor_ell22)
   have sandwich_T: \<open>sandwich T a = a \<otimes>\<^sub>o ?ida\<close> for a
     apply (rule fun_cong[where x=a])

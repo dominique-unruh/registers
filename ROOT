@@ -3,6 +3,6 @@ session Registers = "Registers-Prerequisites" +
   theories All
   document_files "root.tex"
 
-session "Registers-Prerequisites" in ".fake-session-dir/1" = Bounded_Operators +
+session "Registers-Prerequisites" in ".fake-session-dir/1" = Complex_Bounded_Operators +
   sessions "HOL-Library"
   theories "HOL-Library.Z2" "HOL-Library.Word"

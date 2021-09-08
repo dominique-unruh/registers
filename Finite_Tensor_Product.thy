@@ -1,7 +1,7 @@
 section \<open>Tensor products (finite dimensional)\<close>
 
 theory Finite_Tensor_Product
-  imports Bounded_Operators.Complex_L2 Misc
+  imports Complex_Bounded_Operators.Complex_L2 Misc
 begin
 
 declare cblinfun.scaleC_right[simp]

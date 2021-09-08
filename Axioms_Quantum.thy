@@ -31,7 +31,7 @@ section \<open>Quantum instantiation of registers\<close>
 
 theory Axioms_Quantum
   imports Jordan_Normal_Form.Matrix_Impl "HOL-Library.Rewrite"
-          Bounded_Operators.Complex_L2
+          Complex_Bounded_Operators.Complex_L2
           Finite_Tensor_Product
 begin
 

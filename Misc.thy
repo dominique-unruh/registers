@@ -5,7 +5,7 @@ but do not occur in the imported theories.\<close>
 
 theory Misc
   imports
-    Bounded_Operators.Cblinfun_Code
+    Complex_Bounded_Operators.Cblinfun_Code
     "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix
 begin
