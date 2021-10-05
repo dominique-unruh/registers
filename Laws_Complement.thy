@@ -300,4 +300,7 @@ lemma compatible_unit_register[simp]: \<open>register F \<Longrightarrow> compat
 lemma complements_id_unit_register[simp]: \<open>complements id unit_register\<close>
   using complements_sym is_unit_register_def unit_register_is_unit_register by blast
 
+lemma complements_iso_unit_register: \<open>iso_register I \<Longrightarrow> is_unit_register U \<Longrightarrow> complements I U\<close>
+  using complements_sym equivalent_complements is_unit_register_def iso_register_equivalent_id by blast
+
 end
