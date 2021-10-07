@@ -720,24 +720,31 @@ fn m => fn ctxt => fn ct => let
 end\<close>
 
 
+named_theorems compatible_attribute_rule_immediate
+named_theorems compatible_attribute_rule
+
+lemmas [compatible_attribute_rule] = conjunct1 conjunct2 iso_register_is_register iso_register_is_register[OF iso_register_inv]
+lemmas [compatible_attribute_rule_immediate] = compatible_sym compatible_register1 compatible_register2
+  asm_rl[of \<open>compatible _ _\<close>] asm_rl[of \<open>iso_register _\<close>] asm_rl[of \<open>register _\<close>] iso_register_inv
+
 (* Declares the attribute [compatible]. If applied to a conjunction 
    of "compatible x y" facts, it will add all of them to the simplifier
    (as [simp] does), but additionally add all "register x", "register y" facts. *)
 setup \<open>
-let 
-fun add (thm:thm) results = 
+let
+fun add thm results = 
   Net.insert_term (K true) (Thm.concl_of thm, thm) results
   handle Net.INSERT => results
-fun collect thm results = case Thm.concl_of thm of
-(* TODO: Also extract from iso_register, from complements *)
-  Const(\<^const_name>\<open>Trueprop\<close>,_) $ (Const(\<^const_name>\<open>conj\<close>,_) $ _ $ _) => 
-    collect (@{thm conjunct1} OF [thm]) (collect (@{thm conjunct2} OF [thm]) results)
-  | Const(\<^const_name>\<open>Trueprop\<close>,_) $ (Const(\<^const_name>\<open>compatible\<close>,_) $ _ $ _) =>
-    fold add [thm, @{thm compatible_sym} OF [thm], @{thm compatible_register1} OF [thm], @{thm compatible_register2} OF [thm]] results
-    (* collect (@{thm compatible_register1} OF [thm]) (collect (@{thm compatible_register2} OF [thm]) (add thm results)) *)
-  | _ => add thm results
+fun try_rule f thm rule state = case SOME (rule OF [thm]) handle THM _ => NONE  of
+  NONE => state | SOME th => f th state
+fun collect (rules,rules_immediate) thm results =
+  results |> fold (try_rule add thm) rules_immediate |> fold (try_rule (collect (rules,rules_immediate)) thm) rules
 fun declare thm context = let
-  val thms = collect thm (Net.empty) |> Net.entries
+  val ctxt = Context.proof_of context
+  val rules = Named_Theorems.get ctxt @{named_theorems compatible_attribute_rule}
+  val rules_immediate = Named_Theorems.get ctxt @{named_theorems compatible_attribute_rule_immediate}
+  val thms = collect (rules,rules_immediate) thm Net.empty |> Net.entries
+  val _ = \<^print> thms
   in Simplifier.map_ss (fn ctxt => ctxt addsimps thms) context end
 in
 Attrib.setup \<^binding>\<open>compatible\<close>
@@ -745,8 +752,6 @@ Attrib.setup \<^binding>\<open>compatible\<close>
   "Add 'compatible x y' style rules to simplifier. (Also adds 'register x', 'register y')"
 end
 \<close>
-
-
 
 subsection \<open>Notation\<close>
 
