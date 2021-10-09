@@ -48,7 +48,6 @@ lemma complement_unique:
 
 definition is_unit_register where
   \<open>is_unit_register U \<longleftrightarrow> complements U id\<close>
-(* TODO: make sure paper reflects this changed (but equiv) definition *)
 
 lemma register_unit_register[simp]: \<open>is_unit_register U \<Longrightarrow> register U\<close>
   by (simp add: compatible_def complements_def is_unit_register_def)
@@ -302,5 +301,9 @@ lemma complements_id_unit_register[simp]: \<open>complements id unit_register\<c
 
 lemma complements_iso_unit_register: \<open>iso_register I \<Longrightarrow> is_unit_register U \<Longrightarrow> complements I U\<close>
   using complements_sym equivalent_complements is_unit_register_def iso_register_equivalent_id by blast
+
+(* Adding support for "is_unit_register" and "complements" to the [compatible] attribute *)
+lemmas [compatible_attribute_rule] = is_unit_register_def[THEN iffD1] complements_def[THEN iffD1]
+lemmas [compatible_attribute_rule_immediate] = asm_rl[of \<open>is_unit_register _\<close>]
 
 end
