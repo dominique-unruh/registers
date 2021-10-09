@@ -503,6 +503,17 @@ proof -
     by (auto intro!: bounded_linear_intros)
 qed
 
+lemma pure_state_bounded_clinear_right:
+  assumes [compatible]: \<open>compatible F G\<close>
+  shows \<open>bounded_clinear (\<lambda>\<phi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
+proof -
+  have [bounded_clinear]: \<open>bounded_clinear (F;G)\<close>
+    using assms pair_is_register register_bounded_clinear by blast
+  show ?thesis
+    unfolding pure_state'_def
+    by (auto intro!: bounded_linear_intros)
+qed
+
 lemma pure_state_clinear:
   assumes [compatible]: \<open>compatible F G\<close>
   shows \<open>clinear (\<lambda>\<psi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
