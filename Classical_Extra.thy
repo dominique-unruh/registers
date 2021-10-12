@@ -114,7 +114,7 @@ lemma empty_var_compatible[simp]: \<open>compatible empty_var X\<close> if [simp
 lemma empty_var_compatible'[simp]: \<open>register X \<Longrightarrow> compatible X empty_var\<close>
   using compatible_sym empty_var_compatible by blast
 
-subsubsection \<open>Example\<close>
+paragraph \<open>Example\<close>
 
 record memory = 
   x :: "int*int"

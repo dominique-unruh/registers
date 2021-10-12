@@ -36,12 +36,12 @@ proof -
 qed
 
 
-(* https://mathoverflow.net/a/390180/101775 TODO: bibentry instead *)
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
   shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
+  \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
 proof -
   note [[simproc del: compatibility_warn]]
   fix \<xi>0 :: 'a

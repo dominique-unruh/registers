@@ -73,7 +73,8 @@ lemma mat_of_rows_list_carrier[simp]:
 lemma apply_id_cblinfun[simp]: \<open>(*\<^sub>V) id_cblinfun = id\<close>
   by auto
 
-text \<open>Overriding Bounded_Operator.sandwich. The latter is the same function but defined as a cblinfun. Less convenient for us.\<close>
+text \<open>Overriding \\<^theory>\<open>Complex_Bounded_Operators.Complex_Bounded_Linear_Function\<close>.\<^term>\<open>sandwich\<close>.
+      The latter is the same function but defined as a \<^typ>\<open>(_,_) cblinfun\<close> which is less convenient for us.\<close>
 definition sandwich where \<open>sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L a*\<close>
 
 lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
