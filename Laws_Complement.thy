@@ -75,7 +75,7 @@ proof (rule complementsI)
     apply (rule register_eqI[OF sep4]) by auto
   have \<open>(F \<otimes>\<^sub>r G; complement F \<otimes>\<^sub>r complement G) = ((F; complement F) \<otimes>\<^sub>r (G; complement G)) o ?reorder\<close>
     apply (rule register_eqI[OF sep4])
-    by (auto intro!: register_preregister register_comp register_tensor_is_hom pair_is_register
+    by (auto intro!: register_preregister register_comp register_tensor_is_register pair_is_register
         simp: compat register_pair_apply tensor_update_mult)
   moreover have \<open>iso_register \<dots>\<close>
     apply (auto intro!: iso_register_comp iso_register_tensor_is_iso_register)
@@ -214,7 +214,7 @@ lemma unit_register_domain_tensor_unit:
   fixes U :: \<open>'a::domain update \<Rightarrow> _\<close>
   assumes \<open>is_unit_register U\<close>
   shows \<open>\<exists>I :: 'b::domain update \<Rightarrow> ('a*'b) update. iso_register I\<close>
-       (* Can we show that I = (\<lambda>x. tensor_update id_update x) ? *)
+  (* Can we show that I = (\<lambda>x. tensor_update id_update x) ? It would be nice but I do not see how to prove it. *)
 proof -
   have \<open>equivalent_registers (id :: 'b update \<Rightarrow> _) (complement id; id)\<close>
     using id_complement_is_unit_register iso_register_equivalent_id register_id unit_register_pair by blast
@@ -340,9 +340,14 @@ lemma complements_id_unit_register[simp]: \<open>complements id unit_register\<c
 lemma complements_iso_unit_register: \<open>iso_register I \<Longrightarrow> is_unit_register U \<Longrightarrow> complements I U\<close>
   using complements_sym equivalent_complements is_unit_register_def iso_register_equivalent_id by blast
 
-(* Adding support for "is_unit_register" and "complements" to the [compatible] attribute *)
-lemmas [compatible_attribute_rule] = is_unit_register_def[THEN iffD1] complements_def[THEN iffD1]
-lemmas [compatible_attribute_rule_immediate] = asm_rl[of \<open>is_unit_register _\<close>]
+lemma iso_register_complement_is_unit_register[simp]:
+  assumes \<open>iso_register F\<close>
+  shows \<open>is_unit_register (complement F)\<close>
+  by (meson assms complement_is_complement complements_sym equivalent_complements equivalent_registers_sym is_unit_register_def iso_register_equivalent_id iso_register_is_register)
+
+text \<open>Adding support for \<^term>\<open>is_unit_register F\<close> and \<^term>\<open>complements F G\<close> to the [@{attribute register}] attribute\<close>
+lemmas [register_attribute_rule] = is_unit_register_def[THEN iffD1] complements_def[THEN iffD1]
+lemmas [register_attribute_rule_immediate] = asm_rl[of \<open>is_unit_register _\<close>]
 
 no_notation comp_update (infixl "*\<^sub>u" 55)
 no_notation tensor_update (infixr "\<otimes>\<^sub>u" 70)

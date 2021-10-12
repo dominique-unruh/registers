@@ -22,8 +22,6 @@ declare register_tensor_right[simp]
 declare preregister_mult_right[simp]
 declare preregister_mult_left[simp]
 declare register_id[simp]
-(* declare preregister_tensor_left[simp] *)
-(* declare preregister_tensor_right[simp] *)
 
 subsection \<open>Preregisters\<close>
 
@@ -64,8 +62,7 @@ subsection \<open>Tensor product of registers\<close>
 definition register_tensor  (infixr "\<otimes>\<^sub>r" 70) where
   "register_tensor F G = register_pair (\<lambda>a. tensor_update (F a) id_update) (\<lambda>b. tensor_update id_update (G b))"
 
-(* TODO rename *)
-lemma register_tensor_is_hom: 
+lemma register_tensor_is_register: 
   fixes F :: "'a::domain update \<Rightarrow> 'b::domain update" and G :: "'c::domain update \<Rightarrow> 'd::domain update"
   shows "register F \<Longrightarrow> register G \<Longrightarrow> register (F \<otimes>\<^sub>r G)"
   unfolding register_tensor_def
@@ -132,9 +129,9 @@ lemma register_tensor_distrib:
   assumes [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register H\<close> \<open>register L\<close>
   shows \<open>(F \<otimes>\<^sub>r G) o (H \<otimes>\<^sub>r L) = (F o H) \<otimes>\<^sub>r (G o L)\<close>
   apply (rule tensor_extensionality)
-  by (auto intro!: register_comp register_preregister register_tensor_is_hom)
+  by (auto intro!: register_comp register_preregister register_tensor_is_register)
 
-(* Easier to apply using 'rule' than separating_tensor *)
+text \<open>The following is easier to apply using the @{method rule}-method than @{thm [source] separating_tensor}\<close>
 lemma separating_tensor':
   fixes A :: \<open>'a::domain update set\<close> and B :: \<open>'b::domain update set\<close>
   assumes \<open>separating TYPE('c::domain) A\<close>
@@ -180,13 +177,7 @@ qed
 
 lemma register_tensor_id[simp]: \<open>id \<otimes>\<^sub>r id = id\<close>
   apply (rule tensor_extensionality)
-  by (auto simp add: register_tensor_is_hom)
-
-(* TODO duplicated: register_tensor_distrib *)
-lemma tensor_register_distrib: \<open>(F \<otimes>\<^sub>r G) o (F' \<otimes>\<^sub>r G') = (F o F') \<otimes>\<^sub>r (G o G')\<close> 
-  if [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
-  apply (rule tensor_extensionality)
-  by (auto simp: register_tensor_is_hom)
+  by (auto simp add: register_tensor_is_register)
 
 subsection \<open>Pairs and compatibility\<close>
 
@@ -246,7 +237,7 @@ lemma pair_o_tensor:
   assumes "compatible A B" and [simp]: \<open>register C\<close> and [simp]: \<open>register D\<close>
   shows "(A; B) o (C \<otimes>\<^sub>r D) = (A o C; B o D)"
   apply (rule tensor_extensionality)
-  using assms by (simp_all add: register_tensor_is_hom register_pair_apply comp_preregister)
+  using assms by (simp_all add: register_tensor_is_register register_pair_apply comp_preregister)
 
 lemma compatible_tensor_id_update_left[simp]:
   fixes F :: "'a::domain update \<Rightarrow> 'c::domain update" and G :: "'b::domain update \<Rightarrow> 'c::domain update"
@@ -449,7 +440,7 @@ proof -
     comp_preregister[OF _ preregister_mult_right, unfolded o_def]
     comp_preregister[OF _ preregister_mult_left, unfolded o_def]
     comp_preregister
-    register_tensor_is_hom
+    register_tensor_is_register
   have [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
     using assms compatible_def by blast+
   have [simp]: \<open>register (F \<otimes>\<^sub>r G)\<close> \<open>register (F' \<otimes>\<^sub>r G')\<close>
@@ -602,7 +593,7 @@ proof -
     by (meson iso_register_def)
   show ?thesis
     apply (rule iso_registerI[where G=\<open>G' o F'\<close>])
-       apply (auto simp: register_tensor_is_hom iso_register_is_register register_tensor_distrib)
+       apply (auto simp: register_tensor_is_register iso_register_is_register register_tensor_distrib)
      apply (metis \<open>F \<circ> F' = id\<close> \<open>G \<circ> G' = id\<close> fcomp_assoc fcomp_comp id_fcomp)
     by (metis (no_types, lifting) \<open>F \<circ> F' = id\<close> \<open>F' \<circ> F = id\<close> \<open>G' \<circ> G = id\<close> fun.map_comp inj_iff inv_unique_comp o_inv_o_cancel)
 qed
@@ -617,7 +608,7 @@ proof -
     by (meson iso_register_def)
   show ?thesis
     apply (rule iso_registerI[where G=\<open>F' \<otimes>\<^sub>r G'\<close>])
-    by (auto simp: register_tensor_is_hom iso_register_is_register register_tensor_distrib)
+    by (auto simp: register_tensor_is_register iso_register_is_register register_tensor_distrib)
 qed
 
 lemma iso_register_bij: \<open>iso_register F \<Longrightarrow> bij F\<close>
@@ -627,7 +618,7 @@ lemma inv_register_tensor[simp]:
   assumes [simp]: \<open>iso_register F\<close> \<open>iso_register G\<close>
   shows \<open>inv (F \<otimes>\<^sub>r G) = inv F \<otimes>\<^sub>r inv G\<close>
   apply (auto intro!: inj_imp_inv_eq bij_is_inj iso_register_bij 
-              simp: tensor_register_distrib[unfolded o_def, THEN fun_cong] iso_register_is_register
+              simp: register_tensor_distrib[unfolded o_def, THEN fun_cong] iso_register_is_register
                     iso_register_inv bij_is_surj iso_register_bij surj_f_inv_f)
   by (metis eq_id_iff register_tensor_id)
 
@@ -701,7 +692,7 @@ proof -
   from eq obtain I where [simp]: \<open>iso_register I\<close> and \<open>G o I = H\<close>
     by (metis equivalent_registers_def)
   then have *: \<open>(F;G) \<circ> (id \<otimes>\<^sub>r I) = (F;H)\<close>
-    by (auto intro!: tensor_extensionality register_comp register_preregister register_tensor_is_hom 
+    by (auto intro!: tensor_extensionality register_comp register_preregister register_tensor_is_register 
         simp:  register_pair_apply iso_register_is_register)
   show ?thesis
     apply (rule equivalent_registersI[where I=\<open>id \<otimes>\<^sub>r I\<close>])
@@ -716,7 +707,7 @@ proof -
   from eq obtain I where [simp]: \<open>iso_register I\<close> and \<open>F o I = H\<close>
     by (metis equivalent_registers_def)
   then have *: \<open>(F;G) \<circ> (I \<otimes>\<^sub>r id) = (H;G)\<close>
-    by (auto intro!: tensor_extensionality register_comp register_preregister register_tensor_is_hom 
+    by (auto intro!: tensor_extensionality register_comp register_preregister register_tensor_is_register 
         simp:  register_pair_apply iso_register_is_register)
   show ?thesis
     apply (rule equivalent_registersI[where I=\<open>I \<otimes>\<^sub>r id\<close>])
@@ -731,9 +722,9 @@ lemma equivalent_registers_comp:
 
 subsection \<open>Compatibility simplification\<close>
 
-(* The simproc compatibility_warn produces helpful warnings for "compatible x y"
-   subgoals that are probably unsolvable due to missing declarations of 
-   variable compatibility facts. Same for "register x" subgoals. *)
+text \<open>The simproc \<open>compatibility_warn\<close> produces helpful warnings for subgoals of the form
+   \<^term>\<open>compatible x y\<close> that are probably unsolvable due to missing declarations of 
+   variable compatibility facts. Same for subgoals of the form \<^term>\<open>register x\<close>.\<close>
 simproc_setup "compatibility_warn" ("compatible x y" | "register x") = \<open>
 let val thy_string = Markup.markup (Theory.get_markup \<^theory>) (Context.theory_name \<^theory>)
 in
@@ -743,7 +734,6 @@ fn m => fn ctxt => fn ct => let
                | Const(\<^const_name>\<open>register\<close>,_ ) $ x => (x, NONE)
   val str : string lazy = Lazy.lazy (fn () => Syntax.string_of_term ctxt (Thm.term_of ct))
   fun w msg = warning (msg ^ "\n(Disable these warnings with: using [[simproc del: "^thy_string^".compatibility_warn]])")
-  (* val _ = \<^print> (m,ctxt,ct) *)
   val _ = case (x,y) of
         (Free(n,T), SOME (Free(n',T'))) => 
             if String.isPrefix ":" n orelse String.isPrefix ":" n' then 
@@ -757,33 +747,32 @@ fn m => fn ctxt => fn ct => let
                             " occurred but cannot be solved.\n" ^
                             "Please add assumption/fact  [simp]: \<open>" ^ Lazy.force str ^ 
                             "\<close>  somewhere.")
-(*       | (_, SOME _) => w ("Simplification subgoal " ^ Lazy.force str ^ 
-                    "\ncannot be reduced to a compatibility of two variables (such as \<open>compatibility x y\<close>).\n" ^
-                    "Try adding a simplification rule that breaks it down (such as, e.g., " ^ @{fact compatible3} ^ ").") *)
       | (Free(n,T), NONE) => 
             if String.isPrefix ":" n then 
                       w ("Simplification subgoal '" ^ Lazy.force str ^ "' contains a bound variable.\n" ^
                       "Try to add some assumptions that makes this goal solvable by the simplifier")
             else w ("Simplification subgoal " ^ Lazy.force str ^ " occurred but cannot be solved.\n" ^
                     "Please add assumption/fact  [simp]: \<open>" ^ Lazy.force str ^ "\<close>  somewhere.")
-(*       | (_, NONE) => w ("Simplification subgoal " ^ Lazy.force str ^ 
-                    "\ncannot be reduced to a judgment about a single variable (such as \<open>register x\<close>).\n" ^
-                    "Try adding a simplification rule that breaks it down (such as, e.g., " ^ @{fact register_comp} ^ ").") *)
       | _ => ()
   in NONE end
 end\<close>
 
 
-named_theorems compatible_attribute_rule_immediate
-named_theorems compatible_attribute_rule
+named_theorems register_attribute_rule_immediate
+named_theorems register_attribute_rule
 
-lemmas [compatible_attribute_rule] = conjunct1 conjunct2 iso_register_is_register iso_register_is_register[OF iso_register_inv]
-lemmas [compatible_attribute_rule_immediate] = compatible_sym compatible_register1 compatible_register2
+lemmas [register_attribute_rule] = conjunct1 conjunct2 iso_register_is_register iso_register_is_register[OF iso_register_inv]
+lemmas [register_attribute_rule_immediate] = compatible_sym compatible_register1 compatible_register2
   asm_rl[of \<open>compatible _ _\<close>] asm_rl[of \<open>iso_register _\<close>] asm_rl[of \<open>register _\<close>] iso_register_inv
 
-(* Declares the attribute [compatible]. If applied to a conjunction 
-   of "compatible x y" facts, it will add all of them to the simplifier
-   (as [simp] does), but additionally add all "register x", "register y" facts. *)
+text \<open>The following declares an attribute \<open>[register]\<close>. When the attribute is applied to a fact
+  of the form \<^term>\<open>register F\<close>, \<^term>\<open>iso_register F\<close>, \<^term>\<open>compatible F G\<close> or a conjunction of these,
+  then those facts are added to the simplifier together with some derived theorems
+  (e.g., \<^term>\<open>compatible F G\<close> also adds \<^term>\<open>register F\<close>).
+
+  In theory \<open>Laws_Complement\<close>, support for \<^term>\<open>is_unit_register F\<close> and \<^term>\<open>complements F G\<close> is
+  added to this attribute.\<close>
+
 setup \<open>
 let
 fun add thm results = 
@@ -795,15 +784,15 @@ fun collect (rules,rules_immediate) thm results =
   results |> fold (try_rule add thm) rules_immediate |> fold (try_rule (collect (rules,rules_immediate)) thm) rules
 fun declare thm context = let
   val ctxt = Context.proof_of context
-  val rules = Named_Theorems.get ctxt @{named_theorems compatible_attribute_rule}
-  val rules_immediate = Named_Theorems.get ctxt @{named_theorems compatible_attribute_rule_immediate}
+  val rules = Named_Theorems.get ctxt @{named_theorems register_attribute_rule}
+  val rules_immediate = Named_Theorems.get ctxt @{named_theorems register_attribute_rule_immediate}
   val thms = collect (rules,rules_immediate) thm Net.empty |> Net.entries
   val _ = \<^print> thms
   in Simplifier.map_ss (fn ctxt => ctxt addsimps thms) context end
 in
-Attrib.setup \<^binding>\<open>compatible\<close>
+Attrib.setup \<^binding>\<open>register\<close>
  (Scan.succeed (Thm.declaration_attribute declare))
-  "Add 'compatible x y' style rules to simplifier. (Also adds 'register x', 'register y')"
+  "Add register-related rules to the simplifier"
 end
 \<close>
 

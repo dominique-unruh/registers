@@ -24,11 +24,14 @@ unbundle jnf_notation
 abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
 abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)"
 
-(* Declares the ML antiquotation @{fact ...}. In ML code,
-  @{fact f} for a theorem/fact name f is replaced by an ML string
+text \<open>The following declares the ML antiquotation \<^verbatim>\<open>fact\<close>. In ML code,
+  \<^verbatim>\<open>@{fact f}\<close> for a theorem/fact name f is replaced by an ML string
   containing a printable(!) representation of fact. (I.e.,
   if you print that string using writeln, the user can ctrl-click on it.)
- *)
+
+  This is useful when constructing diagnostic messages in ML code, e.g., 
+  \<^verbatim>\<open>"Use the theorem " ^ @{fact thmname} ^ "here."\<close>\<close>
+
 setup \<open>ML_Antiquotation.inline_embedded \<^binding>\<open>fact\<close>
 ((Args.context -- Scan.lift Args.name_position) >> (fn (ctxt,namepos) => let
   val facts = Proof_Context.facts_of ctxt
@@ -67,19 +70,10 @@ lemma mat_of_rows_list_carrier[simp]:
   "dim_col (mat_of_rows_list n vs) = n"
   unfolding mat_of_rows_list_def by auto
 
-(* butterfly_comp_cblinfun *)
-(* lemma butterfly_times_right: "butterfly \<psi> \<phi> o\<^sub>C\<^sub>L a = butterfly \<psi> (a* *\<^sub>V \<phi>)"
-  unfolding butterfly_def
-  by (metis butterfly_comp_cblinfun butterfly_def_one_dim) *)
-
-(* lemma butterfly_is_Proj:
-  \<open>norm x = 1 \<Longrightarrow> is_Proj (selfbutter x)\<close>
-  by (subst butterfly_eq_proj, simp_all) *)
-
 lemma apply_id_cblinfun[simp]: \<open>(*\<^sub>V) id_cblinfun = id\<close>
   by auto
 
-(* Overriding Bounded_Operator.sandwich. The latter is the same function by defined as a cblinfun. Less convenient for us. *)
+text \<open>Overriding Bounded_Operator.sandwich. The latter is the same function but defined as a cblinfun. Less convenient for us.\<close>
 definition sandwich where \<open>sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L a*\<close>
 
 lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
@@ -110,12 +104,9 @@ lemma lift_cblinfun_comp:
   using assms cblinfun_assoc_left(2) apply force
   using assms by force
 
-
-
-(* Abbreviations: "mutually f (x1,x2,x3,\<dots>)" expands to a conjunction
-   of all "f xi xj" with i\<noteq>y.
-
-   "each f (x1,x2,x3,\<dots>)" expands to a conjunction of all "f xi". *)
+text \<open>We define the following abbreviations:
+\<^item> \<open>mutually f (x\<^sub>1,x\<^sub>2,\<dots>,x\<^sub>n)\<close> expands to the conjuction of all \<^term>\<open>f x\<^sub>i x\<^sub>j\<close> with \<^term>\<open>i\<noteq>j\<close>.
+\<^item> \<open>each f (x\<^sub>1,x\<^sub>2,\<dots>,x\<^sub>n)\<close> expands to the conjuction of all \<^term>\<open>f x\<^sub>i\<close>.\<close>
 
 syntax "_mutually" :: "'a \<Rightarrow> args \<Rightarrow> 'b" ("mutually _ '(_')")
 syntax "_mutually2" :: "'a \<Rightarrow> 'b \<Rightarrow> args \<Rightarrow> args \<Rightarrow> 'c"
@@ -164,6 +155,5 @@ lemma surj_from_comp:
 
 lemma double_exists: \<open>(\<exists>x y. Q x y) \<longleftrightarrow> (\<exists>z. Q (fst z) (snd z))\<close>
   by simp
-
 
 end

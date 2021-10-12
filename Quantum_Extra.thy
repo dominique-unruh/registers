@@ -28,8 +28,8 @@ lemma register_unitary:
   using assms by (smt (verit, best) register_def unitary_def)
 
 lemma compatible_proj_intersect:
-  (* I think this also holds without is_Proj, but my proof idea uses the Penrose-Moore 
-     pseudoinverse or simultaneous diagonalization and we do not have an existence theorem for it. *)
+  (* I think this also holds without is_Proj premises, but my proof ideas use the Penrose-Moore 
+     pseudoinverse or simultaneous diagonalization and we do not have an existence theorem for either. *)
   assumes "compatible R S" and "is_Proj a" and "is_Proj b"
   shows "(R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>) = ((R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>)"
 proof (rule antisym)
@@ -86,7 +86,7 @@ lemma sandwich_tensor:
   assumes \<open>unitary a\<close> \<open>unitary b\<close>
   shows "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>r sandwich b"
   apply (rule tensor_extensionality)
-  by (auto simp: unitary_sandwich_register assms sandwich_def register_tensor_is_hom comp_tensor_op tensor_op_adjoint)
+  by (auto simp: unitary_sandwich_register assms sandwich_def register_tensor_is_register comp_tensor_op tensor_op_adjoint)
 
 lemma sandwich_grow_left: 
   fixes a :: \<open>'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
@@ -124,10 +124,10 @@ lemma id_tensor_sandwich:
   assumes "unitary a"
   shows "id \<otimes>\<^sub>r sandwich a = sandwich (id_cblinfun \<otimes>\<^sub>o a)"
   apply (rule tensor_extensionality) 
-  using assms by (auto simp: register_tensor_is_hom comp_tensor_op sandwich_def tensor_op_adjoint unitary_sandwich_register)
+  using assms by (auto simp: register_tensor_is_register comp_tensor_op sandwich_def tensor_op_adjoint unitary_sandwich_register)
 
 lemma compatible_selfbutter_join:
-  assumes [compatible]: "compatible R S"
+  assumes [register]: "compatible R S"
   shows "R (selfbutter \<psi>) o\<^sub>C\<^sub>L S (selfbutter \<phi>) = (R; S) (selfbutter (\<psi> \<otimes>\<^sub>s \<phi>))"
   apply (subst register_pair_apply[symmetric, where F=R and G=S])
   using assms by auto
@@ -158,6 +158,9 @@ lemma register_scaleC:
 
 lemma register_bounded_clinear: \<open>register F \<Longrightarrow> bounded_clinear F\<close>
   using bounded_clinear_finite_dim register_def by blast
+
+lemma register_adjoint: "F (a*) = (F a)*" if \<open>register F\<close>
+  using register_def that by blast
 
 end
 

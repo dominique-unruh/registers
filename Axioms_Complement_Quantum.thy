@@ -35,28 +35,8 @@ proof -
     by (metis card_image)
 qed
 
-(* lemma equal_span_cblinfun_image_antilinear:
-  fixes A B :: "'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector"
-  assumes \<open>bounded_antilinear A\<close> and \<open>bounded_antilinear B\<close> and
-    eq: \<open>\<And>x. x \<in> G \<Longrightarrow> A x = B x\<close> and t: \<open>t \<in> closure (cspan G)\<close>
-  shows \<open>A t = B t\<close>
-proof -
-  have bclA: \<open>bounded_clinear (\<lambda>u. A (from_conjugate_space u))\<close>
-    apply (rule bounded_antilinear_o_bounded_antilinear[OF assms(1), unfolded o_def])
-    by auto
-  have bclB: \<open>bounded_clinear (\<lambda>u. B (from_conjugate_space u))\<close>
-    apply (rule bounded_antilinear_o_bounded_antilinear[OF assms(2), unfolded o_def])
-    by auto
-  have \<open>A (from_conjugate_space u) = B (from_conjugate_space u)\<close> if \<open>u \<in> closure (cspan (to_conjugate_space ` G))\<close> for u
-    using bclA bclB _ that apply (rule bounded_clinear_eq_on[where G=\<open>to_conjugate_space ` G\<close>])
-    by (metis eq imageE iso_tuple_UNIV_I to_conjugate_space_inverse)
-  moreover have \<open>closure (cspan (to_conjugate_space ` G)) = to_conjugate_space ` closure (cspan G)\<close>
-    by (simp add: closure_to_conjugate_space)
-  ultimately show \<open>A t = B t\<close>
-    by (metis imageI iso_tuple_UNIV_I t to_conjugate_space_inverse)
-qed *)
 
-(* https://mathoverflow.net/a/390180/101775 *)
+(* https://mathoverflow.net/a/390180/101775 TODO: bibentry instead *)
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
@@ -470,14 +450,6 @@ proof -
     by (auto simp: sandwich_def[abs_def])
 qed
 
-
-(* definition \<open>equivalent_registers F G \<longleftrightarrow> (register F \<and> (\<exists>I. iso_register I \<and> F o I = G))\<close>
-
-lemma equivalent_registers_sym:
-  assumes \<open>equivalent_registers F G\<close>
-  shows \<open>equivalent_registers G F\<close>
-   *)
-
 lemma complement_exists:
   fixes F :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes \<open>register F\<close>
@@ -624,10 +596,6 @@ proof -
     by (simp add: commutant_exchange commutant_tensor1)
 qed
 
-(* TODO move *)
-lemma register_adjoint: "F (a*) = (F a)*" if \<open>register F\<close>
-  using register_def that by blast
-
 lemma same_range_equivalent:
   fixes F :: \<open>'a::finite update \<Rightarrow> 'c::finite update\<close> and G :: \<open>'b::finite update \<Rightarrow> 'c::finite update\<close>
   assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
@@ -733,24 +701,6 @@ proof -
   with \<open>iso_register I\<close> show ?thesis
     unfolding equivalent_registers_def by auto
 qed
-
-(* lemma iso_register_id[simp]: \<open>iso_register id\<close>
-  by (simp add: iso_register_def) *)
-
-(* lemma iso_register_tensor[simp]: \<open>iso_register (F \<otimes>\<^sub>r G)\<close> if \<open>iso_register F\<close> and \<open>iso_register G\<close>
-proof -
-  from that have [simp]: \<open>register F\<close> \<open>register G\<close>
-    using iso_register_def by blast+
-  from \<open>iso_register F\<close>
-  obtain F' where [simp]: \<open>register F'\<close> \<open>F o F' = id\<close> \<open>F' o F = id\<close>
-    using iso_register_def by blast
-  from \<open>iso_register G\<close>
-  obtain G' where [simp]: \<open>register G'\<close> \<open>G o G' = id\<close> \<open>G' o G = id\<close>
-    using iso_register_def by blast
-  show ?thesis
-    apply (rule iso_registerI[where G=\<open>F' \<otimes>\<^sub>r G'\<close>])
-    by (auto simp add: register_tensor_is_hom tensor_register_distrib)
-qed *)
 
 lemma complement_unique:
   assumes "compatible F G" and \<open>iso_register (F;G)\<close>

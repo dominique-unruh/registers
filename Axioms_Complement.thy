@@ -7,7 +7,7 @@ begin
 typedecl ('a, 'b) complement_domain
 instance complement_domain :: (domain, domain) domain..
 
-(* We need that there is at least one object in our category *)
+\<comment> \<open>We need that there is at least one object in our category. We call is \<^term>\<open>some_domain\<close>.\<close>
 typedecl some_domain
 instance some_domain :: domain..
 

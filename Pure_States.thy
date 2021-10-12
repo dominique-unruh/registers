@@ -2,7 +2,17 @@ theory Pure_States
   imports Laws_Complement_Quantum "HOL-Eisbach.Eisbach"
 begin
 
-instance complement_domain :: (type, type) default..
+
+instance complement_domain :: (type, type) default ..
+    \<comment> \<open>The previous declaration would fit better into \<^theory>\<open>Registers.Quantum_Extra\<close>
+        but it depends on \<^theory>\<open>Registers.Laws_Complement_Quantum\<close> which cannot be included there.\<close>
+
+lemma is_unit_register_empty_var[simp]: \<open>is_unit_register empty_var\<close>
+  \<comment> \<open>The same as for the preceding instance declaration applies here, too.\<close>
+  unfolding is_unit_register_def
+  by (auto intro!: same_range_equivalent range_eqI[where x=\<open>id_cblinfun \<otimes>\<^sub>o _\<close>] 
+      simp del: id_cblinfun_eq_1 simp flip: iso_register_equivalent_id
+      simp: register_pair_apply complements_def)
 
 definition \<open>pure_state_target_vector F \<eta>\<^sub>F = (if ket default \<in> range (cblinfun_apply (F (butterfly \<eta>\<^sub>F \<eta>\<^sub>F)))
    then ket default
@@ -211,7 +221,7 @@ proof -
 
   have *: \<open>((F;G); complement (F;G)) o (swap \<otimes>\<^sub>r id) o assoc' = (G; (F; complement (F;G)))\<close>
     apply (rule tensor_extensionality3)
-      apply (auto intro!: register_comp register_tensor_is_hom pair_is_register complements_complement_pair
+      apply (auto intro!: register_comp register_tensor_is_register pair_is_register complements_complement_pair
         simp: register_pair_apply compatible_complement_pair1)
     by (metis assms(1) cblinfun_assoc_left(1) swap_registers_left)
   have t3_t1: \<open>t3 = assoc ((swap \<otimes>\<^sub>r id) t1)\<close>
@@ -228,7 +238,7 @@ proof -
     by (simp add: *)
   also have \<open>\<dots> = (assoc o swap) (selfbutterket default \<otimes>\<^sub>o inv I aF)\<close>
     apply (rule fun_cong[where g=\<open>assoc o swap\<close>])
-    apply (intro tensor_extensionality3 register_comp register_tensor_is_hom)
+    apply (intro tensor_extensionality3 register_comp register_tensor_is_register)
     by auto
   also have \<open>\<dots> = assoc (inv I aF \<otimes>\<^sub>o selfbutterket default)\<close>
     by auto
@@ -303,19 +313,6 @@ proof -
   then show ?thesis
     using \<open>register F\<close> \<open>register G\<close> register_comp regular_register_def by blast
 qed
-
-(* Move to Q_Extra, but with dep on Laws_Compl_Q *)
-lemma is_unit_register_empty_var[simp]: \<open>is_unit_register empty_var\<close>
-  unfolding is_unit_register_def
-  by (auto intro!: same_range_equivalent range_eqI[where x=\<open>id_cblinfun \<otimes>\<^sub>o _\<close>] 
-      simp del: id_cblinfun_eq_1 simp flip: iso_register_equivalent_id
-      simp: register_pair_apply complements_def)
-
-(* Move to Q_Extra, but with dep on Laws_Compl_Q *)
-lemma iso_register_complement_is_unit_register[simp]:
-  assumes \<open>iso_register F\<close>
-  shows \<open>is_unit_register (complement F)\<close>
-  by (meson assms complement_is_complement complements_sym equivalent_complements equivalent_registers_sym is_unit_register_def iso_register_equivalent_id iso_register_is_register)
 
 lemma regular_iso_register:
   assumes \<open>regular_register F\<close>
@@ -401,10 +398,10 @@ proof -
 qed
 
 lemma state_apply1: 
-  assumes [compatible]: \<open>compatible F G\<close>
+  assumes [register]: \<open>compatible F G\<close>
   shows \<open>F U *\<^sub>V (F \<psi> \<otimes>\<^sub>p G \<phi>) = (F (U \<psi>) \<otimes>\<^sub>p G \<phi>)\<close>
 proof -
-  have [compatible]: \<open>compatible F G\<close>
+  have [register]: \<open>compatible F G\<close>
     using assms(1) complements_def by blast
   have \<open>F U *\<^sub>V (F \<psi> \<otimes>\<^sub>p G \<phi>) = (F;G) (U \<otimes>\<^sub>o id_cblinfun) *\<^sub>V (F \<psi> \<otimes>\<^sub>p G \<phi>)\<close>
     apply (subst register_pair_apply)
@@ -415,16 +412,6 @@ proof -
   finally show ?thesis
     by -
 qed
-
-
-(* lemma surj_isometry_is_unitary':
-  fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  assumes \<open>isometry U\<close>
-  assumes \<open>surj (( *\<^sub>V) U)\<close>
-  shows \<open>unitary U\<close>
-  using assms(1) apply (rule surj_isometry_is_unitary)
-  using assms(2) apply transfer by auto *)
-
 
 lemma Fst_regular[simp]: \<open>regular_register Fst\<close>
   apply (rule regular_registerI[where a=\<open>selfbutterket default\<close> and G=Snd])
@@ -493,7 +480,7 @@ lemma cspan_pure_state:
   by (auto simp: iso_register_is_register)
 
 lemma pure_state_bounded_clinear:
-  assumes [compatible]: \<open>compatible F G\<close>
+  assumes [register]: \<open>compatible F G\<close>
   shows \<open>bounded_clinear (\<lambda>\<psi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
 proof -
   have [bounded_clinear]: \<open>bounded_clinear (F;G)\<close>
@@ -504,7 +491,7 @@ proof -
 qed
 
 lemma pure_state_bounded_clinear_right:
-  assumes [compatible]: \<open>compatible F G\<close>
+  assumes [register]: \<open>compatible F G\<close>
   shows \<open>bounded_clinear (\<lambda>\<phi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
 proof -
   have [bounded_clinear]: \<open>bounded_clinear (F;G)\<close>
@@ -515,21 +502,22 @@ proof -
 qed
 
 lemma pure_state_clinear:
-  assumes [compatible]: \<open>compatible F G\<close>
+  assumes [register]: \<open>compatible F G\<close>
   shows \<open>clinear (\<lambda>\<psi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
   using assms bounded_clinear.clinear pure_state_bounded_clinear by blast
 
 method pure_state_flatten_nested =
   (subst pure_state_nested, (auto; fail)[3])+
 
-(* Proves (or reduces to subgoals) a goal of the form
-  F \<psi> \<otimes>\<^sub>p G \<phi> \<otimes> \<dots> = (something of the same form)
+text \<open>The following method \<open>pure_state_eq\<close> tries to solve a equality where both sides are of the form
+  \<open>F\<^sub>1(\<psi>\<^sub>1) \<otimes>\<^sub>p F\<^sub>2(\<psi>\<^sub>2) \<otimes>\<^sub>p \<dots> \<otimes>\<^sub>p F\<^sub>n(\<psi>\<^sub>n)\<close> by reordering the registers and unfolding nested register pairs.
+  (For the unfolding of nested pairs, it is necessary that the corresponding \<^term>\<open>compatible F G\<close> facts are provable by the simplifier.)
 
-  The registers may be pairs and will be properly unfolded (assuming "compatible X Y" can be proven for all involved registers)
-
-  If the pure states \<psi>... themselves are \<otimes>\<^sub>p-tensors, they will be flattened if possible. 
+  If the some of the pure states \<^term>\<open>\<psi>\<^sub>i\<close> themselves are \<open>\<otimes>\<^sub>p\<close>-tensors, they will be flattened if possible. 
   (If all necessary conditions can be proven, such as \<open>regular_register\<close> etc.)
-*)
+
+  The method may either succeed, fail, or reduce the equality to a hopefully simpler one.\<close>
+
 method pure_state_eq =
   (pure_state_flatten_nested?,
     rule pure_state_eqI;
@@ -539,11 +527,11 @@ method pure_state_eq =
 lemma example:
   fixes F :: \<open>bit update \<Rightarrow> 'c::{finite,default} update\<close>
     and G :: \<open>bit update \<Rightarrow> 'c update\<close>
-  assumes [compatible]: \<open>compatible F G\<close>
+  assumes [register]: \<open>compatible F G\<close>
   shows  \<open>(F;G) CNOT o\<^sub>C\<^sub>L (G;F) CNOT o\<^sub>C\<^sub>L (F;G) CNOT = (F;G) swap_ell2\<close>
 proof -
   define Z where \<open>Z = complement (F;G)\<close>
-  then have [compatible]: \<open>compatible Z F\<close> \<open>compatible Z G\<close>
+  then have [register]: \<open>compatible Z F\<close> \<open>compatible Z G\<close>
     using assms compatible_complement_pair1 compatible_complement_pair2 compatible_sym by blast+
 
   have [simp]: \<open>iso_register (F;(G;Z))\<close>

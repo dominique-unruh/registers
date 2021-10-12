@@ -25,7 +25,7 @@ locale teleport_locale = qhoare "TYPE('mem::finite)" +
     and \<Phi> :: "(bit*bit) update \<Rightarrow> 'mem update"
     and A :: "'atype::finite update \<Rightarrow> 'mem update"
     and B :: "'btype::finite update \<Rightarrow> 'mem update"
-  assumes compat[compatible]: "mutually compatible (X,\<Phi>,A,B)"
+  assumes compat[register]: "mutually compatible (X,\<Phi>,A,B)"
 begin
 
 abbreviation "\<Phi>1 \<equiv> \<Phi> \<circ> Fst"
