@@ -435,6 +435,60 @@ proof (rule tensor_extensionality)
     by (metis (no_types, lifting) assms compatible_def)
 qed
 
+
+subsection \<open>Compatibility of register tensor products\<close>
+
+lemma compatible_register_tensor:
+  fixes F :: \<open>'a::domain update \<Rightarrow> 'e::domain update\<close> and G :: \<open>'b::domain update \<Rightarrow> 'f::domain update\<close>
+    and F' :: \<open>'c::domain update \<Rightarrow> 'e update\<close> and G' :: \<open>'d::domain update \<Rightarrow> 'f update\<close>
+  assumes [simp]: \<open>compatible F F'\<close>
+  assumes [simp]: \<open>compatible G G'\<close>
+  shows \<open>compatible (F \<otimes>\<^sub>r G) (F' \<otimes>\<^sub>r G')\<close>
+proof -
+  note [intro!] = 
+    comp_preregister[OF _ preregister_mult_right, unfolded o_def]
+    comp_preregister[OF _ preregister_mult_left, unfolded o_def]
+    comp_preregister
+    register_tensor_is_hom
+  have [simp]: \<open>register F\<close> \<open>register G\<close> \<open>register F'\<close> \<open>register G'\<close>
+    using assms compatible_def by blast+
+  have [simp]: \<open>register (F \<otimes>\<^sub>r G)\<close> \<open>register (F' \<otimes>\<^sub>r G')\<close>
+    by (auto simp add: register_tensor_def)
+  have [simp]: \<open>register (F;F')\<close> \<open>register (G;G')\<close>
+    by auto
+  define reorder :: \<open>(('a\<times>'b) \<times> ('c\<times>'d)) update \<Rightarrow> (('a\<times>'c) \<times> ('b\<times>'d)) update\<close>
+    where \<open>reorder = ((Fst o Fst; Snd o Fst); (Fst o Snd; Snd o Snd))\<close>
+  have [simp]: \<open>preregister reorder\<close>
+    by (auto simp: reorder_def)
+  have [simp]: \<open>reorder ((a \<otimes>\<^sub>u b) \<otimes>\<^sub>u (c \<otimes>\<^sub>u d)) = ((a \<otimes>\<^sub>u c) \<otimes>\<^sub>u (b \<otimes>\<^sub>u d))\<close> for a b c d
+    apply (simp add: reorder_def register_pair_apply)
+    by (simp add: Fst_def Snd_def tensor_update_mult)
+  define \<Phi> where \<open>\<Phi> c d = ((F;F') \<otimes>\<^sub>r (G;G')) o reorder o (\<lambda>\<sigma>. \<sigma> \<otimes>\<^sub>u (c \<otimes>\<^sub>u d))\<close> for c d
+  have [simp]: \<open>preregister (\<Phi> c d)\<close> for c d
+    unfolding \<Phi>_def 
+    by (auto intro: register_preregister)
+  have \<open>\<Phi> c d (a \<otimes>\<^sub>u b) = (F \<otimes>\<^sub>r G) (a \<otimes>\<^sub>u b) *\<^sub>u (F' \<otimes>\<^sub>r G') (c \<otimes>\<^sub>u d)\<close> for a b c d
+    unfolding \<Phi>_def by (auto simp: register_pair_apply tensor_update_mult)
+  then have \<Phi>1: \<open>\<Phi> c d \<sigma> = (F \<otimes>\<^sub>r G) \<sigma> *\<^sub>u (F' \<otimes>\<^sub>r G') (c \<otimes>\<^sub>u d)\<close> for c d \<sigma>
+    apply (rule_tac fun_cong[of _ _ \<sigma>])
+    apply (rule tensor_extensionality)
+    by auto
+  have \<open>\<Phi> c d (a \<otimes>\<^sub>u b) = (F' \<otimes>\<^sub>r G') (c \<otimes>\<^sub>u d) *\<^sub>u (F \<otimes>\<^sub>r G) (a \<otimes>\<^sub>u b)\<close> for a b c d
+    unfolding \<Phi>_def apply (auto simp: register_pair_apply)
+    by (metis assms(1) assms(2) compatible_def tensor_update_mult)
+  then have \<Phi>2: \<open>\<Phi> c d \<sigma> = (F' \<otimes>\<^sub>r G') (c \<otimes>\<^sub>u d) *\<^sub>u (F \<otimes>\<^sub>r G) \<sigma>\<close> for c d \<sigma>
+    apply (rule_tac fun_cong[of _ _ \<sigma>])
+    apply (rule tensor_extensionality)
+    by auto
+  from \<Phi>1 \<Phi>2 have \<open>(F \<otimes>\<^sub>r G) \<sigma> *\<^sub>u (F' \<otimes>\<^sub>r G') \<tau> = (F' \<otimes>\<^sub>r G') \<tau> *\<^sub>u (F \<otimes>\<^sub>r G) \<sigma>\<close> for \<tau> \<sigma>
+    apply (rule_tac fun_cong[of _ _ \<tau>])
+    apply (rule tensor_extensionality)
+    by auto
+  then show ?thesis
+    apply (rule compatibleI[rotated -1])
+    by auto
+qed
+
 subsection \<open>Associativity of the tensor product\<close>
 
 definition assoc :: \<open>(('a::domain\<times>'b::domain)\<times>'c::domain) update \<Rightarrow> ('a\<times>('b\<times>'c)) update\<close> where 

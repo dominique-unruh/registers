@@ -4,6 +4,9 @@ theory Laws_Complement
   imports Laws Axioms_Complement
 begin
 
+notation comp_update (infixl "*\<^sub>u" 55)
+notation tensor_update (infixr "\<otimes>\<^sub>u" 70)
+
 definition \<open>complements F G \<longleftrightarrow> compatible F G \<and> iso_register (F;G)\<close>
 
 lemma complementsI: \<open>compatible F G \<Longrightarrow> iso_register (F;G) \<Longrightarrow> complements F G\<close>
@@ -45,6 +48,41 @@ lemma complement_unique:
   shows \<open>equivalent_registers G (complement F)\<close>
   apply (rule complement_unique[where F=F])
   using assms unfolding complements_def using compatible_register1 complement_is_complement complements_def by blast+
+
+lemma compatible_complement[simp]: \<open>register F \<Longrightarrow> compatible F (complement F)\<close>
+  using complement_is_complement complements_def by blast
+
+lemma complements_register_tensor:
+  assumes [simp]: \<open>register F\<close> \<open>register G\<close>
+  shows \<open>complements (F \<otimes>\<^sub>r G) (complement F \<otimes>\<^sub>r complement G)\<close>
+proof (rule complementsI)
+  have sep4: \<open>separating TYPE('z::domain) {(a \<otimes>\<^sub>u b) \<otimes>\<^sub>u (c \<otimes>\<^sub>u d) |a b c d. True}\<close>
+    apply (rule separating_tensor'[where A=\<open>{(a \<otimes>\<^sub>u b) |a b. True}\<close> and B=\<open>{(c \<otimes>\<^sub>u d) |c d. True}\<close>])
+    apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
+    apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
+    by auto
+  show compat: \<open>compatible (F \<otimes>\<^sub>r G) (complement F \<otimes>\<^sub>r complement G)\<close>
+    by (metis assms(1) assms(2) compatible_register_tensor complement_is_complement complements_def)
+  let ?reorder = \<open>((Fst o Fst; Snd o Fst); (Fst o Snd; Snd o Snd))\<close>
+  have [simp]: \<open>register ?reorder\<close>
+    by auto
+  have [simp]: \<open>?reorder ((a \<otimes>\<^sub>u b) \<otimes>\<^sub>u (c \<otimes>\<^sub>u d)) = ((a \<otimes>\<^sub>u c) \<otimes>\<^sub>u (b \<otimes>\<^sub>u d))\<close> 
+    for a::\<open>'t::domain update\<close> and b::\<open>'u::domain update\<close> and c::\<open>'v::domain update\<close> and d::\<open>'w::domain update\<close>
+    by (simp add: register_pair_apply Fst_def Snd_def tensor_update_mult)
+  have [simp]: \<open>iso_register ?reorder\<close>
+    apply (rule iso_registerI[of _ ?reorder]) apply auto[2]
+     apply (rule register_eqI[OF sep4]) apply auto[3]
+    apply (rule register_eqI[OF sep4]) by auto
+  have \<open>(F \<otimes>\<^sub>r G; complement F \<otimes>\<^sub>r complement G) = ((F; complement F) \<otimes>\<^sub>r (G; complement G)) o ?reorder\<close>
+    apply (rule register_eqI[OF sep4])
+    by (auto intro!: register_preregister register_comp register_tensor_is_hom pair_is_register
+        simp: compat register_pair_apply tensor_update_mult)
+  moreover have \<open>iso_register \<dots>\<close>
+    apply (auto intro!: iso_register_comp iso_register_tensor_is_iso_register)
+    using assms complement_is_complement complements_def by blast+
+  ultimately show \<open>iso_register (F \<otimes>\<^sub>r G;complement F \<otimes>\<^sub>r complement G)\<close>
+    by simp
+qed
 
 definition is_unit_register where
   \<open>is_unit_register U \<longleftrightarrow> complements U id\<close>
@@ -305,5 +343,8 @@ lemma complements_iso_unit_register: \<open>iso_register I \<Longrightarrow> is_
 (* Adding support for "is_unit_register" and "complements" to the [compatible] attribute *)
 lemmas [compatible_attribute_rule] = is_unit_register_def[THEN iffD1] complements_def[THEN iffD1]
 lemmas [compatible_attribute_rule_immediate] = asm_rl[of \<open>is_unit_register _\<close>]
+
+no_notation comp_update (infixl "*\<^sub>u" 55)
+no_notation tensor_update (infixr "\<otimes>\<^sub>u" 70)
 
 end

@@ -528,12 +528,12 @@ method pure_state_flatten_nested =
   The registers may be pairs and will be properly unfolded (assuming "compatible X Y" can be proven for all involved registers)
 
   If the pure states \<psi>... themselves are \<otimes>\<^sub>p-tensors, they will be flattened if possible. 
-  (If all necessary conditions can be proven, such as \<open>regular_register\<close> etc.
+  (If all necessary conditions can be proven, such as \<open>regular_register\<close> etc.)
 *)
-method pure_state_eq = 
+method pure_state_eq =
   (pure_state_flatten_nested?,
     rule pure_state_eqI;
-    auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def 
+    auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def
     simp flip: tensor_ell2_ket)
 
 lemma example:
@@ -548,7 +548,7 @@ proof -
 
   have [simp]: \<open>iso_register (F;(G;Z))\<close>
     using Z_def assms complements_complement_pair complements_def by blast
-  
+
   have eq1: \<open>((F;G) CNOT o\<^sub>C\<^sub>L (G;F) CNOT o\<^sub>C\<^sub>L (F;G) CNOT) *\<^sub>V (F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z))
            = (F;G) swap_ell2 *\<^sub>V (F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z))\<close> for f g z
   proof -
@@ -587,7 +587,6 @@ proof -
     using that by auto
 
   moreover have \<open>cspan {(F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z))| f g z. True} = UNIV\<close>
-    (* TODO make this one nicer *)
     apply (simp only: double_exists setcompr_eq_image full_SetCompr_eq)
     apply simp
     apply (rule cspan_pure_state)
