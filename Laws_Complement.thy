@@ -93,6 +93,9 @@ lemma register_unit_register[simp]: \<open>is_unit_register U \<Longrightarrow> 
 lemma unit_register_compatible[simp]: \<open>compatible U X\<close> if \<open>is_unit_register U\<close> \<open>register X\<close>
   by (metis compatible_comp_right complements_def id_comp is_unit_register_def that(1) that(2))
 
+lemma unit_register_compatible'[simp]: \<open>compatible X U\<close> if \<open>is_unit_register U\<close> \<open>register X\<close>
+  using compatible_sym that(1) that(2) unit_register_compatible by blast
+
 lemma compatible_complement_left[simp]: \<open>register X \<Longrightarrow> compatible (complement X) X\<close>
   using compatible_sym complement_is_complement complements_def by blast
 

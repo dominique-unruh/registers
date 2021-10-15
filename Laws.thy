@@ -787,7 +787,7 @@ fun declare thm context = let
   val rules = Named_Theorems.get ctxt @{named_theorems register_attribute_rule}
   val rules_immediate = Named_Theorems.get ctxt @{named_theorems register_attribute_rule_immediate}
   val thms = collect (rules,rules_immediate) thm Net.empty |> Net.entries
-  val _ = \<^print> thms
+  (* val _ = \<^print> thms *)
   in Simplifier.map_ss (fn ctxt => ctxt addsimps thms) context end
 in
 Attrib.setup \<^binding>\<open>register\<close>

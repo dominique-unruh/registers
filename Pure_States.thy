@@ -1,18 +1,6 @@
 theory Pure_States
-  imports Laws_Complement_Quantum "HOL-Eisbach.Eisbach"
+  imports Quantum_Extra2 "HOL-Eisbach.Eisbach"
 begin
-
-
-instance complement_domain :: (type, type) default ..
-    \<comment> \<open>The previous declaration would fit better into \<^theory>\<open>Registers.Quantum_Extra\<close>
-        but it depends on \<^theory>\<open>Registers.Laws_Complement_Quantum\<close> which cannot be included there.\<close>
-
-lemma is_unit_register_empty_var[simp]: \<open>is_unit_register empty_var\<close>
-  \<comment> \<open>The same as for the preceding instance declaration applies here, too.\<close>
-  unfolding is_unit_register_def
-  by (auto intro!: same_range_equivalent range_eqI[where x=\<open>id_cblinfun \<otimes>\<^sub>o _\<close>] 
-      simp del: id_cblinfun_eq_1 simp flip: iso_register_equivalent_id
-      simp: register_pair_apply complements_def)
 
 definition \<open>pure_state_target_vector F \<eta>\<^sub>F = (if ket default \<in> range (cblinfun_apply (F (butterfly \<eta>\<^sub>F \<eta>\<^sub>F)))
    then ket default
@@ -316,7 +304,7 @@ qed
 
 lemma regular_iso_register:
   assumes \<open>regular_register F\<close>
-  assumes [simp]: \<open>iso_register F\<close>
+  assumes [register]: \<open>iso_register F\<close>
   shows \<open>F (selfbutterket default) = selfbutterket default\<close>
 proof -
   from assms(1) obtain a where a: \<open>(F;complement F) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default\<close>
@@ -332,11 +320,11 @@ proof -
   have \<open>selfbutterket default = (F; ?u o I) (selfbutterket default \<otimes>\<^sub>o a)\<close>
     using \<open>complement F = empty_var \<circ> I\<close> a by presburger
   also have \<open>\<dots> = (F; ?u) (selfbutterket default \<otimes>\<^sub>o I a)\<close>
-    by (metis \<open>complement F = empty_var \<circ> I\<close> assms(2) comp_apply compatible_complement_right empty_var_compatible' iso_register_is_register register_pair_apply')
+    by (metis Laws_Quantum.register_pair_apply \<open>complement F = empty_var \<circ> I\<close> \<open>equivalent_registers (complement F) empty_var\<close> assms(2) comp_apply complement_is_complement complements_def equivalent_complements iso_register_is_register)
   also have \<open>\<dots> = (F; ?u) (selfbutterket default \<otimes>\<^sub>o (one_dim_iso (I a) *\<^sub>C id_cblinfun))\<close>
     by simp
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C (F; ?u) (selfbutterket default \<otimes>\<^sub>o id_cblinfun)\<close>
-    by (simp add: Laws_Quantum.register_pair_apply empty_var_def iso_register_is_register)
+    by (simp add: Axioms_Quantum.register_pair_apply empty_var_def iso_register_is_register)
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C F (selfbutterket default)\<close>
     by (auto simp: register_pair_apply iso_register_is_register simp del: id_cblinfun_eq_1)
   finally have F: \<open>one_dim_iso (I a) *\<^sub>C F (selfbutterket default) = selfbutterket default\<close>
