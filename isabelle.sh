@@ -16,4 +16,4 @@ SESSION=Lots-Of-Stuff
 
 ISABELLE_DIR=/opt/Isabelle2021
 
-"$ISABELLE_DIR/bin/isabelle" jedit -l "$SESSION" -d . "${FILES[@]}" "$ISABELLE_DIR/src/Pure/ROOT.ML" "$@" &
+"$ISABELLE_DIR/bin/isabelle" jedit -l "$SESSION" -d . "${FILES[@]}" "$@" "$ISABELLE_DIR/src/Pure/ROOT.ML" &
