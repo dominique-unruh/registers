@@ -1,3 +1,10 @@
+ISABELLE_DIR=/opt/Isabelle2021
+ISABELLE=$(ISABELLE_DIR)/bin/isabelle
+NAME=Registers
+THYS=Laws_Complement Classical_Extra Teleport Laws_Complement_Quantum Pure_States Axioms \
+	Axioms_Classical Axioms_Quantum Laws Axioms_Complement Axioms_Complement_Quantum \
+	Laws_Classical Classical_Extra Finite_Tensor_Product_Matrices Finite_Tensor_Product Misc \
+	Laws_Quantum QHoare Quantum_Extra2 Quantum_Extra Quantum Teleport
 
 default : build
 
@@ -33,3 +40,16 @@ upload : registers.zip document/outline.pdf
 	cp document/outline.pdf $(WWW)/registers-isabelle-theories-outline.pdf
 	cd $(WWW) && ./up
 
+registers-afp.zip : ROOT.AFP document/root.tex document/root.bib LICENSE $(THYS:%=%.thy) instantiate_laws.py
+	rm -rf tmp $@
+	mkdir -p tmp/$(NAME)
+	cp --parents $^ tmp/$(NAME)
+	mv tmp/$(NAME)/ROOT.AFP tmp/$(NAME)/ROOT
+	cd tmp && zip -r $@ $(NAME)
+	mv tmp/$@ .
+
+test-afp : registers-afp.zip
+	rm -rf tmp
+	mkdir -p tmp
+	cd tmp && unzip ../$^
+	cd tmp/$(NAME) && "$(ISABELLE)" build -b -d . -v $(NAME)
