@@ -4,8 +4,11 @@ theory Finite_Tensor_Product_Matrices
   imports Finite_Tensor_Product
 begin
 
-definition tensor_pack :: "nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat) \<Rightarrow> nat" where "tensor_pack X Y = (\<lambda>(x, y). x * Y + y)"
-definition tensor_unpack :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat)"  where "tensor_unpack X Y xy = (xy div Y, xy mod Y)"
+definition tensor_pack :: "nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat) \<Rightarrow> nat"
+  where "tensor_pack X Y = (\<lambda>(x, y). x * Y + y)"
+
+definition tensor_unpack :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat)"
+  where "tensor_unpack X Y xy = (xy div Y, xy mod Y)"
 
 lemma tensor_unpack_inj:
   assumes "i < A * B" and "j < A * B"

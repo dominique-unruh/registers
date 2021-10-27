@@ -59,9 +59,9 @@ next
     apply (subst (1) register_from_getter_setter_of_getter_setter[symmetric, of G], simp)
     unfolding register_from_getter_setter_def valid_getter_setter_def
     apply (auto intro!: ext simp: option.case_eq_if map_comp_def) (* Sledgehammer: *)
-    apply ((metis commute option.distinct option.simps)+)[4]
-    apply (smt (verit, ccfv_threshold) assms(2) commute valid_getter_setter_def valid_getter_setter_getter_setter)
-    apply (smt (verit, ccfv_threshold) assms(2) commute valid_getter_setter_def valid_getter_setter_getter_setter)
+          apply ((metis commute option.distinct option.simps)+)[4]
+      apply (smt (verit, ccfv_threshold) assms(2) commute valid_getter_setter_def valid_getter_setter_getter_setter)
+     apply (smt (verit, ccfv_threshold) assms(2) commute valid_getter_setter_def valid_getter_setter_getter_setter)
     by (smt (verit, del_insts) assms(2) commute option.inject valid_getter_setter_def valid_getter_setter_getter_setter)
   then show \<open>compatible F G\<close>
     unfolding compatible_def by auto

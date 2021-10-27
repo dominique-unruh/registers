@@ -49,7 +49,7 @@ definition "enum_all_bit P \<longleftrightarrow> P (0::bit) \<and> P 1"
 definition "enum_ex_bit P \<longleftrightarrow> P (0::bit) \<or> P 1"
 instance
   apply intro_classes
-  apply (auto simp: enum_bit_def enum_all_bit_def enum_ex_bit_def)
+     apply (auto simp: enum_bit_def enum_all_bit_def enum_ex_bit_def)
   by (metis bit_not_one_imp)+
 end
 
@@ -79,7 +79,7 @@ definition sandwich where \<open>sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\
 
 lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
   apply (rule clinearI)
-  apply (simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right sandwich_def)
+   apply (simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right sandwich_def)
   by (simp add: sandwich_def)
 
 lemma sandwich_id[simp]: \<open>sandwich id_cblinfun = id\<close>
@@ -100,8 +100,8 @@ lemma lift_cblinfun_comp:
     and \<open>a o\<^sub>C\<^sub>L (b o\<^sub>C\<^sub>L d) = c o\<^sub>C\<^sub>L d\<close>
     and \<open>a *\<^sub>S (b *\<^sub>S S) = c *\<^sub>S S\<close>
     and \<open>a *\<^sub>V (b *\<^sub>V x) = c *\<^sub>V x\<close>
-  apply (fact assms)
-  apply (simp add: assms cblinfun_assoc_left(1))
+     apply (fact assms)
+    apply (simp add: assms cblinfun_assoc_left(1))
   using assms cblinfun_assoc_left(2) apply force
   using assms by force
 

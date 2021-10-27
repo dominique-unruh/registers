@@ -27,8 +27,8 @@ axiomatization where
     for z :: "'a::domain update"
 
 axiomatization tensor_update :: \<open>'a::domain update \<Rightarrow> 'b::domain update \<Rightarrow> ('a\<times>'b) update\<close> 
-    where tensor_extensionality: "preregister F \<Longrightarrow> preregister G \<Longrightarrow> (\<And>a b. F (tensor_update a b) = G (tensor_update a b)) \<Longrightarrow> F = G"
-    for F G :: \<open>('a\<times>'b) update \<Rightarrow> 'c::domain update\<close>
+  where tensor_extensionality: "preregister F \<Longrightarrow> preregister G \<Longrightarrow> (\<And>a b. F (tensor_update a b) = G (tensor_update a b)) \<Longrightarrow> F = G"
+  for F G :: \<open>('a\<times>'b) update \<Rightarrow> 'c::domain update\<close>
 
 axiomatization where tensor_update_mult: \<open>comp_update (tensor_update a c) (tensor_update b d) = tensor_update (comp_update a b) (comp_update c d)\<close>
   for a b :: \<open>'a::domain update\<close> and c d :: \<open>'b::domain update\<close>

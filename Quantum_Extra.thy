@@ -78,7 +78,7 @@ lemma compatible_proj_mult:
 lemma unitary_sandwich_register: \<open>unitary a \<Longrightarrow> register (sandwich a)\<close>
   unfolding register_def
   apply (auto simp: sandwich_def)
-  apply (metis (no_types, lifting) cblinfun_assoc_left(1) cblinfun_compose_id_right unitaryD1)
+   apply (metis (no_types, lifting) cblinfun_assoc_left(1) cblinfun_compose_id_right unitaryD1)
   by (simp add: lift_cblinfun_comp(2))
 
 lemma sandwich_tensor: 

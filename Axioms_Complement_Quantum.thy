@@ -69,7 +69,7 @@ proof -
     by (metis cblinfun_fixes_range is_Proj_algebraic)
 
   obtain B0 where finiteB0: \<open>finite (B0 i)\<close> and cspanB0: \<open>cspan (B0 i) = space_as_set (S i)\<close> for i
-  apply atomize_elim apply (simp flip: all_conj_distrib) apply (rule choice)
+    apply atomize_elim apply (simp flip: all_conj_distrib) apply (rule choice)
     by (meson cfinite_dim_finite_subspace_basis csubspace_space_as_set)
 
   obtain B where orthoB: \<open>is_ortho_set (B i)\<close>
@@ -110,7 +110,7 @@ proof -
 
 
   define B' where \<open>B' = (\<Union>i\<in>UNIV. B i)\<close>
-  
+
   have P'B: \<open>P' i = Proj (ccspan (B i))\<close> for i
     unfolding ccspanB S_def
     using proj_P' Proj_on_own_range'[symmetric] is_Proj_algebraic by blast
@@ -237,7 +237,7 @@ proof -
       by simp
     also have \<open>\<dots> = eqa \<xi>' \<xi> * eqc \<alpha> \<alpha>'\<close>
       using bij_f orthoB normalB unfolding is_ortho_set_def eqc_def apply auto
-      apply (metis bij_betw_imp_surj_on cnorm_eq_1 rangeI)
+       apply (metis bij_betw_imp_surj_on cnorm_eq_1 rangeI)
       by (smt (z3) bij_betw_iff_bijections iso_tuple_UNIV_I)
     finally show ?thesis
       by (simp add: eqa_def eqac_def eqc_def \<xi>'\<alpha>' \<xi>\<alpha>)
@@ -354,7 +354,7 @@ lemma iso_register_decomposition:
 proof -
   have [simp]: \<open>register F\<close>
     using assms iso_register_is_register by blast 
-  
+
   let ?ida = \<open>id_cblinfun :: ('a, 'b) complement_domain ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close>
 
   from register_decomposition[OF \<open>register F\<close>]
@@ -406,7 +406,7 @@ proof -
   finally have F_rep:  \<open>F a = U o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L U*\<close> for a
     apply (rule_tac fun_cong[where x=a])
     apply (rule_tac clinear_eq_butterfly_ketI)
-    apply auto
+      apply auto
     by (metis (no_types, lifting) cblinfun_apply_clinear clinear_iff sandwich_apply)
 
   have \<open>isometry T\<close>
@@ -486,8 +486,8 @@ proof -
     have [simp]: \<open>register I\<close>
       by (simp add: I_def unitary_sandwich_register)
     have \<open>I o (F;G) = id\<close> and FGI: \<open>(F;G) o I = id\<close>
-      apply (auto intro!:ext simp: I_def[abs_def] FG sandwich_def)
-      apply (metis (no_types, hide_lams) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
+       apply (auto intro!:ext simp: I_def[abs_def] FG sandwich_def)
+       apply (metis (no_types, hide_lams) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
       by (metis (no_types, lifting) \<open>unitary U\<close> cblinfun_assoc_left(1) cblinfun_compose_id_left cblinfun_compose_id_right unitaryD2)
     then show \<open>iso_register (F;G)\<close>
       by (auto intro!: iso_registerI)

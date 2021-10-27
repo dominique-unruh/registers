@@ -33,12 +33,12 @@ lemma tensor_ell2_inner_prod[simp]: \<open>\<langle>tensor_ell2 a b, tensor_ell2
 
 lemma clinear_tensor_ell21: "clinear (\<lambda>b. tensor_ell2 a b)"
   apply (rule clinearI; transfer)
-  apply (auto simp: case_prod_beta)
+   apply (auto simp: case_prod_beta)
   by (simp add: cond_case_prod_eta algebra_simps)
 
 lemma clinear_tensor_ell22: "clinear (\<lambda>a. tensor_ell2 a b)"
   apply (rule clinearI; transfer)
-  apply (auto simp: case_prod_beta)
+   apply (auto simp: case_prod_beta)
   by (simp add: case_prod_beta' algebra_simps)
 
 lemma tensor_ell2_ket[simp]: "tensor_ell2 (ket i) (ket j) = ket (i,j)"
@@ -104,7 +104,7 @@ qed
 
 lemma comp_tensor_op: "(tensor_op a b) o\<^sub>C\<^sub>L (tensor_op c d) = tensor_op (a o\<^sub>C\<^sub>L c) (b o\<^sub>C\<^sub>L d)"
   for a :: "'e::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c::finite ell2" and b :: "'f::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd::finite ell2" and
-  c :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'e ell2" and d :: "'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'f ell2"
+      c :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'e ell2" and d :: "'b::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'f ell2"
   apply (rule equal_ket)
   apply (rename_tac ij, case_tac ij, rename_tac i j, hypsubst_thin)
   by (simp flip: tensor_ell2_ket add: tensor_op_ell2 cblinfun_apply_cblinfun_compose)
@@ -188,7 +188,7 @@ lemma
             \<Rightarrow> 'e::complex_normed_vector"
   assumes "cbilinear F2"
   shows tensor_lift_clinear: "clinear (tensor_lift F2)"
-  and tensor_lift_correct:  \<open>(\<lambda>a b. tensor_lift F2 (tensor_op a b)) = F2\<close>
+    and tensor_lift_correct:  \<open>(\<lambda>a b. tensor_lift F2 (tensor_op a b)) = F2\<close>
 proof -
   define F2' t4 \<phi> where
     \<open>F2' = tensor_lift F2\<close> and
@@ -220,7 +220,7 @@ proof -
   have "cblinfun_extension_exists (range t4) \<phi>"
     thm cblinfun_extension_exists_finite_dim[where \<phi>=\<phi>]
     apply (rule cblinfun_extension_exists_finite_dim)
-    apply auto unfolding * 
+     apply auto unfolding * 
     using cindependent_tensor_op
     using cspan_tensor_op
     by auto
@@ -267,13 +267,13 @@ lift_definition assoc_ell20' :: \<open>('a::finite\<times>('b::finite\<times>'c:
 lift_definition assoc_ell2 :: \<open>(('a::finite\<times>'b::finite)\<times>'c::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>('b\<times>'c)) ell2\<close>
   is assoc_ell20
   apply (subst bounded_clinear_finite_dim)
-  apply (rule clinearI; transfer)
+   apply (rule clinearI; transfer)
   by auto
 
 lift_definition assoc_ell2' :: \<open>('a::finite\<times>('b::finite\<times>'c::finite)) ell2 \<Rightarrow>\<^sub>C\<^sub>L (('a\<times>'b)\<times>'c) ell2\<close> is
   assoc_ell20'
   apply (subst bounded_clinear_finite_dim)
-  apply (rule clinearI; transfer)
+   apply (rule clinearI; transfer)
   by auto
 
 lemma assoc_ell2_tensor: \<open>assoc_ell2 *\<^sub>V tensor_ell2 (tensor_ell2 a b) c = tensor_ell2 a (tensor_ell2 b c)\<close>
@@ -334,7 +334,7 @@ lift_definition swap_ell20 :: \<open>('a::finite\<times>'b::finite) ell2 \<Right
 lift_definition swap_ell2 :: \<open>('a::finite\<times>'b::finite) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'a) ell2\<close>
   is swap_ell20
   apply (subst bounded_clinear_finite_dim)
-  apply (rule clinearI; transfer)
+   apply (rule clinearI; transfer)
   by auto
 
 lemma swap_ell2_tensor[simp]: \<open>swap_ell2 *\<^sub>V tensor_ell2 a b = tensor_ell2 b a\<close>
@@ -669,7 +669,7 @@ proof -
     by (auto simp: cblinfun_assoc_right)
   also have \<open>bij ?s\<close>
     apply (rule o_bij[where g=\<open>(\<lambda>x. swap_ell2 o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L swap_ell2)\<close>])
-    apply (auto intro!: ext simp: cblinfun_assoc_left)
+     apply (auto intro!: ext simp: cblinfun_assoc_left)
     by (auto simp: cblinfun_assoc_right)
   show \<open>bij ?f\<close>
     apply (subst \<open>?s o ?sf = ?f\<close>[symmetric], subst \<open>?sf = ?g\<close>)
@@ -687,7 +687,7 @@ proof -
   let ?id1 = \<open>id_cblinfun :: unit ell2 \<Rightarrow>\<^sub>C\<^sub>L unit ell2\<close>
   note id_cblinfun_eq_1[simp del]
   define d where \<open>d = butterfly \<psi> \<psi>' \<otimes>\<^sub>o a23\<close>
-  
+
   define \<psi>\<^sub>n \<psi>\<^sub>n' a23\<^sub>n where \<open>\<psi>\<^sub>n = \<psi> /\<^sub>C norm \<psi>\<close> and \<open>\<psi>\<^sub>n' = \<psi>' /\<^sub>C norm \<psi>'\<close> and \<open>a23\<^sub>n = norm \<psi> *\<^sub>C norm \<psi>' *\<^sub>C a23\<close>
   have [simp]: \<open>norm \<psi>\<^sub>n = 1\<close> \<open>norm \<psi>\<^sub>n' = 1\<close>
     using \<open>\<psi> \<noteq> 0\<close> \<open>\<psi>' \<noteq> 0\<close> by (auto simp: \<psi>\<^sub>n_def \<psi>\<^sub>n'_def norm_inverse)

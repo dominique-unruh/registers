@@ -84,7 +84,7 @@ schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
   apply (subst pair_o_assoc'[unfolded o_def, THEN fun_cong])
      apply simp_all[3]
   apply (subst register_pair_apply[where a=id_cblinfun])
-    apply simp_all[2]
+   apply simp_all[2]
   apply (subst pair_o_assoc[unfolded o_def, THEN fun_cong])
      apply simp_all[3]
   by simp
@@ -152,8 +152,8 @@ proof -
     apply (rule arg_cong[of _ _ X\<Phi>])
     apply (rule cblinfun_eq_mat_of_cblinfunI)
     apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_tensor_op XZ_def
-                     butterfly_def mat_of_cblinfun_compose mat_of_cblinfun_vector_to_cblinfun 
-                     mat_of_cblinfun_adj vec_of_basis_enum_ket mat_of_cblinfun_id 
+                     butterfly_def mat_of_cblinfun_compose mat_of_cblinfun_vector_to_cblinfun
+                     mat_of_cblinfun_adj vec_of_basis_enum_ket mat_of_cblinfun_id
                      swap_sandwich[abs_def] mat_of_cblinfun_scaleR mat_of_cblinfun_scaleC
                      id_tensor_sandwich vec_of_basis_enum_tensor_state mat_of_cblinfun_cblinfun_apply
                      mat_of_cblinfun_sandwich)
@@ -161,7 +161,7 @@ proof -
 
   have [simp]: "unitary XZ"
     unfolding unitary_def unfolding XZ_def apply auto
-    apply (metis cblinfun_assoc_left(1) pauliXX pauliZZ cblinfun_compose_id_left)
+     apply (metis cblinfun_assoc_left(1) pauliXX pauliZZ cblinfun_compose_id_left)
     by (metis cblinfun_assoc_left(1) pauliXX pauliZZ cblinfun_compose_id_left)
 
   have O7': "O7 = (1/2) *\<^sub>C X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"

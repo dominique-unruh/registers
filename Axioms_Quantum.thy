@@ -93,7 +93,7 @@ lemma register_pair_apply:
   shows \<open>(register_pair F G) (tensor_op a b) = F a o\<^sub>C\<^sub>L G b\<close>
   unfolding register_pair_def
   apply (subst tensor_lift_correct[THEN fun_cong, THEN fun_cong])
-  apply (rule cbilinear_F_comp_G)
+   apply (rule cbilinear_F_comp_G)
   using assms apply (auto intro!: cbilinear_F_comp_G)
   using register_def by auto
 

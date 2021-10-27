@@ -140,7 +140,7 @@ proof -
     using assms(1) complement_is_complement complements_def iso_register_bij pair_is_register by blast
   have [simp]: \<open>register F\<close> \<open>register G\<close>
     using assms(1) unfolding compatible_def by auto
-  
+
   obtain aF where [simp]: \<open>inv (F;complement F) (selfbutterket default) = selfbutterket default \<otimes>\<^sub>o aF\<close>
     by (metis assms(2) compatible_complement_right invI pair_is_register register_inj regular_register_def)
   obtain aG where [simp]: \<open>inv (G;complement G) (selfbutterket default) = selfbutterket default \<otimes>\<^sub>o aG\<close>
@@ -288,7 +288,7 @@ proof -
     by auto
   also have \<open>\<dots> = ((F o (G; complement G); complement F) o assoc') (selfbutterket default \<otimes>\<^sub>o (b \<otimes>\<^sub>o a))\<close>
     unfolding c_def apply (subst surj_f_inv_f[where f=J])
-    apply (meson \<open>iso_register J\<close> bij_betw_inv_into_right iso_register_inv_comp1 iso_register_inv_comp2 iso_tuple_UNIV_I o_bij surj_iff_all)
+     apply (meson \<open>iso_register J\<close> bij_betw_inv_into_right iso_register_inv_comp1 iso_register_inv_comp2 iso_tuple_UNIV_I o_bij surj_iff_all)
     by auto
   also have \<open>\<dots> = (F \<circ> (G;complement G);complement F) ((selfbutterket default \<otimes>\<^sub>o b) \<otimes>\<^sub>o a)\<close>
     by (simp add: assoc'_apply)

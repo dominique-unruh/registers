@@ -245,7 +245,7 @@ lemma compatible_tensor_id_update_left[simp]:
   shows "compatible (\<lambda>a. id_update \<otimes>\<^sub>u F a) (\<lambda>a. id_update \<otimes>\<^sub>u G a)"
   using assms apply (rule compatible_comp_inner[unfolded o_def])
   by simp
-  
+
 lemma compatible_tensor_id_update_right[simp]:
   fixes F :: "'a::domain update \<Rightarrow> 'c::domain update" and G :: "'b::domain update \<Rightarrow> 'c::domain update"
   assumes "compatible F G"
@@ -258,7 +258,7 @@ lemma compatible_tensor_id_update_rl[simp]:
   shows "compatible (\<lambda>a. F a \<otimes>\<^sub>u id_update) (\<lambda>a. id_update \<otimes>\<^sub>u G a)"
   apply (rule compatibleI)
   using assms by (auto simp: tensor_update_mult)
-  
+
 lemma compatible_tensor_id_update_lr[simp]:
   assumes "register F" and "register G"
   shows "compatible (\<lambda>a. id_update \<otimes>\<^sub>u F a) (\<lambda>a. G a \<otimes>\<^sub>u id_update)"
@@ -411,7 +411,7 @@ lemma pair_o_swap[simp]:
   shows "(A; B) o swap = (B; A)"
 proof (rule tensor_extensionality)
   have [simp]: "preregister A" "preregister B"
-    apply (metis (no_types, hide_lams) assms compatible_register1 register_preregister)
+     apply (metis (no_types, hide_lams) assms compatible_register1 register_preregister)
     by (metis (full_types) assms compatible_register2 register_preregister)
   then show \<open>preregister ((A; B) \<circ> swap)\<close>
     by simp

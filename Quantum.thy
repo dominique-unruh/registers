@@ -100,7 +100,7 @@ subsubsection \<open>Qubit swap\<close>
 
 definition "matrix_Uswap = mat_of_rows_list 4 [ [1::complex, 0, 0, 0], [0,0,1,0], [0,1,0,0], [0,0,0,1] ]"
 definition Uswap :: \<open>(bit\<times>bit, bit\<times>bit) matrix\<close> where
- [code del]: \<open>Uswap = cblinfun_of_mat matrix_Uswap\<close>
+  [code del]: \<open>Uswap = cblinfun_of_mat matrix_Uswap\<close>
 
 lemma mat_of_cblinfun_Uswap[simp, code]: "mat_of_cblinfun Uswap = matrix_Uswap"
   apply (auto simp add: Uswap_def matrix_Uswap_def)
@@ -120,11 +120,11 @@ lemma unitary_Uswap[simp]: "unitary Uswap"
 
 lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otimes>\<^sub>s s\<close>
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-  apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
-  apply (simp add: clinear_tensor_ell21)
+    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
+   apply (simp add: clinear_tensor_ell21)
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-  apply (simp add: cblinfun.add_right clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
-  apply (simp add: clinear_tensor_ell22)
+    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
+   apply (simp add: clinear_tensor_ell22)
   apply (rule basis_enum_eq_vec_of_basis_enumI)
   apply (simp add: mat_of_cblinfun_cblinfun_apply vec_of_basis_enum_ket)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)

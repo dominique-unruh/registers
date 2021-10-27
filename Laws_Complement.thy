@@ -58,8 +58,8 @@ lemma complements_register_tensor:
 proof (rule complementsI)
   have sep4: \<open>separating TYPE('z::domain) {(a \<otimes>\<^sub>u b) \<otimes>\<^sub>u (c \<otimes>\<^sub>u d) |a b c d. True}\<close>
     apply (rule separating_tensor'[where A=\<open>{(a \<otimes>\<^sub>u b) |a b. True}\<close> and B=\<open>{(c \<otimes>\<^sub>u d) |c d. True}\<close>])
-    apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
-    apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
+      apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
+     apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
     by auto
   show compat: \<open>compatible (F \<otimes>\<^sub>r G) (complement F \<otimes>\<^sub>r complement G)\<close>
     by (metis assms(1) assms(2) compatible_register_tensor complement_is_complement complements_def)
@@ -108,7 +108,7 @@ proof -
     using complements_def is_unit_register_def iso_register_equivalent_id that(1) by blast
   also have \<open>equivalent_registers \<dots> (U; (X; complement X))\<close>
     apply (rule equivalent_registers_pair_right)
-    apply (auto intro!: unit_register_compatible)
+     apply (auto intro!: unit_register_compatible)
     using complement_is_complement complements_def equivalent_registersI id_comp register_id that(2) by blast
   also have \<open>equivalent_registers \<dots> ((U; X); complement X)\<close>
     apply (rule equivalent_registers_assoc)
@@ -141,7 +141,7 @@ proof -
     by (metis (no_types, hide_lams) assms(1) assms(2) calculation complements_def equivalent_registers_sym equivalent_registers_trans is_unit_register_def register_comp_pair)
   also have \<open>equivalent_registers \<dots> (A o id; complement A)\<close>
     apply (intro equivalent_registers_pair_left equivalent_registers_comp)
-    apply (auto simp: assms)
+      apply (auto simp: assms)
     using assms(1) equivalent_registers_sym register_id unit_register_pair by blast
   also have \<open>equivalent_registers \<dots> id\<close>
     by (metis assms(2) comp_id complement_is_complement complements_def equivalent_registers_def iso_register_inv iso_register_inv_comp2 pair_is_register)
