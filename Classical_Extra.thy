@@ -116,6 +116,8 @@ lemma empty_var_compatible'[simp]: \<open>register X \<Longrightarrow> compatibl
 
 paragraph \<open>Example\<close>
 
+(* TODO: do not pollute name space with x,y *)
+
 record memory = 
   x :: "int*int"
   y :: nat
