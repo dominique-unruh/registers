@@ -40,16 +40,15 @@ upload : registers.zip document/outline.pdf
 	cp document/outline.pdf $(WWW)/registers-isabelle-theories-outline.pdf
 	cd $(WWW) && ./up
 
-registers-afp.zip : ROOT.AFP document/root.tex document/root.bib LICENSE $(THYS:%=%.thy) instantiate_laws.py
-	rm -rf tmp $@
-	mkdir -p tmp/$(NAME)
-	cp --parents $^ tmp/$(NAME)
-	mv tmp/$(NAME)/ROOT.AFP tmp/$(NAME)/ROOT
-	cd tmp && zip -r $@ $(NAME)
-	mv tmp/$@ .
-
 test-afp : registers-afp.zip
 	rm -rf tmp
 	mkdir -p tmp
 	cd tmp && unzip ../$^
 	cd tmp/$(NAME) && "$(ISABELLE)" build -b -d . -v $(NAME)
+
+AFP_DIR=/opt/afp-devel/thys/Registers
+copy-to-afp : ROOT.AFP document/root.tex document/root.bib LICENSE $(THYS:%=%.thy) instantiate_laws.py
+	rm -rf $(AFP_DIR)/*
+	cp --parents $^ $(AFP_DIR)
+	mv $(AFP_DIR)/ROOT.AFP $(AFP_DIR)/ROOT
+	cd $(AFP_DIR)/ && hg diff
